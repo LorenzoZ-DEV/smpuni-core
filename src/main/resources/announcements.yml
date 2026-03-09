@@ -1,0 +1,57 @@
+# ==========================================
+#      HIRU - Announcements Configuration
+#           (announcements.yml)
+# ==========================================
+
+# ---- General Settings ----
+# Interval in seconds between each announcement broadcast
+interval-seconds: 120
+
+# Rotation mode: SEQUENTIAL or RANDOM
+mode: SEQUENTIAL
+
+# ---- Categories ----
+# Each category can be enabled/disabled individually.
+# prefix: Color prefix shown before every message in this category
+# enabled: Whether this category is active
+# messages: List of messages to broadcast (supports & color codes and &#RRGGBB hex)
+
+categories:
+  socials:
+    prefix: "&#55CCFF&l[Social] "
+    enabled: false
+    messages:
+      - "&fFollow us on Instagram: &#55CCFF@ServerName &8| &7Stay updated!"
+      - "&fSubscribe to our &#FF0000YouTube &fchannel for epic content!"
+
+  discord:
+    prefix: "&#7289DA&l[Discord] "
+    enabled: true
+    messages:
+      - "&fJoin our Discord server: &#7289DAhttps://discord.gg/ZMqRyyRCKh &8| &7Chat with the community!"
+      - "&fNeed help? Open a ticket on our &#7289DADiscord&f!"
+      - "&#FFD700Discord exclusive giveaways &fevery week — don't miss out!"
+
+  staff:
+    prefix: "&#FFA500&l[Staff] "
+    enabled: true
+    messages:
+      - "&fWe are &#55FF55HIRING&f! Apply for Staff at: &#FFA500https://discord.gg/ZMqRyyRCKh"
+      - "&fThink you have what it takes? Join our &#FFA500Staff &fteam!"
+      - "&fStaff applications are &#55FF55OPEN &f— apply now on our discord!"
+
+  report:
+    prefix: "&#FF4444&l[Report] "
+    enabled: true
+    messages:
+      - "&fFound a cheater? Report them with &#FF4444/report <player> <reason>"
+      - "&fCheating ruins the fun. Use &#FF4444/report &fto help us keep the server clean!"
+      - "&fSuspicious player? Type &#FF4444/report <player> &fand our Staff will investigate."
+
+  general:
+    prefix: "&#55FF55&l[Server] "
+    enabled: true
+    messages:
+      - "&fNew to the server? Use &#55FF55/kit starter &fto get your starter kit!"
+      - "&fCheck all available kits with &#55FF55/kit&f!"
+      - "&fRules: respect everyone. Violations = &#FF4444permanent ban&f."

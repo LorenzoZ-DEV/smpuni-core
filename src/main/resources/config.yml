@@ -1,0 +1,525 @@
+# ==========================================
+#           HIRU - SMP Core Plugin
+#       Configuration File (config.yml)
+# ==========================================
+
+# ---- Module Toggle ----
+modules:
+  clearlag: true
+  economy: true
+  stats: true
+  shards: true
+  tpa: true
+  spawn: true
+  afk: true
+  rtp: true
+  profile: true
+  keyall: true
+  media: true
+  info: true
+  rules: true
+  tools: true
+  lunar: true
+  settings: true
+  worth: true
+  teams: true
+  homes: true
+  bounty: true
+  leaderboard: true
+  sell: true
+  shop: true
+  billford: true
+  help: true
+  kits: true
+  announcements: true
+  ad: true
+
+# ---- Database ----
+database:
+  type: YAML  # YAML or SQLITE
+  sqlite:
+    file: hiru.db
+
+# ---- Messages ----
+messages:
+  prefix: "&8[&bHiru&8] "
+  no-permission: "&cNon hai il permesso!"
+  player-only: "&cSolo i giocatori possono usare questo comando!"
+  reload-success: "&aConfigurazione ricaricata con successo!"
+  player-not-found: "&cGiocatore non trovato!"
+
+# ---- Economy ----
+economy:
+  starting-balance: 1000.0
+  currency-name: "Coins"
+  currency-symbol: "$"
+  baltop-size: 10
+  messages:
+    balance: "&7Il tuo saldo: &a%symbol%%amount%"
+    balance-other: "&7Saldo di &b%player%&7: &a%symbol%%amount%"
+    pay-sent: "&7Hai inviato &a%symbol%%amount% &7a &b%player%&7."
+    pay-received: "&7Hai ricevuto &a%symbol%%amount% &7da &b%player%&7."
+    pay-insufficient: "&cSaldo insufficiente!"
+    pay-invalid-amount: "&cImporto non valido!"
+    eco-give: "&7Dati &a%symbol%%amount% &7a &b%player%&7."
+    eco-take: "&7Rimossi &a%symbol%%amount% &7da &b%player%&7."
+    eco-set: "&7Saldo di &b%player% &7impostato a &a%symbol%%amount%&7."
+    baltop-header: "&8&m----------&8[ &bBaltop &8]&8&m----------"
+    baltop-entry: "&7#%position% &b%player% &7- &a%symbol%%amount%"
+    baltop-footer: "&8&m---------------------------------"
+
+# ---- ClearLag ----
+clearlag:
+  auto-clear: true
+  interval-minutes: 10
+  countdown-seconds: 30
+  remove-animals: false
+  remove-monsters: true
+  remove-items: true
+  remove-experience: false
+  entity-whitelist:
+    - VILLAGER
+    - HORSE
+    - WOLF
+    - CAT
+    - PARROT
+    - ARMOR_STAND
+    - ITEM_FRAME
+  messages:
+    warning: "&c&l[ClearLag] &ePulizia entità tra &c%seconds% &esecondi!"
+    cleared: "&c&l[ClearLag] &aRimosse &e%amount% &aentità!"
+
+# ---- Shards ----
+shards:
+  currency-name: "Shards"
+  earn:
+    mob-kill: 5
+    mining:
+      DIAMOND_ORE: 10
+      EMERALD_ORE: 15
+      GOLD_ORE: 3
+      IRON_ORE: 2
+      ANCIENT_DEBRIS: 25
+    farming:
+      WHEAT: 1
+      CARROTS: 1
+      POTATOES: 1
+      BEETROOTS: 1
+      NETHER_WART: 2
+  messages:
+    balance: "&7I tuoi Shards: &d%amount%"
+    earned: "&7Hai guadagnato &d%amount% Shards&7!"
+
+# ---- TPA ----
+tpa:
+  timeout-seconds: 60
+  cooldown-seconds: 30
+  teleport-delay-seconds: 3
+  messages:
+    sent: "&7Richiesta TPA inviata a &b%player%&7."
+    received: "&7&b%player% &7vuole teletrasportarsi da te! &a/tpaccept &7o &c/tpdeny"
+    accepted: "&7Richiesta TPA accettata!"
+    denied: "&7Richiesta TPA rifiutata."
+    expired: "&7La richiesta TPA è scaduta."
+    cooldown: "&cDevi aspettare &e%seconds% &csecondi prima di inviare un'altra richiesta."
+    no-request: "&cNon hai richieste TPA pendenti."
+    teleporting: "&7Teletrasporto tra &e{seconds} &7secondi... Non muoverti!"
+    moved: "&cTi sei mosso! Teletrasporto annullato."
+    self: "&cNon puoi inviare una TPA a te stesso!"
+    teleported: "&7Teletrasportato da &b%player%&7!"
+    actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
+    actionbar-success: "&a✔ Teleported to &b{player}"
+
+# ---- Spawn ----
+spawn:
+  teleport-on-join: true
+  teleport-delay-seconds: 3
+  spawns: {}
+  messages:
+    teleported: "&7Teletrasportato allo spawn &b%name%&7!"
+    set: "&7Spawn &b%name% &7impostato!"
+    not-set: "&cNessuno spawn impostato!"
+    menu-title: "&8Spawn Menu"
+    teleporting: "&7Teletrasporto tra &e{seconds} &7secondi... Non muoverti!"
+    moved: "&cTi sei mosso! Teletrasporto annullato."
+    actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
+    actionbar-success: "&a✔ Teleported to spawn &b{name}"
+
+# ---- AFK ----
+afk:
+  kick-enabled: true
+  kick-after-minutes: 30
+  kick-message: "&cSei stato kickato per inattività!"
+  exempt-permission: "hiru.afk.exempt"
+  messages:
+    now-afk: "&7%player% &7è ora &eAFK&7."
+    no-longer-afk: "&7%player% &7non è più &eAFK&7."
+  zones:
+    spawn-afk:
+      world: "world"
+      min-x: -50
+      min-y: 0
+      min-z: -50
+      max-x: 50
+      max-y: 256
+      max-z: 50
+
+# ---- RTP ----
+rtp:
+  max-attempts: 20
+  cooldown-seconds: 300
+  teleport-delay-seconds: 5
+  unsafe-blocks:
+    - LAVA
+    - WATER
+    - MAGMA_BLOCK
+    - CACTUS
+    - SWEET_BERRY_BUSH
+    - FIRE
+    - SOUL_FIRE
+    - CAMPFIRE
+    - SOUL_CAMPFIRE
+    - WITHER_ROSE
+    - POWDER_SNOW
+  worlds:
+    overworld:
+      world-name: "world"
+      min-radius: 250
+      max-radius: 5000
+      min-y: 64
+      max-y: 256
+      enabled: true
+    nether:
+      world-name: "world_nether"
+      min-radius: 100
+      max-radius: 500
+      min-y: 32
+      max-y: 100
+      enabled: true
+    end:
+      world-name: "world_the_end"
+      min-radius: 500
+      max-radius: 2000
+      min-y: 50
+      max-y: 100
+      enabled: false
+  messages:
+    teleporting: "&7Teletrasporto tra &e{seconds} &7secondi... Non muoverti!"
+    teleported: "&7Teletrasportato a &bX: {x} Z: {z} &7nel mondo &b{world}&7!"
+    cooldown: "&cDevi aspettare &e{time} &cprima di usare /rtp."
+    fail: "&cNon è stato trovato un luogo sicuro. Riprova!"
+    cancelled: "&cTeletrasporto annullato."
+    moved: "&cTi sei mosso! Teletrasporto annullato."
+    world-disabled: "&cIl mondo &e{world} &cnon è abilitato per l'RTP."
+    error-no-world: "&cIl mondo &e{world} &cnon esiste!"
+    actionbar-countdown: "&e⏳ Teletrasporto tra &c{seconds}s&e..."
+    actionbar-searching: "&e🔍 Ricerca posizione sicura..."
+    actionbar-success: "&a✔ Teletrasportato nel mondo &b{world} &a(X:{x} Z:{z})"
+  menu:
+    title: "&0Random Teleport"
+    rows: 3
+    filler:
+      material: GRAY_STAINED_GLASS_PANE
+      name: "&f"
+    buttons:
+      nether:
+        slot: 10
+        target-world: "world_nether"
+        enabled: true
+        texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRkMzBlMmZjNWNiMDQ0NjFiYWJjMzk0MjMzODAxODdkMzUyNjUwOWNkNmQ0YzM1YzA0ZjYxNmYzMWIxYjkxZiJ9fX0="
+        name: "&#e32200&lNether"
+        lore:
+          - ""
+          - "&7Click here to randomly teleport"
+          - "&7to a zone in the &cNether"
+          - ""
+          - "&#FF8B76&l➥ Click to teleport"
+      overworld:
+        slot: 13
+        target-world: "world"
+        enabled: true
+        texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZiYjlmYjk3YmE4N2NiNzI3Y2QwZmY0NzdmNzY5MzcwYmVhMTljY2JmYWZiNTgxNjI5Y2Q1NjM5ZjJmZWMyYiJ9fX0="
+        name: "&#1fff5a&lOverworld"
+        lore:
+          - ""
+          - "&7Click here to randomly teleport"
+          - "&7to a zone in the &aOverworld"
+          - ""
+          - "&#72FF97&l➥ Click to teleport"
+      end:
+        slot: 16
+        target-world: "world_the_end"
+        enabled: true
+        texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTlmMjFmNWQ4ODMzMTZmZDY1YTkzNjZmMzJhMzMwMTMxODJlMzM4MWRlYzIxYzE3Yzc4MzU1ZDliZjRmMCJ9fX0="
+        name: "&#f7ffa1&lThe End"
+        lore:
+          - ""
+          - "&7Click here to randomly teleport"
+          - "&7to a zone in &eThe End"
+          - ""
+          - "&#FAFFC9&l➥ Click to teleport"
+
+# ---- Profile ----
+profile:
+  menu-title: "&8Profilo di %player%"
+
+# ---- KeyAll ----
+keyall:
+  valid-types:
+    - common
+    - rare
+    - epic
+    - legendary
+  broadcast: "&a&l[KeyAll] &eTutti hanno ricevuto &b%amount%x %type% Key&e!"
+  received: "&7Hai ricevuto &b%amount%x %type% Key&7!"
+
+# ---- Media Menu ----
+media:
+  menu-title: "&8&lMedia Menu"
+  slots:
+    0:
+      material: DIAMOND
+      name: "&bRequisiti"
+      lore:
+        - "&71. 1000 Iscritti"
+        - "&72. Canale attivo"
+      permission: ""
+    4:
+      material: EMERALD
+      name: "&aBenefici"
+      lore:
+        - "&7Fly nel spawn"
+        - "&7Kit esclusivo"
+      permission: ""
+
+# ---- Info Menu ----
+info:
+  menu-title: "&8&lServer Info"
+  server-name: "&b&lMy SMP Server"
+  owner: "lorenzz"
+  discord: "discord.gg/example"
+  website: "www.example.com"
+  slots:
+    0:
+      material: BEACON
+      name: "&bServer"
+      lore:
+        - "&7Nome: &b%server-name%"
+        - "&7Owner: &b%owner%"
+    4:
+      material: BOOK
+      name: "&eSocial"
+      lore:
+        - "&7Discord: &9%discord%"
+        - "&7Website: &a%website%"
+
+# ---- Rules ----
+rules:
+  menu-title: "&8&lRegole del Server"
+  force-accept-on-first-join: true
+  auto-open-on-join: true
+  kick-delay-seconds: 60
+  accept-message: "&aHai accettato le regole!"
+  deny-message: "&cDevi accettare le regole per giocare!"
+  rules-list:
+    - "&c1. &7Niente hack o cheat."
+    - "&c2. &7Rispetta tutti i giocatori."
+    - "&c3. &7No spam o pubblicità."
+    - "&c4. &7No grief nelle zone protette."
+    - "&c5. &7Segui le indicazioni dello staff."
+    - "&c6. &7No exploit o bug abuse."
+    - "&c7. &7Divertiti!"
+
+# ---- Amethyst Tools ----
+tools:
+  durability-uses: 500
+  tools-list:
+    amethyst_sword:
+      material: DIAMOND_SWORD
+      name: "&d&lAmethyst Sword"
+      lore:
+        - "&7Spada in ametista"
+        - "&7Usi rimanenti: &d%uses%"
+      enchantments:
+        SHARPNESS: 6
+      attributes:
+        GENERIC_ATTACK_DAMAGE: 12.0
+    amethyst_pickaxe:
+      material: DIAMOND_PICKAXE
+      name: "&d&lAmethyst Pickaxe"
+      lore:
+        - "&7Piccone in ametista"
+        - "&7Usi rimanenti: &d%uses%"
+      enchantments:
+        EFFICIENCY: 7
+        FORTUNE: 4
+      attributes:
+        GENERIC_ATTACK_SPEED: 1.5
+
+# ---- Stats Wipe ----
+statswipe:
+  log-file: "statswipe-log.txt"
+  confirm-title: "&c&lSei sicuro?"
+  messages:
+    wiped: "&c&lTutte le statistiche sono state resettate!"
+    cancelled: "&7Operazione annullata."
+
+# ---- Lunar Client ----
+lunar:
+  server-name: "My SMP"
+  discord-app-id: ""
+
+# ---- Settings ----
+settings:
+  defaults:
+    chat: true
+    private-messages: true
+    tpa-requests: true
+    bounty-notifications: true
+    team-notifications: true
+    particles: true
+    kill-messages: true
+    sell-notifications: true
+
+# ---- Worth System ----
+worth:
+  items:
+    DIAMOND: 100.0
+    EMERALD: 75.0
+    GOLD_INGOT: 25.0
+    IRON_INGOT: 10.0
+    COAL: 3.0
+    LAPIS_LAZULI: 8.0
+    REDSTONE: 5.0
+    COPPER_INGOT: 4.0
+    NETHERITE_INGOT: 1000.0
+    ANCIENT_DEBRIS: 500.0
+    QUARTZ: 6.0
+    AMETHYST_SHARD: 15.0
+    OAK_LOG: 2.0
+    BIRCH_LOG: 2.0
+    SPRUCE_LOG: 2.0
+    DARK_OAK_LOG: 2.0
+    WHEAT: 1.0
+    CARROT: 1.0
+    POTATO: 1.0
+    BEETROOT: 1.5
+    MELON_SLICE: 0.5
+    PUMPKIN: 3.0
+    SUGAR_CANE: 2.0
+    CACTUS: 1.5
+    BLAZE_ROD: 20.0
+    ENDER_PEARL: 30.0
+    GUNPOWDER: 5.0
+    BONE: 3.0
+    STRING: 2.0
+    SPIDER_EYE: 4.0
+    ROTTEN_FLESH: 1.0
+    LEATHER: 5.0
+
+# ---- Teams ----
+teams:
+  max-members: 10
+  name-max-length: 16
+  home-cooldown-seconds: 60
+  messages:
+    created: "&#55FF55Team created!"
+    disbanded: "&#FF4444Team disbanded."
+    invited: "&#FFD700Invite sent!"
+    joined: "&#55FF55Joined the team!"
+    left: "&#8C8C8CYou left the team."
+    kicked: "&#FF4444You were kicked."
+
+# ---- Homes ----
+homes:
+  warmup-seconds: 3
+  cooldown-seconds: 30
+  limits:
+    default: 1
+    vip: 3
+    mvp: 5
+    admin: 10
+  messages:
+    set: "&#55FF55Home set!"
+    deleted: "&#55FF55Home deleted."
+    teleported: "&#55FF55Teleported to home!"
+    limit-reached: "&#FF4444Home limit reached!"
+
+# ---- Bounty ----
+bounty:
+  min-amount: 50
+  tax-percent: 10
+  messages:
+    placed: "&#55FF55Bounty placed!"
+    claimed: "&#55FF55Bounty claimed!"
+    broadcast-placed: "&#FF4444&l⚠ BOUNTY placed on %target%!"
+    broadcast-claimed: "&#55FF55&l⚔ BOUNTY CLAIMED on %target%!"
+
+# ---- Leaderboard ----
+leaderboard:
+  top-size: 10
+  refresh-seconds: 300
+
+# ---- Sell ----
+sell:
+  messages:
+    sold: "&#55FF55Items sold!"
+    no-items: "&#8C8C8CNo sellable items found."
+
+# ---- Shop ----
+shop:
+  messages:
+    bought: "&#55FF55Item purchased!"
+    sold: "&#55FF55Item sold!"
+    not-enough: "&#FF4444Not enough funds!"
+
+# ---- Billford ----
+billford:
+  rotation-hours: 6
+  active-trades: 3
+  messages:
+    new-trades: "&#FFD700&l⚡ BILLFORD | New trades available!"
+
+# ---- Kits ----
+kits:
+  auto-give-starter-on-first-join: true
+  starter-kit-id: "starter"
+  gui:
+    title: "&#FFD700&l⚡ Kits"
+  messages:
+    claimed: "&#55FF55You claimed the %kit% &#55FF55kit!"
+    not-found: "&#FF4444Kit &f%kit% &#FF4444not found!"
+    no-permission: "&#FF4444You don't have permission to claim this kit!"
+    already-claimed: "&#FF4444You have already claimed this one-time kit!"
+    cooldown: "&#FF4444Kit on cooldown! &f%time% &#FF4444remaining."
+    auto-starter: "&#55FF55You received the &#FFD700Starter Kit&#55FF55! Use &f/kit &#55FF55to view all kits."
+
+# ---- Ad System ----
+ad:
+  cooldown-seconds: 300
+  weights:
+    standard: 10
+    colored: 70
+    box: 20
+  box-separator: "&8&m                                                    "
+  styles:
+    standard:
+      - "[AD] ⚔ Join SmpUni on Minehut! Type /join SmpUni to play now!"
+      - "[AD] 🌍 Looking for a great SMP? SmpUni is waiting for you — /join SmpUni"
+      - "[AD] ⚡ SmpUni — The best SMP on Minehut. Come join us! /join SmpUni"
+      - "[AD] 🏆 Play with us on SmpUni! Connect via Minehut: /join SmpUni"
+      - "[AD] 🔥 SmpUni is LIVE on Minehut! Don't miss out — /join SmpUni"
+    colored:
+      - "&8[&c&lAD&8] &fLooking for an &a&lSMP&f? Join &b&lSmpUni&f on Minehut! &e/join SmpUni"
+      - "&8[&6&l★ AD ★&8] &fThe &d&lultimate SMP experience&f is on &b&lSmpUni&f — &e/join SmpUni"
+      - "&8[&b&lAD&8] &7» &fJoin &a&lSmpUni &ftoday on &9Minehut&f! &cClick or type &e/join SmpUni"
+      - "&8[&e&lAD&8] &f⚔ &6&lSmpUni &fis waiting for YOU! Best SMP on &9Minehut &f— &e/join SmpUni"
+      - "&8[&d&l✦ AD ✦&8] &fEscape the ordinary. &d&lSmpUni &fon Minehut is &aLIVE&f! &e/join SmpUni"
+    box:
+      - "&8[&6&l★ ADVERTISEMENT ★&8]\\n&fJoin &b&lSmpUni &f— The #1 SMP on &9Minehut&f!\\n&7Type &e/join SmpUni &7to connect now!"
+      - "&8[&c&l✦ AD ✦&8]\\n&fThe &a&lbest SMP experience &fon Minehut!\\n&fJoin &b&lSmpUni &fnow — &e/join SmpUni"
+      - "&8[&d&l★ SMPUNI ★&8]\\n&fYour next adventure starts here!\\n&e/join SmpUni &7on &9Minehut"
+  messages:
+    cooldown: "&cYou can use /ad again in &e%seconds% &cseconds."
+    confirmed: "&aThanks for advertising SmpUni! &7Next use in &e%minutes% minutes&7."
+

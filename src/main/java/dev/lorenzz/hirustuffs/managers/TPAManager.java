@@ -1,0 +1,202 @@
+package dev.lorenzz.hirustuffs.managers;
+
+import dev.lorenzz.hirustuffs.Hiru;
+import dev.lorenzz.hirustuffs.utils.Messages;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class TPAManager {
+
+    private static final double MOVEMENT_TOLERANCE_SQUARED = 0.25D;
+
+    private static TPAManager INSTANCE;
+
+    private final Hiru plugin;
+    private final Map<UUID, UUID> requests = new ConcurrentHashMap<>(); // target -> requester
+    private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, BukkitTask> expiryTasks = new ConcurrentHashMap<>();
+    private final Map<UUID, BukkitRunnable> pendingCountdowns = new ConcurrentHashMap<>();
+
+    public TPAManager(Hiru plugin) {
+        this.plugin = plugin;
+        INSTANCE = this;
+    }
+
+    public static TPAManager getInstance() {
+        return INSTANCE;
+    }
+
+    public boolean sendRequest(Player sender, Player target) {
+        int cooldown = plugin.getConfigFile().getInt("tpa.cooldown-seconds", 30);
+        int timeout = plugin.getConfigFile().getInt("tpa.timeout-seconds", 60);
+
+        if (!sender.hasPermission("hiru.tpa.bypasscooldown") && cooldowns.containsKey(sender.getUniqueId())) {
+            long remaining = (cooldowns.get(sender.getUniqueId()) - System.currentTimeMillis()) / 1000;
+            if (remaining > 0) {
+                String msg = plugin.getConfigFile().getString("tpa.messages.cooldown", "&cAttendi %seconds%s.")
+                        .replace("%seconds%", String.valueOf(remaining));
+                Messages.send(sender, msg);
+                return false;
+            }
+        }
+
+        requests.put(target.getUniqueId(), sender.getUniqueId());
+        cooldowns.put(sender.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
+
+        // Expiry task
+        BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (requests.remove(target.getUniqueId(), sender.getUniqueId())) {
+                String expiredMsg = plugin.getConfigFile().getString("tpa.messages.expired", "&7La richiesta TPA è scaduta.");
+                if (sender.isOnline()) Messages.send(sender, expiredMsg);
+                if (target.isOnline()) Messages.send(target, expiredMsg);
+            }
+            expiryTasks.remove(target.getUniqueId());
+        }, timeout * 20L);
+        expiryTasks.put(target.getUniqueId(), task);
+
+        return true;
+    }
+
+    public boolean acceptRequest(Player target) {
+        UUID requesterId = requests.remove(target.getUniqueId());
+        if (requesterId == null) return false;
+
+        cancelExpiry(target.getUniqueId());
+
+        Player requester = Bukkit.getPlayer(requesterId);
+        if (requester == null || !requester.isOnline()) return false;
+
+        int delay = plugin.getConfigFile().getInt("tpa.teleport-delay-seconds", 3);
+
+        // Bypass delay with permission
+        if (requester.hasPermission("hiru.tpa.bypassdelay") || delay <= 0) {
+            requester.teleportAsync(target.getLocation()).thenAccept(success -> {
+                if (success) {
+                    requester.playSound(requester.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+                    String msg = plugin.getConfigFile().getString("tpa.messages.teleported",
+                            "&7Teletrasportato da &b%player%&7!").replace("%player%", target.getName());
+                    Messages.send(requester, msg);
+                }
+            });
+            return true;
+        }
+
+        String teleportingMsg = plugin.getConfigFile().getString("tpa.messages.teleporting",
+                        "&7Teletrasporto tra &e%seconds% &7secondi... Non muoverti!")
+                .replace("%seconds%", String.valueOf(delay));
+        Messages.send(requester, teleportingMsg);
+
+        Location startLoc = requester.getLocation().clone();
+        UUID requesterUUID = requester.getUniqueId();
+
+        // Cancel any existing countdown for this player
+        BukkitRunnable existing = pendingCountdowns.remove(requesterUUID);
+        if (existing != null) existing.cancel();
+
+        BukkitRunnable countdownTask = new BukkitRunnable() {
+            int countdown = delay;
+
+            @Override
+            public void run() {
+                Player current = Bukkit.getPlayer(requesterUUID);
+                if (current == null || !current.isOnline()) {
+                    pendingCountdowns.remove(requesterUUID);
+                    cancel();
+                    return;
+                }
+
+                // Check if moved
+                if (hasMoved(startLoc, current.getLocation())) {
+                    pendingCountdowns.remove(requesterUUID);
+                    cancel();
+                    String movedMsg = plugin.getConfigFile().getString("tpa.messages.moved", "&cTi sei mosso! Teletrasporto annullato.");
+                    Messages.send(current, movedMsg);
+                    current.sendActionBar(Messages.colorComponent("&c✖ Teleport cancelled"));
+                    return;
+                }
+
+                if (countdown > 0) {
+                    current.playSound(current.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    String actionBar = plugin.getConfigFile().getString("tpa.messages.actionbar-countdown",
+                            "&e⏳ Teleporting in &c{seconds}s&e...").replace("{seconds}", String.valueOf(countdown));
+                    current.sendActionBar(Messages.colorComponent(actionBar));
+                    countdown--;
+                } else {
+                    pendingCountdowns.remove(requesterUUID);
+                    cancel();
+
+                    Player tgt = Bukkit.getPlayer(target.getUniqueId());
+                    Location teleportLoc = (tgt != null && tgt.isOnline()) ? tgt.getLocation() : target.getLocation();
+
+                    current.teleportAsync(teleportLoc).thenAccept(success -> {
+                        if (success) {
+                            Bukkit.getScheduler().runTask(plugin, () -> {
+                                current.playSound(current.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+                                String successBar = plugin.getConfigFile().getString("tpa.messages.actionbar-success",
+                                        "&a✔ Teleported to &b{player}").replace("{player}", target.getName());
+                                current.sendActionBar(Messages.colorComponent(successBar));
+                                String msg = plugin.getConfigFile().getString("tpa.messages.teleported",
+                                        "&7Teletrasportato da &b%player%&7!").replace("%player%", target.getName());
+                                Messages.send(current, msg);
+                            });
+                        }
+                    });
+                }
+            }
+        };
+
+        pendingCountdowns.put(requesterUUID, countdownTask);
+        countdownTask.runTaskTimer(plugin, 0L, 20L);
+
+        return true;
+    }
+
+    public boolean denyRequest(Player target) {
+        UUID requesterId = requests.remove(target.getUniqueId());
+        if (requesterId == null) return false;
+        cancelExpiry(target.getUniqueId());
+
+        // Cancel any pending countdown for the requester
+        if (requesterId != null) {
+            BukkitRunnable countdown = pendingCountdowns.remove(requesterId);
+            if (countdown != null) countdown.cancel();
+        }
+        return true;
+    }
+
+    public boolean hasPendingRequest(UUID targetId) {
+        return requests.containsKey(targetId);
+    }
+
+    public UUID getRequester(UUID targetId) {
+        return requests.get(targetId);
+    }
+
+    private void cancelExpiry(UUID targetId) {
+        BukkitTask task = expiryTasks.remove(targetId);
+        if (task != null) task.cancel();
+    }
+
+    private boolean hasMoved(Location origin, Location current) {
+        if (origin == null || current == null) return true;
+        if (origin.getWorld() == null || current.getWorld() == null) return true;
+        if (!Objects.equals(origin.getWorld(), current.getWorld())) return true;
+        return origin.distanceSquared(current) > MOVEMENT_TOLERANCE_SQUARED;
+    }
+
+    public void shutdown() {
+        expiryTasks.values().forEach(BukkitTask::cancel);
+        expiryTasks.clear();
+        pendingCountdowns.values().forEach(BukkitRunnable::cancel);
+        pendingCountdowns.clear();
+        requests.clear();
+        cooldowns.clear();
+    }
+}

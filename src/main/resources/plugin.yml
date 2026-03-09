@@ -1,0 +1,100 @@
+name: Hiru-Stuffs
+version: '${version}'
+main: dev.lorenzz.hirustuffs.Hiru
+api-version: '1.20'
+authors: [lorenzz]
+depend: [Vault]
+softdepend: [PlaceholderAPI, LuckPerms]
+description: SMP Core Plugin
+
+permissions:
+  hiru.admin:
+    description: Full admin access
+    default: op
+  hiru.media:
+    description: Media rank access
+    default: false
+  hiru.tpa:
+    description: TPA access
+    default: true
+  hiru.clearlag:
+    description: Clearlag access
+    default: op
+  hiru.vip:
+    description: VIP access
+    default: false
+  hiru.balance:
+    description: Balance check
+    default: true
+  hiru.pay:
+    description: Pay players
+    default: true
+  hiru.shards:
+    description: Check shards
+    default: true
+  hiru.spawn:
+    description: Teleport to spawn
+    default: true
+  hiru.profile:
+    description: View profiles
+    default: true
+  hiru.rtp:
+    description: Random teleport
+    default: true
+  hiru.afk:
+    description: Toggle AFK
+    default: true
+  hiru.rules:
+    description: View rules
+    default: true
+  hiru.info:
+    description: View info
+    default: true
+  hiru.giveamethyst:
+    description: Give amethyst tools
+    default: op
+  hiru.settings:
+    description: Open settings menu
+    default: true
+  hiru.home:
+    description: Use home system
+    default: true
+  hiru.bounty:
+    description: Use bounty system
+    default: true
+  hiru.leaderboard:
+    description: View leaderboards
+    default: true
+  hiru.sell:
+    description: Sell items
+    default: true
+  hiru.shop:
+    description: Use shop
+    default: true
+  hiru.billford:
+    description: Use Billford trader
+    default: true
+  hiru.homes.vip:
+    description: VIP home limit
+    default: false
+  hiru.homes.mvp:
+    description: MVP home limit
+    default: false
+  hiru.homes.admin:
+    description: Admin home limit
+    default: op
+  hiru.kit:
+    description: Use kit system
+    default: true
+  hiru.kit.starter:
+    description: Claim the starter kit
+    default: true
+  hiru.announce:
+    description: Manage announcements
+    default: op
+  hiru.ad:
+    description: Use /ad command
+    default: true
+  hiru.ad.bypass:
+    description: Bypass ad cooldown
+    default: op

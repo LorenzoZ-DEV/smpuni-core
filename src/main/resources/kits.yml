@@ -1,0 +1,45 @@
+# ==========================================
+#        HIRU - Kit Definitions
+#           (kits.yml)
+# ==========================================
+# Each kit is defined under the 'kits' section.
+# Items support: material, amount, name, lore, enchantments,
+# stored-enchantments (for enchanted books), leather-color.
+
+kits:
+  starter:
+    display-name: "&#55FF55&lStarter Kit"
+    cooldown: 0
+    one-time: true
+    permission: "hiru.kit.starter"
+    icon: CHEST
+    lore:
+      - "&7A basic kit for new players."
+      - "&7Contains starter gear and food."
+      - ""
+      - "&#55FF55&l➥ Click to claim"
+    items:
+      sword:
+        material: IRON_SWORD
+        amount: 1
+        name: "&#AAAAAA&lStarter Sword"
+      food:
+        material: BREAD
+        amount: 64
+      helmet:
+        material: IRON_HELMET
+        amount: 1
+      chestplate:
+        material: IRON_CHESTPLATE
+        amount: 1
+      leggings:
+        material: IRON_LEGGINGS
+        amount: 1
+      boots:
+        material: IRON_BOOTS
+        amount: 1
+      book:
+        material: ENCHANTED_BOOK
+        amount: 1
+        stored-enchantments:
+          sharpness: 1
