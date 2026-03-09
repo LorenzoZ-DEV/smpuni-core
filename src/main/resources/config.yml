@@ -497,28 +497,17 @@ kits:
 # ---- Ad System ----
 ad:
   cooldown-seconds: 300
-  weights:
-    standard: 10
-    colored: 70
-    box: 20
-  box-separator: "&8&m                                                    "
-  styles:
-    standard:
-      - "[AD] ⚔ Join SmpUni on Minehut! Type /join SmpUni to play now!"
-      - "[AD] 🌍 Looking for a great SMP? SmpUni is waiting for you — /join SmpUni"
-      - "[AD] ⚡ SmpUni — The best SMP on Minehut. Come join us! /join SmpUni"
-      - "[AD] 🏆 Play with us on SmpUni! Connect via Minehut: /join SmpUni"
-      - "[AD] 🔥 SmpUni is LIVE on Minehut! Don't miss out — /join SmpUni"
-    colored:
-      - "&8[&c&lAD&8] &fLooking for an &a&lSMP&f? Join &b&lSmpUni&f on Minehut! &e/join SmpUni"
-      - "&8[&6&l★ AD ★&8] &fThe &d&lultimate SMP experience&f is on &b&lSmpUni&f — &e/join SmpUni"
-      - "&8[&b&lAD&8] &7» &fJoin &a&lSmpUni &ftoday on &9Minehut&f! &cClick or type &e/join SmpUni"
-      - "&8[&e&lAD&8] &f⚔ &6&lSmpUni &fis waiting for YOU! Best SMP on &9Minehut &f— &e/join SmpUni"
-      - "&8[&d&l✦ AD ✦&8] &fEscape the ordinary. &d&lSmpUni &fon Minehut is &aLIVE&f! &e/join SmpUni"
-    box:
-      - "&8[&6&l★ ADVERTISEMENT ★&8]\\n&fJoin &b&lSmpUni &f— The #1 SMP on &9Minehut&f!\\n&7Type &e/join SmpUni &7to connect now!"
-      - "&8[&c&l✦ AD ✦&8]\\n&fThe &a&lbest SMP experience &fon Minehut!\\n&fJoin &b&lSmpUni &fnow — &e/join SmpUni"
-      - "&8[&d&l★ SMPUNI ★&8]\\n&fYour next adventure starts here!\\n&e/join SmpUni &7on &9Minehut"
+  messages-list:
+    - "Join SmpUni on Minehut! Type /join SmpUni to play now!"
+    - "Looking for a great SMP? SmpUni is waiting for you — /join SmpUni"
+    - "SmpUni — The best SMP on Minehut. Come join us! /join SmpUni"
+    - "Play with us on SmpUni! Connect via Minehut: /join SmpUni"
+    - "SmpUni is LIVE on Minehut! Don't miss out — /join SmpUni"
+    - "The ultimate SMP experience is on SmpUni — /join SmpUni"
+    - "Your next adventure starts here! /join SmpUni on Minehut"
+    - "Escape the ordinary. SmpUni on Minehut is LIVE! /join SmpUni"
+    - "Best SMP on Minehut — SmpUni is waiting for YOU! /join SmpUni"
+    - "Join the community! SmpUni on Minehut — /join SmpUni"
   messages:
     cooldown: "&cYou can use /ad again in &e%seconds% &cseconds."
     confirmed: "&aThanks for advertising SmpUni! &7Next use in &e%minutes% minutes&7."
