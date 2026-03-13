@@ -29,14 +29,12 @@ public class KitListener implements Listener {
         boolean autoGiveStarter = plugin.getConfigFile().getBoolean("kits.auto-give-starter-on-first-join", true);
         if (!autoGiveStarter) return;
 
+        // Only give the starter kit on the very FIRST join ever
+        if (player.hasPlayedBefore()) return;
+
         String starterKitId = plugin.getConfigFile().getString("kits.starter-kit-id", "starter");
         Kit starterKit = kitManager.getKit(starterKitId);
         if (starterKit == null) return;
-
-        // Only give if not already claimed (one-time)
-        if (playerData.hasClaimedOneTime(player.getUniqueId(), starterKit.getId())) {
-            return;
-        }
 
         // Delay 5 ticks to ensure player is fully loaded
         org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -56,10 +54,11 @@ public class KitListener implements Listener {
                 }
             }
 
+            // Record the claim so the cooldown starts
             playerData.recordClaim(player.getUniqueId(), starterKit);
 
             String msg = plugin.getConfigFile().getString("kits.messages.auto-starter",
-                    "&#55FF55You received the &#FFD700Starter Kit&#55FF55! Use &f/kit &#55FF55to view all kits.");
+                    "&#55FF55You received the &#FFD700Starter Kit&#55FF55! Use &f/kit &#55FF55to claim it again later.");
             dev.lorenzz.hirustuffs.utils.Messages.send(player, msg);
 
         }, 5L);

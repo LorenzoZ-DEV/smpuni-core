@@ -80,44 +80,4 @@ public class EconomyCommands {
         if (top.isEmpty()) Messages.sendRaw(sender, "&7Nessun dato disponibile.");
         Messages.sendRaw(sender, plugin.getConfigFile().getString("economy.messages.baltop-footer", "&8&m---------------------------------"));
     }
-
-    // /eco give|take|set
-    @Command(name = "eco", aliases = {"economy"}, description = "Gestione economia")
-    @Permission("hiru.admin")
-    public void ecoRoot(@Sender CommandSender sender) {
-        Messages.send(sender, "&cUso: /eco <give|take|set> <giocatore> <importo>");
-    }
-
-    @Subcommand(name = "give", description = "Dai soldi")
-    @Permission("hiru.admin")
-    public void ecoGive(@Sender CommandSender sender, @Named("giocatore") OfflinePlayer target, @Range(min = 1) @Named("importo") double amount) {
-        EconomyManager eco = EconomyManager.getInstance();
-        String symbol = eco.getCurrencySymbol();
-        eco.addBalance(target.getUniqueId(), amount);
-        String name = target.getName() != null ? target.getName() : target.getUniqueId().toString().substring(0, 8);
-        Messages.send(sender, plugin.getConfigFile().getString("economy.messages.eco-give", "&7Dati %symbol%%amount% a %player%.")
-                .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", name));
-    }
-
-    @Subcommand(name = "take", description = "Togli soldi")
-    @Permission("hiru.admin")
-    public void ecoTake(@Sender CommandSender sender, @Named("giocatore") OfflinePlayer target, @Range(min = 1) @Named("importo") double amount) {
-        EconomyManager eco = EconomyManager.getInstance();
-        String symbol = eco.getCurrencySymbol();
-        eco.removeBalance(target.getUniqueId(), amount);
-        String name = target.getName() != null ? target.getName() : target.getUniqueId().toString().substring(0, 8);
-        Messages.send(sender, plugin.getConfigFile().getString("economy.messages.eco-take", "&7Rimossi %symbol%%amount% da %player%.")
-                .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", name));
-    }
-
-    @Subcommand(name = "set", description = "Imposta saldo")
-    @Permission("hiru.admin")
-    public void ecoSet(@Sender CommandSender sender, @Named("giocatore") OfflinePlayer target, @Range(min = 0) @Named("importo") double amount) {
-        EconomyManager eco = EconomyManager.getInstance();
-        String symbol = eco.getCurrencySymbol();
-        eco.setBalance(target.getUniqueId(), amount);
-        String name = target.getName() != null ? target.getName() : target.getUniqueId().toString().substring(0, 8);
-        Messages.send(sender, plugin.getConfigFile().getString("economy.messages.eco-set", "&7Saldo di %player% impostato a %symbol%%amount%.")
-                .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", name));
-    }
 }

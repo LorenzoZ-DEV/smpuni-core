@@ -43,19 +43,15 @@ public class GlobalListener implements Listener {
             AFKManager.getInstance().playerJoin(player.getUniqueId());
         }
 
-        // Teleport to spawn on join
-        if (SpawnManager.getInstance() != null) {
-            boolean teleportOnJoin = plugin.getConfigFile().getBoolean("spawn.teleport-on-join", true);
-            if (teleportOnJoin) {
-                Location spawnLoc = SpawnManager.getInstance().getDefaultSpawn();
-                if (spawnLoc != null) {
-                    // Delay 1 tick to ensure the player is fully loaded into the world
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        if (player.isOnline()) {
-                            player.teleportAsync(spawnLoc);
-                        }
-                    }, 1L);
-                }
+        // Teleport to spawn only on first join; returning players keep their logout position
+        if (SpawnManager.getInstance() != null && !player.hasPlayedBefore()) {
+            Location spawnLoc = SpawnManager.getInstance().getDefaultSpawn();
+            if (spawnLoc != null) {
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (player.isOnline()) {
+                        player.teleportAsync(spawnLoc);
+                    }
+                }, 1L);
             }
         }
         player.sendMessage(Messages.color("""
@@ -67,6 +63,28 @@ public class GlobalListener implements Listener {
                 &fᴛʜɪѕ ɢᴀᴍᴇᴍᴏᴅᴇ ɪѕ &#0053ff ᴅᴇᴠᴇʟᴏᴘᴇᴅ &fᴡɪᴛʜᴏᴜᴛ &#0053ffᴠɪᴘ ʀᴀɴᴋѕ
                 &fᴏᴜʀ ɢᴏᴀʟ ɪѕ ɴᴏᴛ ᴛᴏ ᴍᴀᴋᴇ ᴛʜᴇ ѕᴇʀᴠᴇʀ &#0053ffᴘᴀʏ ᴛᴏ ᴡɪɴ  
                 """));
+
+        // Changelog — sent delayed so it appears after the welcome message
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!player.isOnline()) return;
+            player.sendMessage(Messages.color(""));
+            player.sendMessage(Messages.color("&8&m                                                    "));
+            player.sendMessage(Messages.color("&#FFD700&l  ⚡ CHANGELOG &8— &#8C8C8CMarch 11, 2026"));
+            player.sendMessage(Messages.color(""));
+            player.sendMessage(Messages.color("&#55FF55  ✔ &fKit system reworked — claim every &b5 minutes"));
+            player.sendMessage(Messages.color("&#55FF55  ✔ &fHome saving improved — no more lost homes"));
+            player.sendMessage(Messages.color("&#55FF55  ✔ &fAdded &b/order &fcommand — experimental, try it out!"));
+            player.sendMessage(Messages.color("&#55FF55  ✔ &fFixed kit auto-give on relog"));
+            player.sendMessage(Messages.color("&#4FC3F7  ★ &fNEW: &b/skills &f— Skill tree to boost your progression!"));
+            player.sendMessage(Messages.color("&#4FC3F7  ★ &fNEW: &b/rewards &f— Playtime rewards (AFK doesn't count!)"));
+            player.sendMessage(Messages.color("&#4FC3F7  ★ &fNEW: &b/clearchat &f— Staff can now clear the chat"));
+            player.sendMessage(Messages.color("&#4FC3F7  ★ &fShop & Prices expanded with 100+ items!"));
+            player.sendMessage(Messages.color("&#4FC3F7  ★ &fNEW: &b/back &f— Return to your death location!"));
+            player.sendMessage(Messages.color(""));
+            player.sendMessage(Messages.color("&#8C8C8C  Type &f/help &#8C8C8Cto see all available commands!"));
+            player.sendMessage(Messages.color("&8&m                                                    "));
+            player.sendMessage(Messages.color(""));
+        }, 40L); // 2 second delay
     }
 
     @EventHandler

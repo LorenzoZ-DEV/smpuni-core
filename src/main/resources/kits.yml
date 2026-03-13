@@ -9,8 +9,8 @@
 kits:
   starter:
     display-name: "&#55FF55&lStarter Kit"
-    cooldown: 0
-    one-time: true
+    cooldown: 300
+    one-time: false
     permission: "hiru.kit.starter"
     icon: CHEST
     lore:

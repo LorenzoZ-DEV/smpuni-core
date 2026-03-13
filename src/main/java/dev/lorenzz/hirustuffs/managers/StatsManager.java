@@ -134,6 +134,11 @@ public class StatsManager {
     }
 
     public int getPlaytimeSeconds(UUID uuid) {
+        // Prefer PlaytimeRewardsManager (tracks active playtime, excludes AFK)
+        PlaytimeRewardsManager prm = PlaytimeRewardsManager.getInstance();
+        if (prm != null) {
+            return (int) prm.getActivePlaytimeSeconds(uuid);
+        }
         int stored = getStat(uuid, "playtime");
         if (playtimeStart.containsKey(uuid)) {
             stored += (int) ((System.currentTimeMillis() - playtimeStart.get(uuid)) / 1000);
@@ -142,6 +147,11 @@ public class StatsManager {
     }
 
     public String getFormattedPlaytime(UUID uuid) {
+        // Prefer PlaytimeRewardsManager (tracks active playtime, excludes AFK)
+        PlaytimeRewardsManager prm = PlaytimeRewardsManager.getInstance();
+        if (prm != null) {
+            return prm.getFormattedActivePlaytime(uuid);
+        }
         int total = getPlaytimeSeconds(uuid);
         int hours = total / 3600;
         int minutes = (total % 3600) / 60;

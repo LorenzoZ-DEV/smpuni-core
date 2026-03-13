@@ -1,13 +1,13 @@
 plugins {
     java
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.github.goooler.shadow") version "8.1.8"
 }
 
 group = "dev.lorenzz"
-version = "1.0.0"
+version = "1.0.1"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 repositories {
@@ -25,13 +25,20 @@ repositories {
         name = "reposiliteRepositoryReleases"
         url = uri("https://repo.lorenzzzz.xyz/releases")
     }
+    maven {
+        name = "reposiliteRepositoryPrivate"
+        url = uri("https://repo.lorenzzzz.xyz/private")
+        credentials {
+            username = project.findProperty("lorenzRepoUser") as String? ?: System.getenv("REPO_USER")
+            password = project.findProperty("lorenzRepoPass") as String? ?: System.getenv("REPO_PASS")
+        }
+    }
     maven("https://libraries.minecraft.net")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven {
         name = "lunarclient"
         url = uri("https://repo.lunarclient.dev")
     }
-    maven("https://repo.luckperms.net/")
 }
 
 dependencies {
@@ -51,6 +58,10 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.11.7")
     compileOnly("net.luckperms:api:5.4")
     compileOnly("com.lunarclient:apollo-api:1.2.1")
+    implementation("dev.lorenzz.libs:discord-api-spigot:1.0.0-SNAPSHOT")
+    implementation("dev.lorenzz.libs:discord-api-common:1.0.0-SNAPSHOT")
+
+
 
     // Shaded libraries
     implementation("net.j4c0b3y:MenuAPI-core:1.5.5")
@@ -67,6 +78,7 @@ tasks {
         relocate("org.sqlite", "dev.lorenzz.hiru.libs.sqlite")
         relocate("net.j4c0b3y", "dev.lorenzz.hiru.libs.menuapi")
         relocate("com.cryptomorin.xseries", "dev.lorenzz.hiru.libs.xseries")
+        relocate("dev.lorenzz.libs.discord", "dev.lorenzz.hiru.libs.discord")
     }
     build {
         dependsOn(shadowJar)

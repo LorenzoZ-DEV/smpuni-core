@@ -90,7 +90,7 @@ public class TeamsManager {
                     UUID memberId = UUID.fromString(uuid);
                     Role role = Role.valueOf(ms.getString(uuid, "MEMBER"));
                     team.getMembers().put(memberId, role);
-                    playerTeams.put(memberId, name);
+                    playerTeams.put(memberId, name.toLowerCase());
                 }
             }
             teams.put(name.toLowerCase(), team);

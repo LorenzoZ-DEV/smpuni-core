@@ -227,8 +227,8 @@ public class KitManager {
         // Starter kit
         String base = "kits.starter";
         kitsConfig.set(base + ".display-name", "&#55FF55&lStarter Kit");
-        kitsConfig.set(base + ".cooldown", 0);
-        kitsConfig.set(base + ".one-time", true);
+        kitsConfig.set(base + ".cooldown", 300);
+        kitsConfig.set(base + ".one-time", false);
         kitsConfig.set(base + ".permission", "hiru.kit.starter");
         kitsConfig.set(base + ".icon", "CHEST");
         kitsConfig.set(base + ".lore", Arrays.asList(

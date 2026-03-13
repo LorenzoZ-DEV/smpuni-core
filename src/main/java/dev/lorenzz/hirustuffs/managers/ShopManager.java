@@ -45,40 +45,137 @@ public class ShopManager {
 
     private void createDefaults() {
         YamlConfiguration defaults = new YamlConfiguration();
-        // Overworld
+
+        // ── Overworld Blocks ──
         defaults.set("categories.overworld.display-name", "&#55FF55&lOverworld");
         defaults.set("categories.overworld.icon", "GRASS_BLOCK");
-        defaults.set("categories.overworld.items.OAK_LOG.buy", 10.0);
-        defaults.set("categories.overworld.items.OAK_LOG.sell", 5.0);
-        defaults.set("categories.overworld.items.OAK_LOG.currency", "MONEY");
-        defaults.set("categories.overworld.items.COBBLESTONE.buy", 5.0);
-        defaults.set("categories.overworld.items.COBBLESTONE.sell", 2.0);
-        defaults.set("categories.overworld.items.COBBLESTONE.currency", "MONEY");
-        defaults.set("categories.overworld.items.IRON_INGOT.buy", 50.0);
-        defaults.set("categories.overworld.items.IRON_INGOT.sell", 25.0);
-        defaults.set("categories.overworld.items.IRON_INGOT.currency", "MONEY");
-        defaults.set("categories.overworld.items.DIAMOND.buy", 500.0);
-        defaults.set("categories.overworld.items.DIAMOND.sell", 250.0);
-        defaults.set("categories.overworld.items.DIAMOND.currency", "MONEY");
+        addItem(defaults, "overworld", "OAK_LOG", 10, 5, "MONEY");
+        addItem(defaults, "overworld", "BIRCH_LOG", 10, 5, "MONEY");
+        addItem(defaults, "overworld", "SPRUCE_LOG", 10, 5, "MONEY");
+        addItem(defaults, "overworld", "DARK_OAK_LOG", 12, 6, "MONEY");
+        addItem(defaults, "overworld", "COBBLESTONE", 5, 2, "MONEY");
+        addItem(defaults, "overworld", "STONE", 8, 3, "MONEY");
+        addItem(defaults, "overworld", "SAND", 5, 2, "MONEY");
+        addItem(defaults, "overworld", "GRAVEL", 5, 2, "MONEY");
+        addItem(defaults, "overworld", "CLAY_BALL", 8, 4, "MONEY");
+        addItem(defaults, "overworld", "GLASS", 6, 3, "MONEY");
+        addItem(defaults, "overworld", "OBSIDIAN", 75, 30, "MONEY");
 
-        // Nether
+        // ── Ores & Minerals ──
+        defaults.set("categories.ores.display-name", "&#FFD700&lOres & Minerals");
+        defaults.set("categories.ores.icon", "DIAMOND");
+        addItem(defaults, "ores", "COAL", 15, 6, "MONEY");
+        addItem(defaults, "ores", "IRON_INGOT", 50, 25, "MONEY");
+        addItem(defaults, "ores", "GOLD_INGOT", 100, 50, "MONEY");
+        addItem(defaults, "ores", "DIAMOND", 500, 250, "MONEY");
+        addItem(defaults, "ores", "EMERALD", 400, 200, "MONEY");
+        addItem(defaults, "ores", "LAPIS_LAZULI", 30, 15, "MONEY");
+        addItem(defaults, "ores", "REDSTONE", 20, 10, "MONEY");
+        addItem(defaults, "ores", "COPPER_INGOT", 15, 8, "MONEY");
+        addItem(defaults, "ores", "QUARTZ", 25, 12, "MONEY");
+        addItem(defaults, "ores", "AMETHYST_SHARD", 60, 30, "MONEY");
+        addItem(defaults, "ores", "NETHERITE_INGOT", 5000, 2500, "MONEY");
+        addItem(defaults, "ores", "ANCIENT_DEBRIS", 2500, 1250, "MONEY");
+
+        // ── Farming ──
+        defaults.set("categories.farming.display-name", "&#55FF55&lFarming");
+        defaults.set("categories.farming.icon", "WHEAT");
+        addItem(defaults, "farming", "WHEAT", 5, 2, "MONEY");
+        addItem(defaults, "farming", "CARROT", 5, 2, "MONEY");
+        addItem(defaults, "farming", "POTATO", 5, 2, "MONEY");
+        addItem(defaults, "farming", "BEETROOT", 8, 3, "MONEY");
+        addItem(defaults, "farming", "MELON_SLICE", 3, 1, "MONEY");
+        addItem(defaults, "farming", "PUMPKIN", 15, 6, "MONEY");
+        addItem(defaults, "farming", "SUGAR_CANE", 10, 4, "MONEY");
+        addItem(defaults, "farming", "CACTUS", 8, 3, "MONEY");
+        addItem(defaults, "farming", "SWEET_BERRIES", 6, 2, "MONEY");
+        addItem(defaults, "farming", "COCOA_BEANS", 10, 4, "MONEY");
+        addItem(defaults, "farming", "BAMBOO", 3, 1, "MONEY");
+        addItem(defaults, "farming", "KELP", 3, 1, "MONEY");
+
+        // ── Food ──
+        defaults.set("categories.food.display-name", "&#FF8B76&lFood");
+        defaults.set("categories.food.icon", "COOKED_BEEF");
+        addItem(defaults, "food", "BREAD", 10, 4, "MONEY");
+        addItem(defaults, "food", "COOKED_BEEF", 20, 10, "MONEY");
+        addItem(defaults, "food", "COOKED_PORKCHOP", 20, 10, "MONEY");
+        addItem(defaults, "food", "COOKED_CHICKEN", 15, 6, "MONEY");
+        addItem(defaults, "food", "GOLDEN_APPLE", 1000, 500, "MONEY");
+        addItem(defaults, "food", "GOLDEN_CARROT", 200, 100, "MONEY");
+        addItem(defaults, "food", "CAKE", 80, 30, "MONEY");
+
+        // ── Mob Drops ──
+        defaults.set("categories.mob_drops.display-name", "&#FF4444&lMob Drops");
+        defaults.set("categories.mob_drops.icon", "BONE");
+        addItem(defaults, "mob_drops", "BONE", 15, 6, "MONEY");
+        addItem(defaults, "mob_drops", "STRING", 10, 4, "MONEY");
+        addItem(defaults, "mob_drops", "GUNPOWDER", 25, 10, "MONEY");
+        addItem(defaults, "mob_drops", "SPIDER_EYE", 20, 8, "MONEY");
+        addItem(defaults, "mob_drops", "ROTTEN_FLESH", 5, 2, "MONEY");
+        addItem(defaults, "mob_drops", "LEATHER", 25, 10, "MONEY");
+        addItem(defaults, "mob_drops", "SLIME_BALL", 40, 16, "MONEY");
+        addItem(defaults, "mob_drops", "GHAST_TEAR", 250, 100, "MONEY");
+        addItem(defaults, "mob_drops", "PHANTOM_MEMBRANE", 100, 40, "MONEY");
+        addItem(defaults, "mob_drops", "INK_SAC", 15, 6, "MONEY");
+        addItem(defaults, "mob_drops", "GLOW_INK_SAC", 50, 20, "MONEY");
+
+        // ── Nether ──
         defaults.set("categories.nether.display-name", "&#FF4444&lNether");
         defaults.set("categories.nether.icon", "NETHERRACK");
-        defaults.set("categories.nether.items.BLAZE_ROD.buy", 100.0);
-        defaults.set("categories.nether.items.BLAZE_ROD.sell", 50.0);
-        defaults.set("categories.nether.items.BLAZE_ROD.currency", "SHARDS");
-        defaults.set("categories.nether.items.NETHER_WART.buy", 20.0);
-        defaults.set("categories.nether.items.NETHER_WART.sell", 10.0);
-        defaults.set("categories.nether.items.NETHER_WART.currency", "SHARDS");
+        addItem(defaults, "nether", "BLAZE_ROD", 100, 50, "SHARDS");
+        addItem(defaults, "nether", "NETHER_WART", 20, 10, "SHARDS");
+        addItem(defaults, "nether", "MAGMA_CREAM", 60, 30, "SHARDS");
+        addItem(defaults, "nether", "GHAST_TEAR", 200, 100, "SHARDS");
+        addItem(defaults, "nether", "GLOWSTONE", 40, 20, "SHARDS");
+        addItem(defaults, "nether", "CRIMSON_STEM", 20, 10, "SHARDS");
+        addItem(defaults, "nether", "WARPED_STEM", 20, 10, "SHARDS");
+        addItem(defaults, "nether", "CRYING_OBSIDIAN", 100, 50, "SHARDS");
+        addItem(defaults, "nether", "WITHER_SKELETON_SKULL", 2000, 1000, "SHARDS");
 
-        // End
+        // ── End ──
         defaults.set("categories.end.display-name", "&#CE93D8&lThe End");
         defaults.set("categories.end.icon", "END_STONE");
-        defaults.set("categories.end.items.ENDER_PEARL.buy", 200.0);
-        defaults.set("categories.end.items.ENDER_PEARL.sell", 100.0);
-        defaults.set("categories.end.items.ENDER_PEARL.currency", "SHARDS");
+        addItem(defaults, "end", "ENDER_PEARL", 200, 100, "SHARDS");
+        addItem(defaults, "end", "END_STONE", 15, 6, "SHARDS");
+        addItem(defaults, "end", "CHORUS_FRUIT", 40, 20, "SHARDS");
+        addItem(defaults, "end", "PURPUR_BLOCK", 30, 15, "SHARDS");
+        addItem(defaults, "end", "SHULKER_SHELL", 500, 250, "SHARDS");
+        addItem(defaults, "end", "DRAGON_BREATH", 400, 200, "SHARDS");
+        addItem(defaults, "end", "ELYTRA", 10000, 5000, "SHARDS");
+
+        // ── Redstone ──
+        defaults.set("categories.redstone.display-name", "&#FF4444&lRedstone");
+        defaults.set("categories.redstone.icon", "REDSTONE");
+        addItem(defaults, "redstone", "REDSTONE", 20, 10, "MONEY");
+        addItem(defaults, "redstone", "REPEATER", 40, 20, "MONEY");
+        addItem(defaults, "redstone", "COMPARATOR", 60, 30, "MONEY");
+        addItem(defaults, "redstone", "PISTON", 80, 40, "MONEY");
+        addItem(defaults, "redstone", "STICKY_PISTON", 120, 60, "MONEY");
+        addItem(defaults, "redstone", "HOPPER", 150, 75, "MONEY");
+        addItem(defaults, "redstone", "OBSERVER", 100, 50, "MONEY");
+        addItem(defaults, "redstone", "TNT", 120, 60, "MONEY");
+        addItem(defaults, "redstone", "DROPPER", 50, 25, "MONEY");
+        addItem(defaults, "redstone", "DISPENSER", 60, 30, "MONEY");
+
+        // ── Combat ──
+        defaults.set("categories.combat.display-name", "&#FF6B6B&lCombat");
+        defaults.set("categories.combat.icon", "DIAMOND_SWORD");
+        addItem(defaults, "combat", "ARROW", 5, 2, "MONEY");
+        addItem(defaults, "combat", "BOW", 100, 40, "MONEY");
+        addItem(defaults, "combat", "CROSSBOW", 150, 60, "MONEY");
+        addItem(defaults, "combat", "SHIELD", 80, 30, "MONEY");
+        addItem(defaults, "combat", "TOTEM_OF_UNDYING", 5000, 2500, "SHARDS");
+        addItem(defaults, "combat", "GOLDEN_APPLE", 1000, 500, "MONEY");
+        addItem(defaults, "combat", "ENCHANTED_GOLDEN_APPLE", 25000, 12500, "SHARDS");
 
         try { defaults.save(dataFile); } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    private void addItem(YamlConfiguration config, String category, String material, double buy, double sell, String currency) {
+        String path = "categories." + category + ".items." + material;
+        config.set(path + ".buy", buy);
+        config.set(path + ".sell", sell);
+        config.set(path + ".currency", currency);
     }
 
     private void loadAll() {

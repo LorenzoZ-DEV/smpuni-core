@@ -98,3 +98,36 @@ permissions:
   hiru.ad.bypass:
     description: Bypass ad cooldown
     default: op
+  hiru.broadcast:
+    description: Send broadcast messages
+    default: op
+  hiru.report:
+    description: Report a player
+    default: true
+  hiru.report.receive:
+    description: Receive report notifications
+    default: op
+  hiru.report.bypass:
+    description: Bypass report cooldown
+    default: op
+  hiru.request:
+    description: Send a request to staff
+    default: true
+  hiru.request.receive:
+    description: Receive request notifications
+    default: op
+  hiru.request.bypass:
+    description: Bypass request cooldown
+    default: op
+  hiru.clearchat:
+    description: Clear the server chat
+    default: op
+  hiru.skills:
+    description: Access skill tree
+    default: true
+  hiru.skills.reset:
+    description: Reset skill tree
+    default: true
+  hiru.rewards:
+    description: View playtime rewards
+    default: true

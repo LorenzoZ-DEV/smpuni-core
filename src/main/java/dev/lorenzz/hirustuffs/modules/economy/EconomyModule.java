@@ -18,6 +18,7 @@ public class EconomyModule extends AbstractModule {
         economyManager.init();
 
         plugin.getCommandManager().register(new EconomyCommands());
+        plugin.getCommandManager().register(new EcoAdminCommands());
 
         logger.info("[Hiru] EconomyModule loaded - Vault hooked.");
     }

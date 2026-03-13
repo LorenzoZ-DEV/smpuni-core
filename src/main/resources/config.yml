@@ -33,6 +33,13 @@ modules:
   kits: true
   announcements: true
   ad: true
+  broadcast: true
+  report: true
+  request: true
+  clearchat: true
+  skilltree: true
+  playtime-rewards: true
+  back: true
 
 # ---- Database ----
 database:
@@ -384,6 +391,7 @@ settings:
 # ---- Worth System ----
 worth:
   items:
+    # ── Ores & Ingots ──
     DIAMOND: 100.0
     EMERALD: 75.0
     GOLD_INGOT: 25.0
@@ -396,10 +404,31 @@ worth:
     ANCIENT_DEBRIS: 500.0
     QUARTZ: 6.0
     AMETHYST_SHARD: 15.0
+    RAW_IRON: 8.0
+    RAW_GOLD: 20.0
+    RAW_COPPER: 3.0
+    DIAMOND_BLOCK: 900.0
+    EMERALD_BLOCK: 675.0
+    GOLD_BLOCK: 225.0
+    IRON_BLOCK: 90.0
+    NETHERITE_BLOCK: 9000.0
+    LAPIS_BLOCK: 72.0
+    REDSTONE_BLOCK: 45.0
+    COPPER_BLOCK: 36.0
+    COAL_BLOCK: 27.0
+    # ── Logs & Wood ──
     OAK_LOG: 2.0
     BIRCH_LOG: 2.0
     SPRUCE_LOG: 2.0
     DARK_OAK_LOG: 2.0
+    JUNGLE_LOG: 2.5
+    ACACIA_LOG: 2.0
+    MANGROVE_LOG: 3.0
+    CHERRY_LOG: 4.0
+    CRIMSON_STEM: 5.0
+    WARPED_STEM: 5.0
+    OAK_PLANKS: 0.5
+    # ── Farming ──
     WHEAT: 1.0
     CARROT: 1.0
     POTATO: 1.0
@@ -408,6 +437,28 @@ worth:
     PUMPKIN: 3.0
     SUGAR_CANE: 2.0
     CACTUS: 1.5
+    SWEET_BERRIES: 1.0
+    GLOW_BERRIES: 3.0
+    BAMBOO: 0.5
+    COCOA_BEANS: 2.0
+    KELP: 0.5
+    CHORUS_FRUIT: 8.0
+    NETHER_WART: 3.0
+    # ── Food ──
+    BREAD: 2.0
+    COOKED_BEEF: 5.0
+    COOKED_PORKCHOP: 5.0
+    COOKED_CHICKEN: 3.0
+    COOKED_MUTTON: 4.0
+    COOKED_SALMON: 4.0
+    COOKED_COD: 3.0
+    GOLDEN_APPLE: 200.0
+    ENCHANTED_GOLDEN_APPLE: 5000.0
+    GOLDEN_CARROT: 50.0
+    CAKE: 15.0
+    PUMPKIN_PIE: 8.0
+    COOKIE: 1.0
+    # ── Mob Drops ──
     BLAZE_ROD: 20.0
     ENDER_PEARL: 30.0
     GUNPOWDER: 5.0
@@ -416,6 +467,55 @@ worth:
     SPIDER_EYE: 4.0
     ROTTEN_FLESH: 1.0
     LEATHER: 5.0
+    SLIME_BALL: 8.0
+    GHAST_TEAR: 50.0
+    MAGMA_CREAM: 15.0
+    PHANTOM_MEMBRANE: 20.0
+    PRISMARINE_SHARD: 10.0
+    PRISMARINE_CRYSTALS: 12.0
+    SHULKER_SHELL: 150.0
+    WITHER_SKELETON_SKULL: 500.0
+    NETHER_STAR: 2500.0
+    DRAGON_BREATH: 100.0
+    TRIDENT: 800.0
+    TOTEM_OF_UNDYING: 1000.0
+    RABBIT_FOOT: 25.0
+    INK_SAC: 3.0
+    GLOW_INK_SAC: 10.0
+    HONEYCOMB: 8.0
+    HONEY_BOTTLE: 12.0
+    # ── Redstone & Technical ──
+    REDSTONE_TORCH: 3.0
+    REPEATER: 10.0
+    COMPARATOR: 15.0
+    PISTON: 20.0
+    STICKY_PISTON: 30.0
+    OBSERVER: 25.0
+    HOPPER: 40.0
+    DROPPER: 15.0
+    DISPENSER: 20.0
+    TNT: 30.0
+    # ── Misc Blocks ──
+    OBSIDIAN: 15.0
+    CRYING_OBSIDIAN: 25.0
+    END_STONE: 5.0
+    PURPUR_BLOCK: 8.0
+    SEA_LANTERN: 20.0
+    GLOWSTONE: 12.0
+    SPONGE: 50.0
+    CLAY_BALL: 2.0
+    TERRACOTTA: 3.0
+    GLASS: 1.0
+    SAND: 0.5
+    GRAVEL: 0.5
+    COBBLESTONE: 0.25
+    STONE: 0.5
+    DEEPSLATE: 0.5
+    TUFF: 0.5
+    DRIPSTONE_BLOCK: 2.0
+    MOSS_BLOCK: 3.0
+    SCULK: 10.0
+    SCULK_CATALYST: 50.0
 
 # ---- Teams ----
 teams:
@@ -492,12 +592,12 @@ kits:
     no-permission: "&#FF4444You don't have permission to claim this kit!"
     already-claimed: "&#FF4444You have already claimed this one-time kit!"
     cooldown: "&#FF4444Kit on cooldown! &f%time% &#FF4444remaining."
-    auto-starter: "&#55FF55You received the &#FFD700Starter Kit&#55FF55! Use &f/kit &#55FF55to view all kits."
+    auto-starter: "&#55FF55You received the &#FFD700Starter Kit&#55FF55! Use &f/kit &#55FF55to claim it again later."
 
 # ---- Ad System ----
 ad:
   cooldown-seconds: 300
-  messages-list:
+            messages-list:
     - "Join SmpUni on Minehut! Type /join SmpUni to play now!"
     - "Looking for a great SMP? SmpUni is waiting for you — /join SmpUni"
     - "SmpUni — The best SMP on Minehut. Come join us! /join SmpUni"
@@ -511,4 +611,184 @@ ad:
   messages:
     cooldown: "&cYou can use /ad again in &e%seconds% &cseconds."
     confirmed: "&aThanks for advertising SmpUni! &7Next use in &e%minutes% minutes&7."
+
+# ---- Broadcast ----
+broadcast:
+  prefix: "&#FF4444&l⚡ BROADCAST &#8C8C8C» &f"
+  separator: "&8&m                                                    "
+  show-separator: true
+  play-sound: true
+  sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+
+# ---- Report System ----
+report:
+  cooldown-seconds: 60
+  discord-webhook: "https://discord.com/api/webhooks/1480732112209444965/A4JlGVTiA6KQc3zy5z0kgAJ7jKQ_8VmQLc0IqLQNc0rlntRRm83t7YzEeSFJ0K83smDd"
+  messages:
+    cooldown: "&#FF4444You must wait &#FFD700%seconds% &#FF4444seconds before reporting again."
+    staff-notify: "&#FF4444&l⚠ REPORT &#8C8C8C» &#FF6B6B%reporter% &#8C8C8Creported &#FFD700%target% &#8C8C8Cfor: &#E0E0E0%reason%"
+
+# ---- Request System ----
+request:
+  cooldown-seconds: 120
+  discord-webhook: "https://discord.com/api/webhooks/1480732318917201993/68xgZHf9YcDrpImmcrZ8Eu_bBXoKI3b-VPyBrvfkOkLiPDTUin8ttr1k0Edmqnrlst4g"
+  messages:
+    cooldown: "&#FF4444You must wait &#FFD700%seconds% &#FF4444seconds before sending another request."
+    staff-notify: "&#4FC3F7&l✉ REQUEST &#8C8C8C» &#4FC3F7%player% &#8C8C8Crequests: &#E0E0E0%message%"
+
+# ---- Clear Chat ----
+clearchat:
+  message: "&#FF4444&l⚡ &#8C8C8CChat has been cleared by &#55FF55%player%"
+
+# ---- Skill Tree ----
+skilltree:
+  reset-refund-percent: 50.0
+  skills:
+    mining_boost:
+      display-name: "&#FFD700&l⛏ Mining Boost"
+      description: "Chance for double ore drops"
+      icon: "DIAMOND_PICKAXE"
+      max-level: 5
+      base-cost: 100
+      cost-per-level: 75
+      effect-type: "MULTIPLIER"
+      potion-effect: "NONE"
+      potion-amplifier-per-level: 0
+      multiplier-per-level: 0.1
+    farming_boost:
+      display-name: "&#55FF55&l🌾 Farming Boost"
+      description: "Chance for double crop drops"
+      icon: "GOLDEN_HOE"
+      max-level: 5
+      base-cost: 80
+      cost-per-level: 60
+      effect-type: "MULTIPLIER"
+      potion-effect: "NONE"
+      potion-amplifier-per-level: 0
+      multiplier-per-level: 0.1
+    speed:
+      display-name: "&#4FC3F7&l💨 Speed"
+      description: "Permanent speed boost"
+      icon: "SUGAR"
+      max-level: 3
+      base-cost: 150
+      cost-per-level: 100
+      effect-type: "POTION"
+      potion-effect: "SPEED"
+      potion-amplifier-per-level: 1
+      multiplier-per-level: 0.0
+    haste:
+      display-name: "&#FFD700&l⚡ Haste"
+      description: "Permanent mining speed boost"
+      icon: "GOLDEN_PICKAXE"
+      max-level: 2
+      base-cost: 200
+      cost-per-level: 150
+      effect-type: "POTION"
+      potion-effect: "HASTE"
+      potion-amplifier-per-level: 1
+      multiplier-per-level: 0.0
+    health_boost:
+      display-name: "&#FF4444&l❤ Health Boost"
+      description: "Extra hearts permanently"
+      icon: "GOLDEN_APPLE"
+      max-level: 3
+      base-cost: 250
+      cost-per-level: 200
+      effect-type: "POTION"
+      potion-effect: "HEALTH_BOOST"
+      potion-amplifier-per-level: 1
+      multiplier-per-level: 0.0
+    xp_boost:
+      display-name: "&#CE93D8&l✦ XP Boost"
+      description: "Multiplied XP from mob kills"
+      icon: "EXPERIENCE_BOTTLE"
+      max-level: 5
+      base-cost: 100
+      cost-per-level: 80
+      effect-type: "MULTIPLIER"
+      potion-effect: "NONE"
+      potion-amplifier-per-level: 0
+      multiplier-per-level: 0.15
+    luck:
+      display-name: "&#55FF55&l🍀 Luck"
+      description: "Bonus Shards on mob kills"
+      icon: "EMERALD"
+      max-level: 5
+      base-cost: 120
+      cost-per-level: 90
+      effect-type: "MULTIPLIER"
+      potion-effect: "NONE"
+      potion-amplifier-per-level: 0
+      multiplier-per-level: 0.1
+    night_vision:
+      display-name: "&#FAFFC9&l👁 Night Vision"
+      description: "See in the dark permanently"
+      icon: "GOLDEN_CARROT"
+      max-level: 1
+      base-cost: 300
+      cost-per-level: 0
+      effect-type: "POTION"
+      potion-effect: "NIGHT_VISION"
+      potion-amplifier-per-level: 0
+      multiplier-per-level: 0.0
+
+# ---- Playtime Rewards ----
+playtime-rewards:
+  milestones:
+    milestone_30m:
+      minutes: 30
+      display-name: "&#55FF55&l⏱ 30 Minutes"
+      icon: "CLOCK"
+      reward-money: 500
+      reward-shards: 50
+      reward-commands: []
+    milestone_1h:
+      minutes: 60
+      display-name: "&#FFD700&l⏱ 1 Hour"
+      icon: "GOLD_INGOT"
+      reward-money: 1500
+      reward-shards: 150
+      reward-commands: []
+    milestone_2h:
+      minutes: 120
+      display-name: "&#4FC3F7&l⏱ 2 Hours"
+      icon: "DIAMOND"
+      reward-money: 3000
+      reward-shards: 300
+      reward-commands: []
+    milestone_5h:
+      minutes: 300
+      display-name: "&#CE93D8&l⏱ 5 Hours"
+      icon: "EMERALD"
+      reward-money: 10000
+      reward-shards: 750
+      reward-commands: []
+    milestone_10h:
+      minutes: 600
+      display-name: "&#FF4444&l⏱ 10 Hours"
+      icon: "NETHERITE_INGOT"
+      reward-money: 25000
+      reward-shards: 2000
+      reward-commands: []
+    milestone_24h:
+      minutes: 1440
+      display-name: "&#FFD700&l⭐ 24 Hours"
+      icon: "NETHER_STAR"
+      reward-money: 100000
+      reward-shards: 10000
+      reward-commands:
+        - "give %player% diamond_block 16"
+    milestone_48h:
+      minutes: 2880
+      display-name: "&#FF4444&l🏆 48 Hours"
+      icon: "DRAGON_EGG"
+      reward-money: 250000
+      reward-shards: 25000
+      reward-commands:
+        - "give %player% netherite_block 4"
+
+# ---- Back (Death Teleport) ----
+back:
+  cooldown-seconds: 30
 
