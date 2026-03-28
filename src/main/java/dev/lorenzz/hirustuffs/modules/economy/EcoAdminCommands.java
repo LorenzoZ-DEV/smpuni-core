@@ -25,7 +25,7 @@ public class EcoAdminCommands {
         eco.addBalance(target.getUniqueId(), amount);
         String name = target.getName() != null ? target.getName() : target.getUniqueId().toString().substring(0, 8);
         Messages.send(sender, plugin.getConfigFile().getString("economy.messages.eco-give", "&7Given %symbol%%amount% to %player%.")
-                .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", name));
+                .replace("%symbol%", symbol).replace("%amount%", Messages.formatNumber(amount)).replace("%player%", name));
     }
 
     @Subcommand(name = "take", description = "Take money from a player")
@@ -36,7 +36,7 @@ public class EcoAdminCommands {
         eco.removeBalance(target.getUniqueId(), amount);
         String name = target.getName() != null ? target.getName() : target.getUniqueId().toString().substring(0, 8);
         Messages.send(sender, plugin.getConfigFile().getString("economy.messages.eco-take", "&7Removed %symbol%%amount% from %player%.")
-                .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", name));
+                .replace("%symbol%", symbol).replace("%amount%", Messages.formatNumber(amount)).replace("%player%", name));
     }
 
     @Subcommand(name = "set", description = "Set a player's balance")
@@ -47,6 +47,6 @@ public class EcoAdminCommands {
         eco.setBalance(target.getUniqueId(), amount);
         String name = target.getName() != null ? target.getName() : target.getUniqueId().toString().substring(0, 8);
         Messages.send(sender, plugin.getConfigFile().getString("economy.messages.eco-set", "&7Balance of %player% set to %symbol%%amount%.")
-                .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", name));
+                .replace("%symbol%", symbol).replace("%amount%", Messages.formatNumber(amount)).replace("%player%", name));
     }
 }

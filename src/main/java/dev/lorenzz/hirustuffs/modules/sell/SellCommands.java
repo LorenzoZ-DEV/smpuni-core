@@ -50,7 +50,7 @@ public class SellCommands {
         player.getInventory().setItemInMainHand(null);
 
         Messages.send(player, "&#55FF55Sold &#FFD700" + hand.getAmount() + "x " + formatMat(hand.getType()) +
-                " &#55FF55for &#FFD700$" + String.format("%.2f", total));
+                " &#55FF55for &#FFD700$" + Messages.formatNumber(total));
     }
 
     @Command(name = "sellall", description = "Sell all sellable items", async = false)
@@ -80,7 +80,7 @@ public class SellCommands {
         }
 
         eco.addBalance(player.getUniqueId(), total);
-        Messages.send(player, "&#55FF55Sold &#FFD700" + itemsSold + " items &#55FF55for &#FFD700$" + String.format("%.2f", total));
+        Messages.send(player, "&#55FF55Sold &#FFD700" + itemsSold + " items &#55FF55for &#FFD700$" + Messages.formatNumber(total));
     }
 
     private void openSellMenu(Player player) {
@@ -174,7 +174,7 @@ public class SellCommands {
             double itemTotal = price * item.getAmount();
             total += itemTotal;
             itemsSold += item.getAmount();
-            soldItems.add("&#8C8C8C" + item.getAmount() + "x " + formatMat(item.getType()) + " &#55FF55$" + String.format("%.2f", itemTotal));
+            soldItems.add("&#8C8C8C" + item.getAmount() + "x " + formatMat(item.getType()) + " &#55FF55$" + Messages.formatNumber(itemTotal));
             menu.getInventory().setItem(i, null);
         }
 
@@ -191,7 +191,7 @@ public class SellCommands {
             Messages.sendRaw(player, " " + line);
         }
         Messages.send(player, "");
-        Messages.send(player, " &#E0E0E0Total: &#FFD700&l$" + String.format("%.2f", total));
+        Messages.send(player, " &#E0E0E0Total: &#FFD700&l$" + Messages.formatNumber(total));
         Messages.send(player, "&#3D3D3D━━━━━━━━━━━━━━━━━━━━━━━━━━");
     }
 

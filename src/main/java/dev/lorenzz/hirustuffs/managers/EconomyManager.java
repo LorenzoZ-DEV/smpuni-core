@@ -2,6 +2,7 @@ package dev.lorenzz.hirustuffs.managers;
 
 import dev.lorenzz.hirustuffs.Hiru;
 import dev.lorenzz.hirustuffs.utils.Config;
+import dev.lorenzz.hirustuffs.utils.Messages;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -14,6 +15,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class EconomyManager implements Economy {
@@ -21,12 +24,14 @@ public class EconomyManager implements Economy {
     private static EconomyManager INSTANCE;
 
     private final Hiru plugin;
-    private final Map<UUID, Double> balances = new HashMap<>();
+    private final Map<UUID, Double> balances = new ConcurrentHashMap<>();
     private double startingBalance;
     private String currencyName;
     private String currencySymbol;
     private File dataFile;
     private YamlConfiguration dataConfig;
+    private final AtomicBoolean dirty = new AtomicBoolean(false);
+    private org.bukkit.scheduler.BukkitTask autoSaveTask;
 
     public EconomyManager(Hiru plugin) {
         this.plugin = plugin;
@@ -62,6 +67,13 @@ public class EconomyManager implements Economy {
         // Register Vault
         Bukkit.getServicesManager().register(Economy.class, this, plugin, ServicePriority.Normal);
         plugin.getLogger().info("[Hiru] Economy registered with Vault.");
+
+        // Auto-save every 60 seconds if dirty
+        autoSaveTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+            if (dirty.compareAndSet(true, false)) {
+                saveAll();
+            }
+        }, 1200L, 1200L);
     }
 
     private void loadFromYaml() {
@@ -95,6 +107,10 @@ public class EconomyManager implements Economy {
     }
 
     public void shutdown() {
+        if (autoSaveTask != null) {
+            autoSaveTask.cancel();
+            autoSaveTask = null;
+        }
         saveAll();
         Bukkit.getServicesManager().unregister(Economy.class, this);
     }
@@ -105,7 +121,7 @@ public class EconomyManager implements Economy {
 
     public void setBalance(UUID uuid, double amount) {
         balances.put(uuid, amount);
-        saveAll();
+        dirty.set(true);
     }
 
     public void addBalance(UUID uuid, double amount) {
@@ -136,7 +152,7 @@ public class EconomyManager implements Economy {
     @Override public String getName() { return "Hiru"; }
     @Override public boolean hasBankSupport() { return false; }
     @Override public int fractionalDigits() { return 2; }
-    @Override public String format(double amount) { return currencySymbol + String.format("%.2f", amount); }
+    @Override public String format(double amount) { return currencySymbol + Messages.formatNumber(amount); }
     @Override public String currencyNamePlural() { return currencyName; }
     @Override public String currencyNameSingular() { return currencyName; }
 

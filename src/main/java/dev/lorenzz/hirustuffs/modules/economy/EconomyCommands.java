@@ -27,13 +27,13 @@ public class EconomyCommands {
         if (target != null) {
             double bal = eco.getBalance(target.getUniqueId());
             String msg = plugin.getConfigFile().getString("economy.messages.balance-other", "&7Balance of &b%player%&7: &a%symbol%%amount%")
-                    .replace("%player%", target.getName()).replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", bal));
+                    .replace("%player%", target.getName()).replace("%symbol%", symbol).replace("%amount%", Messages.formatNumber(bal));
             Messages.send(sender, msg);
         } else {
             if (!(sender instanceof Player player)) { Messages.send(sender, "&cSpecify a player!"); return; }
             double bal = eco.getBalance(player.getUniqueId());
             String msg = plugin.getConfigFile().getString("economy.messages.balance", "&7Your balance: &a%symbol%%amount%")
-                    .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", bal));
+                    .replace("%symbol%", symbol).replace("%amount%", Messages.formatNumber(bal));
             Messages.send(sender, msg);
         }
     }
@@ -53,9 +53,9 @@ public class EconomyCommands {
         eco.addBalance(target.getUniqueId(), amount);
 
         Messages.send(sender, plugin.getConfigFile().getString("economy.messages.pay-sent", "&7Sent &a%symbol%%amount% &7to &b%player%&7.")
-                .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", target.getName()));
+                .replace("%symbol%", symbol).replace("%amount%", Messages.formatNumber(amount)).replace("%player%", target.getName()));
         Messages.send(target, plugin.getConfigFile().getString("economy.messages.pay-received", "&7Received &a%symbol%%amount% &7from &b%player%&7.")
-                .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", sender.getName()));
+                .replace("%symbol%", symbol).replace("%amount%", Messages.formatNumber(amount)).replace("%player%", sender.getName()));
     }
 
     // /baltop
@@ -75,7 +75,7 @@ public class EconomyCommands {
             String name = p.getName() != null ? p.getName() : entry.getKey().toString().substring(0, 8);
             Messages.sendRaw(sender, plugin.getConfigFile().getString("economy.messages.baltop-entry", "&7#%position% &b%player% &7- &a%symbol%%amount%")
                     .replace("%position%", String.valueOf(i + 1)).replace("%player%", name)
-                    .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", entry.getValue())));
+                    .replace("%symbol%", symbol).replace("%amount%", Messages.formatNumber(entry.getValue())));
         }
         if (top.isEmpty()) Messages.sendRaw(sender, "&7No data available.");
         Messages.sendRaw(sender, plugin.getConfigFile().getString("economy.messages.baltop-footer", "&8&m---------------------------------"));

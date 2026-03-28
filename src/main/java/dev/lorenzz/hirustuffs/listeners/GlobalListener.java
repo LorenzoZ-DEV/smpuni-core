@@ -21,10 +21,16 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.Map;
+import java.util.UUID;
+
 
 public class GlobalListener implements Listener {
 
     private final Hiru plugin;
+    // Throttle move events — only record activity every 2 seconds per player
+    private final Map<UUID, Long> lastMoveRecord = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long MOVE_THROTTLE_MS = 2000L;
 
     public GlobalListener(Hiru plugin) {
         this.plugin = plugin;
@@ -59,18 +65,18 @@ public class GlobalListener implements Listener {
                 &r
                 &r
                 &r
-                &#0053ff&lSMPUNI &7- &
-                &fᴡᴇʟᴄᴏᴍᴇ &fᴛᴏ &#0053ffѕᴍᴘᴜɴɪ
-                &fᴛʜɪѕ ɢᴀᴍᴇᴍᴏᴅᴇ ɪѕ &#0053ff ᴅᴇᴠᴇʟᴏᴘᴇᴅ &fᴡɪᴛʜᴏᴜᴛ &#0053ffᴠɪᴘ ʀᴀɴᴋѕ
-                &fᴏᴜʀ ɡᴏᴀʟ ɪѕ ɴᴏᴛ ᴛᴏ ᴍᴀᴋᴇ ᴛʜᴇ ѕᴇʀᴠᴇʀ &#0053ffᴘᴀʏ ᴛᴏ ᴡɪɴ  
+                &#0053ff&lSMPUNI &7- &e&lSEASON 1
                 &r
-                &fThe beta will be ending at &c&l26/03/2026
+                &fWelcome to &bSMPUni&f, a unique SMP experience with custom features and a friendly community! Join our Discord for support, announcements, and to connect with other players: &bhttps://discord.gg/smpuni
+                &fThis server is supported also in 26.1 version, but we recommend using 1.21+ for the best experience.
+                &fThe season 1 map is now live! Explore the world, gather resources, and build your base. Use &b/warp &fto find warps around the world, and &b/spawn &fto return to the main spawn area.
                 """));  // 2 second delay
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
+        lastMoveRecord.remove(player.getUniqueId());
 
         // Stats playtime
         if (StatsManager.getInstance() != null) {
@@ -145,7 +151,13 @@ public class GlobalListener implements Listener {
                 && event.getFrom().getBlockZ() == event.getTo().getBlockZ()) return;
 
         if (AFKManager.getInstance() != null) {
-            AFKManager.getInstance().recordActivity(event.getPlayer().getUniqueId());
+            UUID uuid = event.getPlayer().getUniqueId();
+            long now = System.currentTimeMillis();
+            Long last = lastMoveRecord.get(uuid);
+            if (last == null || now - last >= MOVE_THROTTLE_MS) {
+                lastMoveRecord.put(uuid, now);
+                AFKManager.getInstance().recordActivity(uuid);
+            }
         }
     }
 

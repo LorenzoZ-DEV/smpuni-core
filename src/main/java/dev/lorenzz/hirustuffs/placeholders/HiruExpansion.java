@@ -9,6 +9,7 @@ import dev.lorenzz.hirustuffs.managers.TeamsManager;
 import dev.lorenzz.hirustuffs.managers.HomeManager;
 import dev.lorenzz.hirustuffs.managers.PlaytimeRewardsManager;
 import dev.lorenzz.hirustuffs.modules.keyall.KeyAllCommands;
+import dev.lorenzz.hirustuffs.utils.Messages;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
@@ -63,17 +64,17 @@ public class HiruExpansion extends PlaceholderExpansion {
             case "money" -> {
                 EconomyManager eco = EconomyManager.getInstance();
                 if (eco == null) return "0";
-                return String.format("%.2f", eco.getBalance(player.getUniqueId()));
+                return Messages.formatNumber(eco.getBalance(player.getUniqueId()));
             }
             case "kills" -> {
                 StatsManager stats = StatsManager.getInstance();
                 if (stats == null) return "0";
-                return String.valueOf(stats.getKills(player.getUniqueId()));
+                return Messages.formatNumber(stats.getKills(player.getUniqueId()));
             }
             case "deaths" -> {
                 StatsManager stats = StatsManager.getInstance();
                 if (stats == null) return "0";
-                return String.valueOf(stats.getDeaths(player.getUniqueId()));
+                return Messages.formatNumber(stats.getDeaths(player.getUniqueId()));
             }
             case "playtime" -> {
                 PlaytimeRewardsManager prm = PlaytimeRewardsManager.getInstance();
@@ -87,7 +88,7 @@ public class HiruExpansion extends PlaceholderExpansion {
             case "shards" -> {
                 ShardManager sm = ShardManager.getInstance();
                 if (sm == null) return "0";
-                return String.valueOf(sm.getShards(player.getUniqueId()));
+                return Messages.formatNumber(sm.getShards(player.getUniqueId()));
             }
             case "rank" -> {
                 return getRank(player);
@@ -104,7 +105,7 @@ public class HiruExpansion extends PlaceholderExpansion {
                 BountyManager bm = BountyManager.getInstance();
                 if (bm == null) return "0";
                 BountyManager.Bounty b = bm.getBounty(player.getUniqueId());
-                return b != null ? String.valueOf(b.amount()) : "0";
+                return b != null ? Messages.formatNumber(b.amount()) : "0";
             }
             case "team" -> {
                 TeamsManager tm = TeamsManager.getInstance();
@@ -204,7 +205,7 @@ public class HiruExpansion extends PlaceholderExpansion {
                 if (top.size() < position) return wantName ? "---" : "0";
                 Map.Entry<UUID, Integer> entry = top.get(position - 1);
                 if (wantName) return getPlayerName(entry.getKey());
-                return String.valueOf(entry.getValue());
+                return Messages.formatNumber(entry.getValue());
             }
             case "playtime" -> {
                 StatsManager stats = StatsManager.getInstance();
@@ -222,7 +223,7 @@ public class HiruExpansion extends PlaceholderExpansion {
                 if (top.size() < position) return wantName ? "---" : "0.00";
                 Map.Entry<UUID, Double> entry = top.get(position - 1);
                 if (wantName) return getPlayerName(entry.getKey());
-                return formatMoney(entry.getValue());
+                return Messages.formatNumber(entry.getValue());
             }
             case "shards" -> {
                 ShardManager sm = ShardManager.getInstance();
@@ -231,7 +232,7 @@ public class HiruExpansion extends PlaceholderExpansion {
                 if (top.size() < position) return wantName ? "---" : "0";
                 Map.Entry<UUID, Integer> entry = top.get(position - 1);
                 if (wantName) return getPlayerName(entry.getKey());
-                return String.valueOf(entry.getValue());
+                return Messages.formatNumber(entry.getValue());
             }
             default -> { return ""; }
         }
@@ -242,11 +243,6 @@ public class HiruExpansion extends PlaceholderExpansion {
         return p.getName() != null ? p.getName() : "???";
     }
 
-    private String formatMoney(double amount) {
-        if (amount >= 1_000_000) return String.format("%.1fM", amount / 1_000_000);
-        if (amount >= 1_000) return String.format("%.1fK", amount / 1_000);
-        return String.format("%.2f", amount);
-    }
 
     private String getRank(OfflinePlayer player) {
         try {

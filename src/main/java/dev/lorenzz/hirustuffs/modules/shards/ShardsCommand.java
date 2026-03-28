@@ -18,12 +18,12 @@ public class ShardsCommand {
 
         if (target != null) {
             int amount = sm.getShards(target.getUniqueId());
-            Messages.send(sender, "&7Shards of &b" + target.getName() + "&7: &d" + amount);
+            Messages.send(sender, "&7Shards of &b" + target.getName() + "&7: &d" + Messages.formatNumber(amount));
         } else {
             if (!(sender instanceof Player player)) { Messages.send(sender, "&cSpecify a player!"); return; }
             int amount = sm.getShards(player.getUniqueId());
             String msg = plugin.getConfigFile().getString("shards.messages.balance", "&7Your Shards: &d%amount%")
-                    .replace("%amount%", String.valueOf(amount));
+                    .replace("%amount%", Messages.formatNumber(amount));
             Messages.send(sender, msg);
         }
     }

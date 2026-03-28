@@ -11,6 +11,34 @@ import java.util.List;
 
 public class HelpCommands {
 
+     // Pre-processed color strings to avoid regex on every /help call
+    private static final String TITLE_MAIN = "&#1A1A2E&lServer Guide";
+    private static final String TITLE_ECO = "&#1A1A2E&lEconomy Guide";
+    private static final String TITLE_COMBAT = "&#1A1A2E&lCombat & Bounty Guide";
+    private static final String TITLE_TP = "&#1A1A2E&lTeleportation Guide";
+    private static final String TITLE_TEAMS = "&#1A1A2E&lTeams Guide";
+    private static final String TITLE_SHARDS = "&#1A1A2E&lShards & Worth Guide";
+    private static final String TITLE_UTIL = "&#1A1A2E&lUtility Guide";
+
+    // Cache processed title strings (computed once)
+    private static String cachedTitleMain;
+    private static String cachedTitleEco;
+    private static String cachedTitleCombat;
+    private static String cachedTitleTp;
+    private static String cachedTitleTeams;
+    private static String cachedTitleShards;
+    private static String cachedTitleUtil;
+
+    static {
+        cachedTitleMain = Messages.color(TITLE_MAIN);
+        cachedTitleEco = Messages.color(TITLE_ECO);
+        cachedTitleCombat = Messages.color(TITLE_COMBAT);
+        cachedTitleTp = Messages.color(TITLE_TP);
+        cachedTitleTeams = Messages.color(TITLE_TEAMS);
+        cachedTitleShards = Messages.color(TITLE_SHARDS);
+        cachedTitleUtil = Messages.color(TITLE_UTIL);
+    }
+
     @Command(name = "help", aliases = {"h", "?"}, description = "Server help menu", async = false)
     public void help(@Sender Player player) {
         openMainHelp(player);
