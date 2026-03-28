@@ -89,7 +89,7 @@ public class BackCommand {
                 }
 
                 if (remaining > 0) {
-                    current.playSound(current.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    current.playSound(current.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
                     current.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                             TextComponent.fromLegacyText(Messages.color(
                                     "&#FFD700⏳ Teleporting in &#FFFFFF" + remaining + "s&#FFD700...")));
@@ -117,7 +117,7 @@ public class BackCommand {
             if (success) {
                 manager.startCooldown(player.getUniqueId());
                 Messages.send(player, "&#55FF55✔ Teleported to your death location!");
-                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
+                player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1.2f);
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                         TextComponent.fromLegacyText(Messages.color(
                                 "&#55FF55✔ Arrived at death location")));

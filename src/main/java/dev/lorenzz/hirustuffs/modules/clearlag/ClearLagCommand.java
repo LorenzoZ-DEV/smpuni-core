@@ -9,7 +9,7 @@ import org.bukkit.command.CommandSender;
 
 public class ClearLagCommand {
 
-    @Command(name = "clearlag", description = "Pulizia entità")
+    @Command(name = "clearlag", description = "Clear entities")
     @Permission("hiru.clearlag")
     public void clearlag(@Sender CommandSender sender) {
         Hiru plugin = Hiru.getInstance();
@@ -19,7 +19,7 @@ public class ClearLagCommand {
         if (module != null) {
             module.startCountdown(countdown);
         } else {
-            Messages.send(sender, "&cClearLag non disponibile.");
+            Messages.send(sender, "&cClearLag not available.");
         }
     }
 }

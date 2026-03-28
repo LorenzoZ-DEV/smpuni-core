@@ -54,7 +54,7 @@ public class SkillTreeCommand {
                 p -> {
                     int refund = stm.resetSkills(p.getUniqueId());
                     p.closeInventory();
-                    p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 0.5f);
+                    p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 0.5f);
                     Messages.send(p, "&#55FF55Skills reset! Refunded &#FFD700" + refund + " Shards&#55FF55.");
                 });
 
@@ -137,7 +137,7 @@ public class SkillTreeCommand {
             builder.item(slot, itemStack, p -> {
                 if (stm.upgradeSkill(p.getUniqueId(), skillId)) {
                     int newLevel = stm.getPlayerLevel(p.getUniqueId(), skillId);
-                    p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+                    p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1.5f);
                     Messages.send(p, "&#55FF55Upgraded &#FFD700" + Messages.color(skill.displayName()) +
                             " &#55FF55to level &#FFD700" + newLevel + "&#55FF55!");
                     // Reopen GUI to refresh

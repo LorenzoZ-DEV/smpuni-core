@@ -18,7 +18,7 @@ public class RulesCommands {
         this.module = module;
     }
 
-    @Command(name = "rules", description = "Regole del server")
+    @Command(name = "rules", description = "Server rules")
     @Permission("hiru.rules")
     public void rules(@Sender Player player) {
         openRulesMenu(player);
@@ -26,7 +26,7 @@ public class RulesCommands {
 
     public void openRulesMenu(Player player) {
         List<String> rules = plugin.getConfigFile().getStringList("rules.rules-list");
-        String title = plugin.getConfigFile().getString("rules.menu-title", "&8&lRegole del Server");
+        String title = plugin.getConfigFile().getString("rules.menu-title", "&8&lServer Rules");
 
         int rows = Math.min(Math.max((rules.size() / 7) + 3, 3), 6);
         GUI.Builder builder = GUI.builder(title, rows).border(Material.RED_STAINED_GLASS_PANE);
@@ -40,24 +40,24 @@ public class RulesCommands {
         }
 
         if (!module.hasAccepted(player.getUniqueId())) {
-            builder.item((rows * 9) - 5, Material.LIME_CONCRETE, "&a&lAccetta Regole",
-                    List.of("&7Clicca per accettare le regole"),
+            builder.item((rows * 9) - 5, Material.LIME_CONCRETE, "&a&lAccept Rules",
+                    List.of("&7Click to accept the rules"),
                     p -> {
                         module.accept(p.getUniqueId());
                         p.closeInventory();
-                        Messages.send(p, plugin.getConfigFile().getString("rules.accept-message", "&aHai accettato le regole!"));
+                        Messages.send(p, plugin.getConfigFile().getString("rules.accept-message", "&aYou have accepted the rules!"));
                     });
-            builder.item((rows * 9) - 3, Material.RED_CONCRETE, "&c&lRifiuta",
-                    List.of("&7Clicca per rifiutare"),
+            builder.item((rows * 9) - 3, Material.RED_CONCRETE, "&c&lDecline",
+                    List.of("&7Click to decline"),
                     p -> {
                         p.closeInventory();
                         // Kick player if they refuse
-                        String denyMsg = plugin.getConfigFile().getString("rules.deny-message", "&cDevi accettare le regole per giocare!");
+                        String denyMsg = plugin.getConfigFile().getString("rules.deny-message", "&cYou must accept the rules to play!");
                         p.kick(Messages.colorComponent(denyMsg));
                     });
         } else {
-            builder.item((rows * 9) - 4, Material.LIME_CONCRETE, "&a&lRegole già accettate",
-                    List.of("&7Hai già accettato le regole!"));
+            builder.item((rows * 9) - 4, Material.LIME_CONCRETE, "&a&lRules Already Accepted",
+                    List.of("&7You have already accepted the rules!"));
         }
 
         builder.open(player);

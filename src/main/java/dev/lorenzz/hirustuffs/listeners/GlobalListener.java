@@ -19,6 +19,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitTask;
 
 
 public class GlobalListener implements Listener {
@@ -58,33 +59,13 @@ public class GlobalListener implements Listener {
                 &r
                 &r
                 &r
-                &#0053ff&lSMPUNI &7- &c&lBETA
+                &#0053ff&lSMPUNI &7- &
                 &fᴡᴇʟᴄᴏᴍᴇ &fᴛᴏ &#0053ffѕᴍᴘᴜɴɪ
                 &fᴛʜɪѕ ɢᴀᴍᴇᴍᴏᴅᴇ ɪѕ &#0053ff ᴅᴇᴠᴇʟᴏᴘᴇᴅ &fᴡɪᴛʜᴏᴜᴛ &#0053ffᴠɪᴘ ʀᴀɴᴋѕ
-                &fᴏᴜʀ ɢᴏᴀʟ ɪѕ ɴᴏᴛ ᴛᴏ ᴍᴀᴋᴇ ᴛʜᴇ ѕᴇʀᴠᴇʀ &#0053ffᴘᴀʏ ᴛᴏ ᴡɪɴ  
-                """));
-
-        // Changelog — sent delayed so it appears after the welcome message
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (!player.isOnline()) return;
-            player.sendMessage(Messages.color(""));
-            player.sendMessage(Messages.color("&8&m                                                    "));
-            player.sendMessage(Messages.color("&#FFD700&l  ⚡ CHANGELOG &8— &#8C8C8CMarch 11, 2026"));
-            player.sendMessage(Messages.color(""));
-            player.sendMessage(Messages.color("&#55FF55  ✔ &fKit system reworked — claim every &b5 minutes"));
-            player.sendMessage(Messages.color("&#55FF55  ✔ &fHome saving improved — no more lost homes"));
-            player.sendMessage(Messages.color("&#55FF55  ✔ &fAdded &b/order &fcommand — experimental, try it out!"));
-            player.sendMessage(Messages.color("&#55FF55  ✔ &fFixed kit auto-give on relog"));
-            player.sendMessage(Messages.color("&#4FC3F7  ★ &fNEW: &b/skills &f— Skill tree to boost your progression!"));
-            player.sendMessage(Messages.color("&#4FC3F7  ★ &fNEW: &b/rewards &f— Playtime rewards (AFK doesn't count!)"));
-            player.sendMessage(Messages.color("&#4FC3F7  ★ &fNEW: &b/clearchat &f— Staff can now clear the chat"));
-            player.sendMessage(Messages.color("&#4FC3F7  ★ &fShop & Prices expanded with 100+ items!"));
-            player.sendMessage(Messages.color("&#4FC3F7  ★ &fNEW: &b/back &f— Return to your death location!"));
-            player.sendMessage(Messages.color(""));
-            player.sendMessage(Messages.color("&#8C8C8C  Type &f/help &#8C8C8Cto see all available commands!"));
-            player.sendMessage(Messages.color("&8&m                                                    "));
-            player.sendMessage(Messages.color(""));
-        }, 40L); // 2 second delay
+                &fᴏᴜʀ ɡᴏᴀʟ ɪѕ ɴᴏᴛ ᴛᴏ ᴍᴀᴋᴇ ᴛʜᴇ ѕᴇʀᴠᴇʀ &#0053ffᴘᴀʏ ᴛᴏ ᴡɪɴ  
+                &r
+                &fThe beta will be ending at &c&l26/03/2026
+                """));  // 2 second delay
     }
 
     @EventHandler

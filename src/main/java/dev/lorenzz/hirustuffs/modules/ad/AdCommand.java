@@ -4,6 +4,13 @@ import dev.lorenzz.common.annotations.*;
 import dev.lorenzz.common.annotations.Optional;
 import dev.lorenzz.hirustuffs.Hiru;
 import dev.lorenzz.hirustuffs.utils.Messages;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -49,16 +56,63 @@ public class AdCommand {
         // Pick a random message
         String chosen = allMessages.get(ThreadLocalRandom.current().nextInt(allMessages.size()));
 
-        // Show header + the copyable message to the player only
-        String separator = "&8&m                                                    ";
-        Messages.sendRaw(player, "");
-        Messages.sendRaw(player, separator);
-        Messages.sendRaw(player, "&#FFD700&l  ⚡ AD MESSAGE — Copy & paste this in chat!");
-        Messages.sendRaw(player, "");
-        Messages.sendRaw(player, "  &f" + chosen);
-        Messages.sendRaw(player, "");
-        Messages.sendRaw(player, separator);
-        Messages.sendRaw(player, "");
+        // Build the copyable text: the ad message itself
+        Audience audience = player;
+
+        // Separator line
+        Component separator = Messages.colorComponent("&8&m                                                    ");
+
+        // Header
+        Component header = Component.empty()
+                .append(Component.text("  ⚡ ", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text("AD MESSAGE", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text(" — ", NamedTextColor.GRAY))
+                .append(Component.text("SmpUni", TextColor.color(0x55, 0xFF, 0xFF)).decoration(TextDecoration.BOLD, true));
+
+        // The ad message preview (white)
+        Component messagePreview = Component.text("  ", NamedTextColor.DARK_GRAY)
+                .append(Component.text("» ", TextColor.color(0xFF, 0xAA, 0x00)))
+                .append(Messages.colorComponent("&f" + chosen));
+
+        // Click-to-copy button
+        Component clickButton = Component.empty()
+                .append(Component.text("  ", NamedTextColor.DARK_GRAY))
+                .append(Component.text("  ✂ ", TextColor.color(0x55, 0xFF, 0x55)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text("CLICK TO COPY", TextColor.color(0x55, 0xFF, 0x55)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text(" — ", NamedTextColor.GRAY))
+                .append(Component.text("paste it in another server's chat!", NamedTextColor.GRAY))
+                .clickEvent(ClickEvent.copyToClipboard(chosen))
+                .hoverEvent(HoverEvent.showText(
+                        Component.text("Click to copy the ad message!", TextColor.color(0x55, 0xFF, 0x55))
+                                .append(Component.newline())
+                                .append(Component.text(chosen, NamedTextColor.WHITE))
+                ));
+
+        // Tip: /join SmpUni
+        Component joinTip = Component.empty()
+                .append(Component.text("  ", NamedTextColor.DARK_GRAY))
+                .append(Component.text("  ⓘ ", TextColor.color(0x4F, 0xC3, 0xF7)))
+                .append(Component.text("Players can join with: ", NamedTextColor.GRAY))
+                .append(Component.text("/join SmpUni", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true)
+                        .clickEvent(ClickEvent.copyToClipboard("/join SmpUni"))
+                        .hoverEvent(HoverEvent.showText(
+                                Component.text("Click to copy ", NamedTextColor.GRAY)
+                                        .append(Component.text("/join SmpUni", TextColor.color(0xFF, 0xD7, 0x00)))
+                        ))
+                );
+
+        // Send all components
+        audience.sendMessage(Component.empty());
+        audience.sendMessage(separator);
+        audience.sendMessage(header);
+        audience.sendMessage(Component.empty());
+        audience.sendMessage(messagePreview);
+        audience.sendMessage(Component.empty());
+        audience.sendMessage(clickButton);
+        audience.sendMessage(joinTip);
+        audience.sendMessage(Component.empty());
+        audience.sendMessage(separator);
+        audience.sendMessage(Component.empty());
 
         // Start cooldown
         cooldowns.put(player.getUniqueId(), System.currentTimeMillis());

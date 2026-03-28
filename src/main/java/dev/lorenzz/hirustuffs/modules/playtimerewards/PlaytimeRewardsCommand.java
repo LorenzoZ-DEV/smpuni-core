@@ -102,7 +102,7 @@ public class PlaytimeRewardsCommand {
             final int milestoneMinutes = ms.minutes();
             builder.item(slot, itemStack, p -> {
                 if (prm.claimMilestone(p, milestoneMinutes)) {
-                    p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+                    p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1.5f);
                     Messages.send(p, "&#55FF55Reward claimed! &#FFD700" + Messages.color(ms.displayName()));
                     openRewardsGUI(p); // Refresh GUI
                 } else if (prm.hasClaimed(p.getUniqueId(), milestoneMinutes)) {

@@ -4,15 +4,8 @@ import dev.lorenzz.common.annotations.*;
 import dev.lorenzz.hirustuffs.Hiru;
 import dev.lorenzz.hirustuffs.utils.Messages;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemFlag;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
 
@@ -20,55 +13,82 @@ public class KeyAllCommands {
 
     private final Hiru plugin = Hiru.getInstance();
 
-    @Command(name = "keyall", description = "Dai chiavi a tutti i giocatori online")
+    // Static fields accessible from placeholder
+    private static long lastKeyAllTime = 0;
+    private static String lastKeyAllType = "";
+    private static int lastKeyAllAmount = 0;
+    private static int intervalMinutes = 60;
+
+    public static long getLastKeyAllTime() { return lastKeyAllTime; }
+    public static String getLastKeyAllType() { return lastKeyAllType; }
+    public static int getLastKeyAllAmount() { return lastKeyAllAmount; }
+
+    public static void setIntervalMinutes(int minutes) { intervalMinutes = minutes; }
+
+    public static void updateLastKeyAll(String type, int amount) {
+        lastKeyAllTime = System.currentTimeMillis();
+        lastKeyAllType = type;
+        lastKeyAllAmount = amount;
+    }
+
+    /**
+     * Returns a formatted string showing the time remaining until the next auto keyall.
+     * If no keyall has happened yet, shows the full interval.
+     */
+    public static String getTimeUntilNextKeyAll() {
+        if (intervalMinutes <= 0) return "N/A";
+        long intervalMs = intervalMinutes * 60L * 1000L;
+        long elapsed;
+        if (lastKeyAllTime == 0) {
+            // No keyall yet — assume started at server start, show full interval
+            elapsed = 0;
+        } else {
+            elapsed = System.currentTimeMillis() - lastKeyAllTime;
+        }
+        long remaining = intervalMs - elapsed;
+        if (remaining <= 0) return "Soon!";
+
+        long totalSeconds = remaining / 1000;
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+
+        if (hours > 0) return hours + "h " + minutes + "m";
+        if (minutes > 0) return minutes + "m " + seconds + "s";
+        return seconds + "s";
+    }
+
+    @Command(name = "keyall", description = "Give keys to all online players")
     @Permission("hiru.admin")
-    public void keyall(@Sender CommandSender sender, @Named("tipo") String keyType, @Range(min = 1) @Named("quantità") int amount) {
+    public void keyall(@Sender CommandSender sender, @Named("type") String keyType, @Range(min = 1) @Named("amount") int amount) {
         List<String> validTypes = plugin.getConfigFile().getStringList("keyall.valid-types");
         if (!validTypes.contains(keyType.toLowerCase())) {
-            Messages.send(sender, "&cTipo non valido! Tipi: " + String.join(", ", validTypes));
+            Messages.send(sender, "&cInvalid type! Types: " + String.join(", ", validTypes));
             return;
         }
 
-        ItemStack key = createKey(keyType.toLowerCase(), amount);
+        // Get the console command template from config
+        String commandTemplate = plugin.getConfigFile().getString("keyall.console-command",
+                "crate give %player% %type% %amount%");
 
         for (Player player : Bukkit.getOnlinePlayers()) {
-            player.getInventory().addItem(key.clone());
-            Messages.send(player, plugin.getConfigFile().getString("keyall.received", "&7Hai ricevuto &b%amount%x %type% Key!")
+            String cmd = commandTemplate
+                    .replace("%player%", player.getName())
+                    .replace("%type%", keyType.toLowerCase())
+                    .replace("%amount%", String.valueOf(amount));
+
+            // Execute command from console
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+
+            Messages.send(player, plugin.getConfigFile().getString("keyall.received", "&7You received &b%amount%x %type% Key!")
                     .replace("%amount%", String.valueOf(amount)).replace("%type%", keyType));
         }
 
+        // Update last keyall info for placeholder
+        updateLastKeyAll(keyType, amount);
+
         Bukkit.broadcast(Messages.colorComponent(
-                plugin.getConfigFile().getString("keyall.broadcast", "&a&l[KeyAll] &eTutti hanno ricevuto &b%amount%x %type% Key&e!")
+                plugin.getConfigFile().getString("keyall.broadcast", "&a&l[KeyAll] &eEveryone received &b%amount%x %type% Key&e!")
                         .replace("%amount%", String.valueOf(amount)).replace("%type%", keyType)));
-    }
-
-    private ItemStack createKey(String type, int amount) {
-        ItemStack key = new ItemStack(Material.TRIPWIRE_HOOK, amount);
-        ItemMeta meta = key.getItemMeta();
-        if (meta != null) {
-            String color = switch (type) {
-                case "common" -> "&f";
-                case "rare" -> "&9";
-                case "epic" -> "&5";
-                case "legendary" -> "&6";
-                default -> "&7";
-            };
-            meta.displayName(Messages.colorComponent(color + "&l" + type.toUpperCase() + " Key"));
-            meta.lore(List.of(
-                    Messages.colorComponent("&7Tipo: " + color + type),
-                    Messages.colorComponent("&7Usa su una crate per aprirla!")
-            ));
-            meta.addEnchant(Enchantment.DURABILITY, 1, true);
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-
-            // PDC tags per identificare la chiave
-            NamespacedKey crateKey = new NamespacedKey(plugin, "crate_key");
-            NamespacedKey crateType = new NamespacedKey(plugin, "crate_key_type");
-            meta.getPersistentDataContainer().set(crateKey, PersistentDataType.BOOLEAN, true);
-            meta.getPersistentDataContainer().set(crateType, PersistentDataType.STRING, type);
-
-            key.setItemMeta(meta);
-        }
-        return key;
     }
 }

@@ -14,7 +14,7 @@ public class MediaCommands {
 
     private final Hiru plugin = Hiru.getInstance();
 
-    @Command(name = "media", description = "Apri il menu media")
+    @Command(name = "media", description = "Open the media menu")
     @Permission("hiru.media")
     public void media(@Sender Player player) {
         Config config = plugin.getConfigFile();

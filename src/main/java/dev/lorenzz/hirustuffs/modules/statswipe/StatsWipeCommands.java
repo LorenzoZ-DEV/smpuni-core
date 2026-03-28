@@ -20,24 +20,24 @@ public class StatsWipeCommands {
 
     private final Hiru plugin = Hiru.getInstance();
 
-    @Command(name = "statswipe", description = "Resetta tutte le statistiche")
+    @Command(name = "statswipe", description = "Wipe all statistics")
     @Permission("hiru.admin")
     public void statswipe(@Sender Player player) {
-        String title = plugin.getConfigFile().getString("statswipe.confirm-title", "&c&lSei sicuro?");
+        String title = plugin.getConfigFile().getString("statswipe.confirm-title", "&c&lAre you sure?");
 
         GUI.builder(title, 3)
                 .border(Material.RED_STAINED_GLASS_PANE)
-                .item(11, Material.LIME_CONCRETE, "&a&lConferma",
-                        List.of("&7Clicca per confermare il wipe delle statistiche"),
+                .item(11, Material.LIME_CONCRETE, "&a&lConfirm",
+                        List.of("&7Click to confirm the stats wipe"),
                         p -> {
                             performWipe(p);
                             p.closeInventory();
                         })
-                .item(15, Material.RED_CONCRETE, "&c&lAnnulla",
-                        List.of("&7Clicca per annullare"),
+                .item(15, Material.RED_CONCRETE, "&c&lCancel",
+                        List.of("&7Click to cancel"),
                         p -> {
                             p.closeInventory();
-                            Messages.send(p, plugin.getConfigFile().getString("statswipe.messages.cancelled", "&7Operazione annullata."));
+                            Messages.send(p, plugin.getConfigFile().getString("statswipe.messages.cancelled", "&7Operation cancelled."));
                         })
                 .open(player);
     }
@@ -45,12 +45,12 @@ public class StatsWipeCommands {
     private void performWipe(Player player) {
         StatsManager stats = StatsManager.getInstance();
         if (stats == null) {
-            Messages.send(player, "&cStats manager non disponibile.");
+            Messages.send(player, "&cStats manager not available.");
             return;
         }
         logWipe(player);
         stats.wipeAll();
-        Messages.send(player, plugin.getConfigFile().getString("statswipe.messages.wiped", "&c&lTutte le statistiche resettate!"));
+        Messages.send(player, plugin.getConfigFile().getString("statswipe.messages.wiped", "&c&lAll stats have been wiped!"));
         plugin.getLogger().warning("[Hiru] Stats wiped by " + player.getName());
     }
 

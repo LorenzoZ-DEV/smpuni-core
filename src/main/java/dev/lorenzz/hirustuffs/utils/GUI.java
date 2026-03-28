@@ -60,9 +60,9 @@ public class GUI {
         }
 
         public Builder item(int slot, Material material, String name, List<String> lore) {
-            Item item = new Item(toXMaterial(material)).setName(name);
+            Item item = new Item(toXMaterial(material)).setName(Messages.color(name));
             if (lore != null && !lore.isEmpty()) {
-                item.setLore(lore);
+                item.setLore(lore.stream().map(Messages::color).toList());
             }
             items.put(slot, item.build());
             return this;
@@ -85,7 +85,7 @@ public class GUI {
         }
 
         public void open(Player player) {
-            final String menuTitle = title;
+            final String menuTitle = Messages.color(title);
             final int menuRows = rows;
             final Map<Integer, ItemStack> menuItems = new HashMap<>(items);
             final Map<Integer, Consumer<Player>> menuActions = new HashMap<>(actions);

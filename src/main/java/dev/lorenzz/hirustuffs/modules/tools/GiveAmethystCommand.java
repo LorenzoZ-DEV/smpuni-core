@@ -8,30 +8,30 @@ import org.bukkit.inventory.ItemStack;
 
 public class GiveAmethystCommand {
 
-    @Command(name = "giveamethyst", description = "Dai uno strumento in ametista a un giocatore")
+    @Command(name = "giveamethyst", description = "Give an amethyst tool to a player")
     @Permission("hiru.giveamethyst")
-    public void give(@Sender Player sender, @Named("giocatore") Player target, @Named("tool") String toolId) {
+    public void give(@Sender Player sender, @Named("player") Player target, @Named("tool") String toolId) {
         Hiru plugin = Hiru.getInstance();
         AmethystToolsModule module = plugin.getModuleManager().getModule("tools");
         if (module == null) {
-            Messages.send(sender, "&cModulo AmethystTools non disponibile.");
+            Messages.send(sender, "&cAmethystTools module not available.");
             return;
         }
 
         AmethystToolsListener listener = module.getListener();
         if (listener == null) {
-            Messages.send(sender, "&cAmethystTools listener non disponibile.");
+            Messages.send(sender, "&cAmethystTools listener not available.");
             return;
         }
 
         ItemStack item = listener.createAmethystTool(toolId);
         if (item == null) {
-            Messages.send(sender, "&cTool ID non valido: &e" + toolId + "&c. Controlla config.yml (tools.tools-list)");
+            Messages.send(sender, "&cInvalid tool ID: &e" + toolId + "&c. Check config.yml (tools.tools-list)");
             return;
         }
 
         target.getInventory().addItem(item);
-        Messages.send(sender, "&7Dato &d" + toolId + " &7a &b" + target.getName() + "&7.");
-        Messages.send(target, "&7Hai ricevuto uno strumento in &dametista&7!");
+        Messages.send(sender, "&7Given &d" + toolId + " &7to &b" + target.getName() + "&7.");
+        Messages.send(target, "&7You received an &damethyst tool&7!");
     }
 }

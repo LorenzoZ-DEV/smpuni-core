@@ -15,7 +15,7 @@ public class InfoCommands {
 
     private final Hiru plugin = Hiru.getInstance();
 
-    @Command(name = "serverinfo", aliases = {"sinfo"}, description = "Informazioni del server", async = false)
+    @Command(name = "serverinfo", aliases = {"sinfo"}, description = "Server information", async = false)
     @Permission("hiru.info")
     public void info(@Sender Player player) {
         Config config = plugin.getConfigFile();

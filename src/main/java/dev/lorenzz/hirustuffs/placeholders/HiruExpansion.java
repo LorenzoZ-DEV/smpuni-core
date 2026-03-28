@@ -8,6 +8,7 @@ import dev.lorenzz.hirustuffs.managers.BountyManager;
 import dev.lorenzz.hirustuffs.managers.TeamsManager;
 import dev.lorenzz.hirustuffs.managers.HomeManager;
 import dev.lorenzz.hirustuffs.managers.PlaytimeRewardsManager;
+import dev.lorenzz.hirustuffs.modules.keyall.KeyAllCommands;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
@@ -116,6 +117,17 @@ public class HiruExpansion extends PlaceholderExpansion {
                 if (hm == null) return "0";
                 return String.valueOf(hm.getHomeCount(player.getUniqueId()));
             }
+            case "keyall" -> {
+                return KeyAllCommands.getTimeUntilNextKeyAll();
+            }
+            case "keyall_type" -> {
+                String type = KeyAllCommands.getLastKeyAllType();
+                return type.isEmpty() ? "None" : type;
+            }
+            case "keyall_amount" -> {
+                int amount = KeyAllCommands.getLastKeyAllAmount();
+                return amount == 0 ? "0" : String.valueOf(amount);
+            }
         }
 
         return null;
@@ -147,7 +159,7 @@ public class HiruExpansion extends PlaceholderExpansion {
         }
         if (position < 1 || position > 100) return "";
 
-        String field = parts[3]; // "name" or "value"
+        String field = parts[3]; // "name" or "value"   wda
         boolean wantName = field.equals("name");
         boolean wantValue = field.equals("value");
         if (!wantName && !wantValue) return "";

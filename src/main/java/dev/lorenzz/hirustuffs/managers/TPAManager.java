@@ -40,7 +40,7 @@ public class TPAManager {
         if (!sender.hasPermission("hiru.tpa.bypasscooldown") && cooldowns.containsKey(sender.getUniqueId())) {
             long remaining = (cooldowns.get(sender.getUniqueId()) - System.currentTimeMillis()) / 1000;
             if (remaining > 0) {
-                String msg = plugin.getConfigFile().getString("tpa.messages.cooldown", "&cAttendi %seconds%s.")
+                String msg = plugin.getConfigFile().getString("tpa.messages.cooldown", "&cWait %seconds%s.")
                         .replace("%seconds%", String.valueOf(remaining));
                 Messages.send(sender, msg);
                 return false;
@@ -53,7 +53,7 @@ public class TPAManager {
         // Expiry task
         BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (requests.remove(target.getUniqueId(), sender.getUniqueId())) {
-                String expiredMsg = plugin.getConfigFile().getString("tpa.messages.expired", "&7La richiesta TPA è scaduta.");
+                String expiredMsg = plugin.getConfigFile().getString("tpa.messages.expired", "&7The TPA request has expired.");
                 if (sender.isOnline()) Messages.send(sender, expiredMsg);
                 if (target.isOnline()) Messages.send(target, expiredMsg);
             }
@@ -79,9 +79,9 @@ public class TPAManager {
         if (requester.hasPermission("hiru.tpa.bypassdelay") || delay <= 0) {
             requester.teleportAsync(target.getLocation()).thenAccept(success -> {
                 if (success) {
-                    requester.playSound(requester.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+                    requester.playSound(requester.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1.2f);
                     String msg = plugin.getConfigFile().getString("tpa.messages.teleported",
-                            "&7Teletrasportato da &b%player%&7!").replace("%player%", target.getName());
+                            "&7Teleported to &b%player%&7!").replace("%player%", target.getName());
                     Messages.send(requester, msg);
                 }
             });
@@ -89,7 +89,7 @@ public class TPAManager {
         }
 
         String teleportingMsg = plugin.getConfigFile().getString("tpa.messages.teleporting",
-                        "&7Teletrasporto tra &e%seconds% &7secondi... Non muoverti!")
+                        "&7Teleporting in &e%seconds% &7seconds... Don't move!")
                 .replace("%seconds%", String.valueOf(delay));
         Messages.send(requester, teleportingMsg);
 
@@ -116,14 +116,14 @@ public class TPAManager {
                 if (hasMoved(startLoc, current.getLocation())) {
                     pendingCountdowns.remove(requesterUUID);
                     cancel();
-                    String movedMsg = plugin.getConfigFile().getString("tpa.messages.moved", "&cTi sei mosso! Teletrasporto annullato.");
+                    String movedMsg = plugin.getConfigFile().getString("tpa.messages.moved", "&cYou moved! Teleport cancelled.");
                     Messages.send(current, movedMsg);
                     current.sendActionBar(Messages.colorComponent("&c✖ Teleport cancelled"));
                     return;
                 }
 
                 if (countdown > 0) {
-                    current.playSound(current.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    current.playSound(current.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
                     String actionBar = plugin.getConfigFile().getString("tpa.messages.actionbar-countdown",
                             "&e⏳ Teleporting in &c{seconds}s&e...").replace("{seconds}", String.valueOf(countdown));
                     current.sendActionBar(Messages.colorComponent(actionBar));
@@ -138,12 +138,12 @@ public class TPAManager {
                     current.teleportAsync(teleportLoc).thenAccept(success -> {
                         if (success) {
                             Bukkit.getScheduler().runTask(plugin, () -> {
-                                current.playSound(current.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+                                current.playSound(current.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1.2f);
                                 String successBar = plugin.getConfigFile().getString("tpa.messages.actionbar-success",
                                         "&a✔ Teleported to &b{player}").replace("{player}", target.getName());
                                 current.sendActionBar(Messages.colorComponent(successBar));
                                 String msg = plugin.getConfigFile().getString("tpa.messages.teleported",
-                                        "&7Teletrasportato da &b%player%&7!").replace("%player%", target.getName());
+                                        "&7Teleported to &b%player%&7!").replace("%player%", target.getName());
                                 Messages.send(current, msg);
                             });
                         }

@@ -26,15 +26,15 @@ public class SpawnCommands {
     private static final double MOVEMENT_TOLERANCE_SQUARED = 0.25D;
     private static final Map<UUID, BukkitRunnable> pendingCountdowns = new ConcurrentHashMap<>();
 
-    @Command(name = "spawn", description = "Teletrasportati allo spawn", async = false)
+    @Command(name = "spawn", description = "Teleport to spawn", async = false)
     @Permission("hiru.spawn")
     public void spawn(@Sender Player player) {
         SpawnManager sm = SpawnManager.getInstance();
-        if (sm == null) { Messages.send(player, "&cSpawn non disponibile."); return; }
+        if (sm == null) { Messages.send(player, "&cSpawn not available."); return; }
 
         Set<String> names = sm.getSpawnNames();
         if (names.isEmpty()) {
-            Messages.send(player, plugin.getConfigFile().getString("spawn.messages.not-set", "&cNessuno spawn impostato!"));
+            Messages.send(player, plugin.getConfigFile().getString("spawn.messages.not-set", "&cNo spawn has been set!"));
             return;
         }
 
@@ -57,19 +57,19 @@ public class SpawnCommands {
         builder.open(player);
     }
 
-    @Command(name = "setspawn", description = "Imposta uno spawn", async = false)
+    @Command(name = "setspawn", description = "Set a spawn point", async = false)
     @Permission("hiru.admin")
-    public void setSpawn(@Sender Player player, @Optional("default") @Named("nome") String name) {
+    public void setSpawn(@Sender Player player, @Optional("default") @Named("name") String name) {
         SpawnManager sm = SpawnManager.getInstance();
         sm.setSpawn(name, player.getLocation());
-        Messages.send(player, plugin.getConfigFile().getString("spawn.messages.set", "&7Spawn %name% impostato!")
+        Messages.send(player, plugin.getConfigFile().getString("spawn.messages.set", "&7Spawn &b%name% &7has been set!")
                 .replace("%name%", name));
     }
 
     private void teleportToSpawn(Player player, String name) {
         SpawnManager sm = SpawnManager.getInstance();
         Location loc = sm.getSpawn(name);
-        if (loc == null) { Messages.send(player, "&cSpawn non trovato!"); return; }
+        if (loc == null) { Messages.send(player, "&cSpawn not found!"); return; }
 
         int delay = plugin.getConfigFile().getInt("spawn.teleport-delay-seconds", 3);
 
@@ -78,12 +78,12 @@ public class SpawnCommands {
             player.teleportAsync(loc).thenAccept(success -> {
                 if (success) {
                     Bukkit.getScheduler().runTask(plugin, () -> {
-                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1.2f);
                         String successBar = plugin.getConfigFile().getString("spawn.messages.actionbar-success",
                                 "&a✔ Teleported to spawn &b{name}").replace("{name}", name);
                         player.sendActionBar(Messages.colorComponent(successBar));
                         Messages.send(player, plugin.getConfigFile().getString("spawn.messages.teleported",
-                                "&7Teletrasportato allo spawn &b%name%&7!").replace("%name%", name));
+                                "&7Teleported to spawn &b%name%&7!").replace("%name%", name));
                     });
                 }
             });
@@ -91,7 +91,7 @@ public class SpawnCommands {
         }
 
         String teleportingMsg = plugin.getConfigFile().getString("spawn.messages.teleporting",
-                        "&7Teletrasporto tra &e{seconds} &7secondi... Non muoverti!")
+                        "&7Teleporting in &e{seconds} &7seconds... Don't move!")
                 .replace("{seconds}", String.valueOf(delay));
         Messages.send(player, teleportingMsg);
 
@@ -119,14 +119,14 @@ public class SpawnCommands {
                     pendingCountdowns.remove(playerId);
                     cancel();
                     String movedMsg = plugin.getConfigFile().getString("spawn.messages.moved",
-                            "&cTi sei mosso! Teletrasporto annullato.");
+                            "&cYou moved! Teleport cancelled.");
                     Messages.send(current, movedMsg);
                     current.sendActionBar(Messages.colorComponent("&c✖ Teleport cancelled"));
                     return;
                 }
 
                 if (countdown > 0) {
-                    current.playSound(current.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    current.playSound(current.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
                     String actionBar = plugin.getConfigFile().getString("spawn.messages.actionbar-countdown",
                             "&e⏳ Teleporting in &c{seconds}s&e...").replace("{seconds}", String.valueOf(countdown));
                     current.sendActionBar(Messages.colorComponent(actionBar));
@@ -138,12 +138,12 @@ public class SpawnCommands {
                     current.teleportAsync(loc).thenAccept(success -> {
                         if (success) {
                             Bukkit.getScheduler().runTask(plugin, () -> {
-                                current.playSound(current.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+                                current.playSound(current.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1.2f);
                                 String successBar = plugin.getConfigFile().getString("spawn.messages.actionbar-success",
                                         "&a✔ Teleported to spawn &b{name}").replace("{name}", name);
                                 current.sendActionBar(Messages.colorComponent(successBar));
                                 Messages.send(current, plugin.getConfigFile().getString("spawn.messages.teleported",
-                                        "&7Teletrasportato allo spawn &b%name%&7!").replace("%name%", name));
+                                        "&7Teleported to spawn &b%name%&7!").replace("%name%", name));
                             });
                         }
                     });

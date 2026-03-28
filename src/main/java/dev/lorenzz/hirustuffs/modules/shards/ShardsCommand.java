@@ -11,18 +11,18 @@ public class ShardsCommand {
 
     private final Hiru plugin = Hiru.getInstance();
 
-    @Command(name = "shards", description = "Controlla i tuoi shards")
-    public void shards(@Sender CommandSender sender, @Optional @Named("giocatore") Player target) {
+    @Command(name = "shards", description = "Check your shards")
+    public void shards(@Sender CommandSender sender, @Optional @Named("player") Player target) {
         ShardManager sm = ShardManager.getInstance();
-        if (sm == null) { Messages.send(sender, "&cShards non disponibile."); return; }
+        if (sm == null) { Messages.send(sender, "&cShards not available."); return; }
 
         if (target != null) {
             int amount = sm.getShards(target.getUniqueId());
-            Messages.send(sender, "&7Shards di &b" + target.getName() + "&7: &d" + amount);
+            Messages.send(sender, "&7Shards of &b" + target.getName() + "&7: &d" + amount);
         } else {
-            if (!(sender instanceof Player player)) { Messages.send(sender, "&cSpecifica un giocatore!"); return; }
+            if (!(sender instanceof Player player)) { Messages.send(sender, "&cSpecify a player!"); return; }
             int amount = sm.getShards(player.getUniqueId());
-            String msg = plugin.getConfigFile().getString("shards.messages.balance", "&7I tuoi Shards: &d%amount%")
+            String msg = plugin.getConfigFile().getString("shards.messages.balance", "&7Your Shards: &d%amount%")
                     .replace("%amount%", String.valueOf(amount));
             Messages.send(sender, msg);
         }

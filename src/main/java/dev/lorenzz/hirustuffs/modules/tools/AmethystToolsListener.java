@@ -93,7 +93,7 @@ public class AmethystToolsListener implements Listener {
         if (uses <= 0) {
             // Self-destruct
             player.getInventory().remove(item);
-            Messages.send(player, "&d&lIl tuo strumento in ametista si è distrutto!");
+            Messages.send(player, "&d&lYour amethyst tool has been destroyed!");
             return;
         }
 

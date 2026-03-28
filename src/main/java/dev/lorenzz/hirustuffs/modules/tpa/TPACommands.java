@@ -13,45 +13,45 @@ public class TPACommands {
 
     private final Hiru plugin = Hiru.getInstance();
 
-    @Command(name = "tpa", description = "Richiedi teletrasporto", async = false)
+    @Command(name = "tpa", description = "Request teleport", async = false)
     @Permission("hiru.tpa")
-    public void tpa(@Sender Player sender, @Named("giocatore") Player target) {
+    public void tpa(@Sender Player sender, @Named("player") Player target) {
         if (target.equals(sender)) {
-            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.self", "&cNon puoi inviare una TPA a te stesso!"));
+            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.self", "&cYou can't send a TPA to yourself!"));
             return;
         }
         TPAManager tpa = TPAManager.getInstance();
-        if (tpa == null) { Messages.send(sender, "&cTPA non disponibile."); return; }
+        if (tpa == null) { Messages.send(sender, "&cTPA not available."); return; }
 
         if (tpa.sendRequest(sender, target)) {
-            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.sent", "&7Richiesta TPA inviata a %player%.")
+            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.sent", "&7TPA request sent to &b%player%&7.")
                     .replace("%player%", target.getName()));
-            Messages.send(target, plugin.getConfigFile().getString("tpa.messages.received", "&7%player% vuole teletrasportarsi da te! &a/tpaccept &7o &c/tpdeny")
+            Messages.send(target, plugin.getConfigFile().getString("tpa.messages.received", "&7&b%player% &7wants to teleport to you! &a/tpaccept &7or &c/tpdeny")
                     .replace("%player%", sender.getName()));
         }
     }
 
-    @Command(name = "tpaccept", description = "Accetta richiesta TPA", async = false)
+    @Command(name = "tpaccept", description = "Accept TPA request", async = false)
     public void tpaccept(@Sender Player sender) {
         TPAManager tpa = TPAManager.getInstance();
-        if (tpa == null) { Messages.send(sender, "&cTPA non disponibile."); return; }
+        if (tpa == null) { Messages.send(sender, "&cTPA not available."); return; }
 
         if (tpa.acceptRequest(sender)) {
-            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.accepted", "&7Richiesta TPA accettata!"));
+            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.accepted", "&7TPA request accepted!"));
         } else {
-            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.no-request", "&cNessuna richiesta TPA pendente."));
+            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.no-request", "&cNo pending TPA requests."));
         }
     }
 
-    @Command(name = "tpdeny", description = "Rifiuta richiesta TPA", async = false)
+    @Command(name = "tpdeny", description = "Deny TPA request", async = false)
     public void tpdeny(@Sender Player sender) {
         TPAManager tpa = TPAManager.getInstance();
-        if (tpa == null) { Messages.send(sender, "&cTPA non disponibile."); return; }
+        if (tpa == null) { Messages.send(sender, "&cTPA not available."); return; }
 
         if (tpa.denyRequest(sender)) {
-            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.denied", "&7Richiesta TPA rifiutata."));
+            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.denied", "&7TPA request denied."));
         } else {
-            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.no-request", "&cNessuna richiesta TPA pendente."));
+            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.no-request", "&cNo pending TPA requests."));
         }
     }
 }

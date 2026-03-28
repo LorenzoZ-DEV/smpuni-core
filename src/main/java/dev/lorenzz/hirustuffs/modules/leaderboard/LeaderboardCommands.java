@@ -51,6 +51,7 @@ public class LeaderboardCommands {
         EconomyManager eco = EconomyManager.getInstance();
         if (eco == null) { Messages.send(player, "&cEconomy not available."); return; }
 
+
         List<Map.Entry<UUID, Double>> top = eco.getTopBalances(10);
         GUI.Builder builder = GUI.builder("&#333333&lTop Money", 4).border(Material.GOLD_BLOCK);
 

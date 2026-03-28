@@ -49,7 +49,7 @@ public class ClearLagModule extends AbstractModule {
                 task.cancel();
                 int cleared = clearEntities();
                 String msg = plugin.getConfigFile().getString("clearlag.messages.cleared",
-                                "&c&l[ClearLag] &aRimosse &e%amount% &aentità!")
+                                "&c&l[ClearLag] &aRemoved &e%amount% &aentities!")
                         .replace("%amount%", String.valueOf(cleared));
                 sendToAll(msg);
                 return;
@@ -57,7 +57,7 @@ public class ClearLagModule extends AbstractModule {
 
             if (remaining[0] == seconds || remaining[0] == 10 || remaining[0] == 5 || remaining[0] <= 3) {
                 String msg = plugin.getConfigFile().getString("clearlag.messages.warning",
-                                "&c&l[ClearLag] &ePulizia entità tra &c%seconds% &esecondi!")
+                                "&c&l[ClearLag] &eEntity cleanup in &c%seconds% &eseconds!")
                         .replace("%seconds%", String.valueOf(remaining[0]));
                 sendToAll(msg);
             }

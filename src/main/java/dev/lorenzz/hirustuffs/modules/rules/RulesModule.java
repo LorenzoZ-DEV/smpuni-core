@@ -65,7 +65,7 @@ public class RulesModule extends AbstractModule implements Listener {
         boolean autoOpen = plugin.getConfigFile().getBoolean("rules.auto-open-on-join", true);
 
         if (forceAccept && !hasAccepted(player.getUniqueId())) {
-            Messages.send(player, "&c&lDevi accettare le regole! Usa &e/rules &c&lper visualizzarle.");
+            Messages.send(player, "&c&lYou must accept the rules! Use &e/rules &c&lto view them.");
 
             // Auto-open rules menu after a short delay
             if (autoOpen) {
@@ -80,7 +80,7 @@ public class RulesModule extends AbstractModule implements Listener {
             int kickDelay = plugin.getConfigFile().getInt("rules.kick-delay-seconds", 60);
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (player.isOnline() && !hasAccepted(player.getUniqueId())) {
-                    String denyMsg = plugin.getConfigFile().getString("rules.deny-message", "&cDevi accettare le regole per giocare!");
+                    String denyMsg = plugin.getConfigFile().getString("rules.deny-message", "&cYou must accept the rules to play!");
                     player.kick(Messages.colorComponent(denyMsg));
                 }
             }, kickDelay * 20L);

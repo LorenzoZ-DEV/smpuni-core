@@ -14,14 +14,14 @@ public class RTPCommand {
         this.rtpService = rtpService;
     }
 
-    @Command(name = "rtp", aliases = {"randomtp", "wild"}, description = "Teletrasporto casuale", async = false)
+    @Command(name = "rtp", aliases = {"randomtp", "wild"}, description = "Random teleport", async = false)
     @Permission("hiru.rtp")
     public void rtp(@Sender Player player, @Optional("") @Named("world") String worldName) {
         if (worldName == null || worldName.isEmpty()) {
-            // Nessun mondo specificato -> apri il menu GUI
+            // No world specified -> open the GUI menu
             new RtpMenu(player).open();
         } else {
-            // Mondo specificato direttamente -> teletrasporta senza menu
+            // World specified directly -> teleport without menu
             rtpService.handleCommand(player, worldName);
         }
     }

@@ -2,7 +2,8 @@ name: Hiru-Stuffs
 version: '${version}'
 main: dev.lorenzz.hirustuffs.Hiru
 api-version: '1.20'
-authors: [lorenzz]
+authors: [Lorenzzzzzz]
+website: "https://lorenzzzz.xyz"
 depend: [Vault]
 softdepend: [PlaceholderAPI, LuckPerms]
 description: SMP Core Plugin
@@ -131,3 +132,12 @@ permissions:
   hiru.rewards:
     description: View playtime rewards
     default: true
+  hiru.back:
+    description: Use /back command
+    default: true
+  hiru.back.bypasscooldown:
+    description: Bypass /back cooldown
+    default: op
+  hiru.combat.bypass:
+    description: Bypass combat tag restrictions
+    default: op

@@ -10,6 +10,7 @@ import dev.lorenzz.hirustuffs.modules.billford.BillfordModule;
 import dev.lorenzz.hirustuffs.modules.bounty.BountyModule;
 import dev.lorenzz.hirustuffs.modules.clearlag.ClearLagModule;
 import dev.lorenzz.hirustuffs.modules.economy.EconomyModule;
+import dev.lorenzz.hirustuffs.modules.enderchest.EnderChestModule;
 import dev.lorenzz.hirustuffs.modules.help.HelpModule;
 import dev.lorenzz.hirustuffs.modules.homes.HomeModule;
 import dev.lorenzz.hirustuffs.modules.info.InfoModule;
@@ -41,6 +42,7 @@ import dev.lorenzz.hirustuffs.modules.skilltree.SkillTreeModule;
 import dev.lorenzz.hirustuffs.modules.playtimerewards.PlaytimeRewardsModule;
 import dev.lorenzz.hirustuffs.modules.worth.WorthModule;
 import dev.lorenzz.hirustuffs.modules.back.BackModule;
+import dev.lorenzz.hirustuffs.modules.combat.CombatModule;
 import dev.lorenzz.hirustuffs.placeholders.HiruExpansion;
 import dev.lorenzz.hirustuffs.utils.Config;
 import dev.lorenzz.hirustuffs.utils.Messages;
@@ -142,12 +144,14 @@ public final class Hiru extends JavaPlugin {
         moduleManager.registerModule(new AnnouncementModule(this));
         moduleManager.registerModule(new AdModule(this));
         moduleManager.registerModule(new BroadcastModule(this));
+        moduleManager.registerModule(new EnderChestModule(this));
         moduleManager.registerModule(new ReportModule(this));
         moduleManager.registerModule(new RequestModule(this));
         moduleManager.registerModule(new ClearChatModule(this));
         moduleManager.registerModule(new SkillTreeModule(this));
         moduleManager.registerModule(new PlaytimeRewardsModule(this));
         moduleManager.registerModule(new BackModule(this));
+        moduleManager.registerModule(new CombatModule(this));
     }
 
     public void reloadAllConfigs() {

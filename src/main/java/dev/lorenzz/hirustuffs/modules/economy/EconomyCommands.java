@@ -18,51 +18,51 @@ public class EconomyCommands {
     private final Hiru plugin = Hiru.getInstance();
 
     // /balance [player]
-    @Command(name = "balance", aliases = {"bal", "money"}, description = "Controlla il saldo")
-    public void balance(@Sender CommandSender sender, @Optional @Named("giocatore") Player target) {
+    @Command(name = "balance", aliases = {"bal", "money"}, description = "Check your balance")
+    public void balance(@Sender CommandSender sender, @Optional @Named("player") Player target) {
         EconomyManager eco = EconomyManager.getInstance();
-        if (eco == null) { Messages.send(sender, "&cEconomy non disponibile."); return; }
+        if (eco == null) { Messages.send(sender, "&cEconomy not available."); return; }
 
         String symbol = eco.getCurrencySymbol();
         if (target != null) {
             double bal = eco.getBalance(target.getUniqueId());
-            String msg = plugin.getConfigFile().getString("economy.messages.balance-other", "&7Saldo di %player%: &a%symbol%%amount%")
+            String msg = plugin.getConfigFile().getString("economy.messages.balance-other", "&7Balance of &b%player%&7: &a%symbol%%amount%")
                     .replace("%player%", target.getName()).replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", bal));
             Messages.send(sender, msg);
         } else {
-            if (!(sender instanceof Player player)) { Messages.send(sender, "&cSpecifica un giocatore!"); return; }
+            if (!(sender instanceof Player player)) { Messages.send(sender, "&cSpecify a player!"); return; }
             double bal = eco.getBalance(player.getUniqueId());
-            String msg = plugin.getConfigFile().getString("economy.messages.balance", "&7Saldo: &a%symbol%%amount%")
+            String msg = plugin.getConfigFile().getString("economy.messages.balance", "&7Your balance: &a%symbol%%amount%")
                     .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", bal));
             Messages.send(sender, msg);
         }
     }
 
     // /pay <player> <amount>
-    @Command(name = "pay", description = "Paga un giocatore")
-    public void pay(@Sender Player sender, @Named("giocatore") Player target, @Range(min = 1) @Named("importo") double amount) {
-        if (target.equals(sender)) { Messages.send(sender, "&cNon puoi pagare te stesso!"); return; }
+    @Command(name = "pay", description = "Pay a player")
+    public void pay(@Sender Player sender, @Named("player") Player target, @Range(min = 1) @Named("amount") double amount) {
+        if (target.equals(sender)) { Messages.send(sender, "&cYou can't pay yourself!"); return; }
 
         EconomyManager eco = EconomyManager.getInstance();
         String symbol = eco.getCurrencySymbol();
 
         if (!eco.removeBalance(sender.getUniqueId(), amount)) {
-            Messages.send(sender, plugin.getConfigFile().getString("economy.messages.pay-insufficient", "&cSaldo insufficiente!"));
+            Messages.send(sender, plugin.getConfigFile().getString("economy.messages.pay-insufficient", "&cInsufficient balance!"));
             return;
         }
         eco.addBalance(target.getUniqueId(), amount);
 
-        Messages.send(sender, plugin.getConfigFile().getString("economy.messages.pay-sent", "&7Inviati %symbol%%amount% a %player%.")
+        Messages.send(sender, plugin.getConfigFile().getString("economy.messages.pay-sent", "&7Sent &a%symbol%%amount% &7to &b%player%&7.")
                 .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", target.getName()));
-        Messages.send(target, plugin.getConfigFile().getString("economy.messages.pay-received", "&7Ricevuti %symbol%%amount% da %player%.")
+        Messages.send(target, plugin.getConfigFile().getString("economy.messages.pay-received", "&7Received &a%symbol%%amount% &7from &b%player%&7.")
                 .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", amount)).replace("%player%", sender.getName()));
     }
 
     // /baltop
-    @Command(name = "baltop", description = "Classifica saldi")
+    @Command(name = "baltop", description = "Balance leaderboard")
     public void baltop(@Sender CommandSender sender) {
         EconomyManager eco = EconomyManager.getInstance();
-        if (eco == null) { Messages.send(sender, "&cEconomy non disponibile."); return; }
+        if (eco == null) { Messages.send(sender, "&cEconomy not available."); return; }
 
         int topSize = plugin.getConfigFile().getInt("economy.baltop-size", 10);
         String symbol = eco.getCurrencySymbol();
@@ -77,7 +77,7 @@ public class EconomyCommands {
                     .replace("%position%", String.valueOf(i + 1)).replace("%player%", name)
                     .replace("%symbol%", symbol).replace("%amount%", String.format("%.2f", entry.getValue())));
         }
-        if (top.isEmpty()) Messages.sendRaw(sender, "&7Nessun dato disponibile.");
+        if (top.isEmpty()) Messages.sendRaw(sender, "&7No data available.");
         Messages.sendRaw(sender, plugin.getConfigFile().getString("economy.messages.baltop-footer", "&8&m---------------------------------"));
     }
 }

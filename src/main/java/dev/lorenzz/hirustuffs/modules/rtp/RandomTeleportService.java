@@ -165,7 +165,7 @@ public final class RandomTeleportService {
                 }
 
                 if (countdown > 0) {
-                    current.playSound(current.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    current.playSound(current.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
                     sendActionBar(current, "rtp.messages.actionbar-countdown", Map.of("{seconds}", String.valueOf(countdown)));
                     countdown--;
                 } else {
@@ -240,7 +240,7 @@ public final class RandomTeleportService {
                                     "{x}", String.valueOf(location.getBlockX()),
                                     "{z}", String.valueOf(location.getBlockZ())
                             ));
-                            current.playSound(current.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+                            current.playSound(current.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1.2f);
                             sendActionBar(current, "rtp.messages.actionbar-success", Map.of(
                                     "{world}", world.getName(),
                                     "{x}", String.valueOf(location.getBlockX()),

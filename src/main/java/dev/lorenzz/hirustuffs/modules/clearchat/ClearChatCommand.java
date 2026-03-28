@@ -36,7 +36,7 @@ public class ClearChatCommand {
                 Messages.sendRaw(online, separator);
 
                 try {
-                    online.playSound(online.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
+                    online.playSound(online.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.5f, 1.2f);
                 } catch (Exception ignored) {}
             }
         }

@@ -40,6 +40,7 @@ modules:
   skilltree: true
   playtime-rewards: true
   back: true
+  combat: true
 
 # ---- Database ----
 database:
@@ -50,10 +51,10 @@ database:
 # ---- Messages ----
 messages:
   prefix: "&8[&bHiru&8] "
-  no-permission: "&cNon hai il permesso!"
-  player-only: "&cSolo i giocatori possono usare questo comando!"
-  reload-success: "&aConfigurazione ricaricata con successo!"
-  player-not-found: "&cGiocatore non trovato!"
+  no-permission: "&cYou don't have permission!"
+  player-only: "&cOnly players can use this command!"
+  reload-success: "&aConfiguration reloaded successfully!"
+  player-not-found: "&cPlayer not found!"
 
 # ---- Economy ----
 economy:
@@ -62,15 +63,15 @@ economy:
   currency-symbol: "$"
   baltop-size: 10
   messages:
-    balance: "&7Il tuo saldo: &a%symbol%%amount%"
-    balance-other: "&7Saldo di &b%player%&7: &a%symbol%%amount%"
-    pay-sent: "&7Hai inviato &a%symbol%%amount% &7a &b%player%&7."
-    pay-received: "&7Hai ricevuto &a%symbol%%amount% &7da &b%player%&7."
-    pay-insufficient: "&cSaldo insufficiente!"
-    pay-invalid-amount: "&cImporto non valido!"
-    eco-give: "&7Dati &a%symbol%%amount% &7a &b%player%&7."
-    eco-take: "&7Rimossi &a%symbol%%amount% &7da &b%player%&7."
-    eco-set: "&7Saldo di &b%player% &7impostato a &a%symbol%%amount%&7."
+    balance: "&7Your balance: &a%symbol%%amount%"
+    balance-other: "&7Balance of &b%player%&7: &a%symbol%%amount%"
+    pay-sent: "&7You sent &a%symbol%%amount% &7to &b%player%&7."
+    pay-received: "&7You received &a%symbol%%amount% &7from &b%player%&7."
+    pay-insufficient: "&cInsufficient balance!"
+    pay-invalid-amount: "&cInvalid amount!"
+    eco-give: "&7Given &a%symbol%%amount% &7to &b%player%&7."
+    eco-take: "&7Removed &a%symbol%%amount% &7from &b%player%&7."
+    eco-set: "&7Balance of &b%player% &7set to &a%symbol%%amount%&7."
     baltop-header: "&8&m----------&8[ &bBaltop &8]&8&m----------"
     baltop-entry: "&7#%position% &b%player% &7- &a%symbol%%amount%"
     baltop-footer: "&8&m---------------------------------"
@@ -93,8 +94,8 @@ clearlag:
     - ARMOR_STAND
     - ITEM_FRAME
   messages:
-    warning: "&c&l[ClearLag] &ePulizia entità tra &c%seconds% &esecondi!"
-    cleared: "&c&l[ClearLag] &aRimosse &e%amount% &aentità!"
+    warning: "&c&l[ClearLag] &eEntity cleanup in &c%seconds% &eseconds!"
+    cleared: "&c&l[ClearLag] &aRemoved &e%amount% &aentities!"
 
 # ---- Shards ----
 shards:
@@ -114,8 +115,8 @@ shards:
       BEETROOTS: 1
       NETHER_WART: 2
   messages:
-    balance: "&7I tuoi Shards: &d%amount%"
-    earned: "&7Hai guadagnato &d%amount% Shards&7!"
+    balance: "&7Your Shards: &d%amount%"
+    earned: "&7You earned &d%amount% Shards&7!"
 
 # ---- TPA ----
 tpa:
@@ -123,17 +124,17 @@ tpa:
   cooldown-seconds: 30
   teleport-delay-seconds: 3
   messages:
-    sent: "&7Richiesta TPA inviata a &b%player%&7."
-    received: "&7&b%player% &7vuole teletrasportarsi da te! &a/tpaccept &7o &c/tpdeny"
-    accepted: "&7Richiesta TPA accettata!"
-    denied: "&7Richiesta TPA rifiutata."
-    expired: "&7La richiesta TPA è scaduta."
-    cooldown: "&cDevi aspettare &e%seconds% &csecondi prima di inviare un'altra richiesta."
-    no-request: "&cNon hai richieste TPA pendenti."
-    teleporting: "&7Teletrasporto tra &e{seconds} &7secondi... Non muoverti!"
-    moved: "&cTi sei mosso! Teletrasporto annullato."
-    self: "&cNon puoi inviare una TPA a te stesso!"
-    teleported: "&7Teletrasportato da &b%player%&7!"
+    sent: "&7TPA request sent to &b%player%&7."
+    received: "&7&b%player% &7wants to teleport to you! &a/tpaccept &7or &c/tpdeny"
+    accepted: "&7TPA request accepted!"
+    denied: "&7TPA request denied."
+    expired: "&7The TPA request has expired."
+    cooldown: "&cYou must wait &e%seconds% &cseconds before sending another request."
+    no-request: "&cYou have no pending TPA requests."
+    teleporting: "&7Teleporting in &e{seconds} &7seconds... Don't move!"
+    moved: "&cYou moved! Teleport cancelled."
+    self: "&cYou can't send a TPA to yourself!"
+    teleported: "&7Teleported to &b%player%&7!"
     actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
     actionbar-success: "&a✔ Teleported to &b{player}"
 
@@ -143,12 +144,12 @@ spawn:
   teleport-delay-seconds: 3
   spawns: {}
   messages:
-    teleported: "&7Teletrasportato allo spawn &b%name%&7!"
-    set: "&7Spawn &b%name% &7impostato!"
-    not-set: "&cNessuno spawn impostato!"
+    teleported: "&7Teleported to spawn &b%name%&7!"
+    set: "&7Spawn &b%name% &7has been set!"
+    not-set: "&cNo spawn has been set!"
     menu-title: "&8Spawn Menu"
-    teleporting: "&7Teletrasporto tra &e{seconds} &7secondi... Non muoverti!"
-    moved: "&cTi sei mosso! Teletrasporto annullato."
+    teleporting: "&7Teleporting in &e{seconds} &7seconds... Don't move!"
+    moved: "&cYou moved! Teleport cancelled."
     actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
     actionbar-success: "&a✔ Teleported to spawn &b{name}"
 
@@ -156,11 +157,15 @@ spawn:
 afk:
   kick-enabled: true
   kick-after-minutes: 30
-  kick-message: "&cSei stato kickato per inattività!"
+  kick-message: "&cYou have been kicked for inactivity!"
   exempt-permission: "hiru.afk.exempt"
+  # AFK Zone reward settings - gives shards to players standing in AFK zones
+  zone-reward-interval-seconds: 60
+  zone-reward-shards: 5
   messages:
-    now-afk: "&7%player% &7è ora &eAFK&7."
-    no-longer-afk: "&7%player% &7non è più &eAFK&7."
+    now-afk: "&7%player% &7is now &eAFK&7."
+    no-longer-afk: "&7%player% &7is no longer &eAFK&7."
+    zone-reward: "&7You received &d%amount% Shards &7for staying in the AFK Zone!"
   zones:
     spawn-afk:
       world: "world"
@@ -211,17 +216,17 @@ rtp:
       max-y: 100
       enabled: false
   messages:
-    teleporting: "&7Teletrasporto tra &e{seconds} &7secondi... Non muoverti!"
-    teleported: "&7Teletrasportato a &bX: {x} Z: {z} &7nel mondo &b{world}&7!"
-    cooldown: "&cDevi aspettare &e{time} &cprima di usare /rtp."
-    fail: "&cNon è stato trovato un luogo sicuro. Riprova!"
-    cancelled: "&cTeletrasporto annullato."
-    moved: "&cTi sei mosso! Teletrasporto annullato."
-    world-disabled: "&cIl mondo &e{world} &cnon è abilitato per l'RTP."
-    error-no-world: "&cIl mondo &e{world} &cnon esiste!"
-    actionbar-countdown: "&e⏳ Teletrasporto tra &c{seconds}s&e..."
-    actionbar-searching: "&e🔍 Ricerca posizione sicura..."
-    actionbar-success: "&a✔ Teletrasportato nel mondo &b{world} &a(X:{x} Z:{z})"
+    teleporting: "&7Teleporting in &e{seconds} &7seconds... Don't move!"
+    teleported: "&7Teleported to &bX: {x} Z: {z} &7in world &b{world}&7!"
+    cooldown: "&cYou must wait &e{time} &cbefore using /rtp."
+    fail: "&cNo safe location found. Try again!"
+    cancelled: "&cTeleport cancelled."
+    moved: "&cYou moved! Teleport cancelled."
+    world-disabled: "&cWorld &e{world} &cis not enabled for RTP."
+    error-no-world: "&cWorld &e{world} &cdoes not exist!"
+    actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
+    actionbar-searching: "&e🔍 Searching for a safe location..."
+    actionbar-success: "&a✔ Teleported to world &b{world} &a(X:{x} Z:{z})"
   menu:
     title: "&0Random Teleport"
     rows: 3
@@ -268,7 +273,7 @@ rtp:
 
 # ---- Profile ----
 profile:
-  menu-title: "&8Profilo di %player%"
+  menu-title: "&8Profile of %player%"
 
 # ---- KeyAll ----
 keyall:
@@ -277,8 +282,15 @@ keyall:
     - rare
     - epic
     - legendary
-  broadcast: "&a&l[KeyAll] &eTutti hanno ricevuto &b%amount%x %type% Key&e!"
-  received: "&7Hai ricevuto &b%amount%x %type% Key&7!"
+  # Command executed from console for each player. Use %player%, %type%, %amount%
+  console-command: "crates give %player% %type% %amount%"
+  # Auto KeyAll - automatically gives keys at a set interval
+  auto-enabled: false
+  auto-interval-minutes: 60
+  auto-type: "common"
+  auto-amount: 1
+  broadcast: "&a&l[KeyAll] &eEveryone received &b%amount%x %type% Key&e!"
+  received: "&7You received &b%amount%x %type% Key&7!"
 
 # ---- Media Menu ----
 media:
@@ -286,17 +298,17 @@ media:
   slots:
     0:
       material: DIAMOND
-      name: "&bRequisiti"
+      name: "&bRequirements"
       lore:
-        - "&71. 1000 Iscritti"
-        - "&72. Canale attivo"
+        - "&71. 1000 Subscribers"
+        - "&72. Active channel"
       permission: ""
     4:
       material: EMERALD
-      name: "&aBenefici"
+      name: "&aBenefits"
       lore:
-        - "&7Fly nel spawn"
-        - "&7Kit esclusivo"
+        - "&7Fly at spawn"
+        - "&7Exclusive kit"
       permission: ""
 
 # ---- Info Menu ----
@@ -311,7 +323,7 @@ info:
       material: BEACON
       name: "&bServer"
       lore:
-        - "&7Nome: &b%server-name%"
+        - "&7Name: &b%server-name%"
         - "&7Owner: &b%owner%"
     4:
       material: BOOK
@@ -322,20 +334,20 @@ info:
 
 # ---- Rules ----
 rules:
-  menu-title: "&8&lRegole del Server"
+  menu-title: "&8&lServer Rules"
   force-accept-on-first-join: true
   auto-open-on-join: true
   kick-delay-seconds: 60
-  accept-message: "&aHai accettato le regole!"
-  deny-message: "&cDevi accettare le regole per giocare!"
+  accept-message: "&aYou have accepted the rules!"
+  deny-message: "&cYou must accept the rules to play!"
   rules-list:
-    - "&c1. &7Niente hack o cheat."
-    - "&c2. &7Rispetta tutti i giocatori."
-    - "&c3. &7No spam o pubblicità."
-    - "&c4. &7No grief nelle zone protette."
-    - "&c5. &7Segui le indicazioni dello staff."
-    - "&c6. &7No exploit o bug abuse."
-    - "&c7. &7Divertiti!"
+    - "&c1. &7No hacking or cheating."
+    - "&c2. &7Respect all players."
+    - "&c3. &7No spam or advertising."
+    - "&c4. &7No griefing in protected areas."
+    - "&c5. &7Follow staff instructions."
+    - "&c6. &7No exploits or bug abuse."
+    - "&c7. &7Have fun!"
 
 # ---- Amethyst Tools ----
 tools:
@@ -345,8 +357,8 @@ tools:
       material: DIAMOND_SWORD
       name: "&d&lAmethyst Sword"
       lore:
-        - "&7Spada in ametista"
-        - "&7Usi rimanenti: &d%uses%"
+        - "&7Amethyst sword"
+        - "&7Uses remaining: &d%uses%"
       enchantments:
         SHARPNESS: 6
       attributes:
@@ -355,8 +367,8 @@ tools:
       material: DIAMOND_PICKAXE
       name: "&d&lAmethyst Pickaxe"
       lore:
-        - "&7Piccone in ametista"
-        - "&7Usi rimanenti: &d%uses%"
+        - "&7Amethyst pickaxe"
+        - "&7Uses remaining: &d%uses%"
       enchantments:
         EFFICIENCY: 7
         FORTUNE: 4
@@ -366,10 +378,10 @@ tools:
 # ---- Stats Wipe ----
 statswipe:
   log-file: "statswipe-log.txt"
-  confirm-title: "&c&lSei sicuro?"
+  confirm-title: "&c&lAre you sure?"
   messages:
-    wiped: "&c&lTutte le statistiche sono state resettate!"
-    cancelled: "&7Operazione annullata."
+    wiped: "&c&lAll stats have been wiped!"
+    cancelled: "&7Operation cancelled."
 
 # ---- Lunar Client ----
 lunar:
@@ -597,17 +609,22 @@ kits:
 # ---- Ad System ----
 ad:
   cooldown-seconds: 300
-            messages-list:
-    - "Join SmpUni on Minehut! Type /join SmpUni to play now!"
-    - "Looking for a great SMP? SmpUni is waiting for you — /join SmpUni"
-    - "SmpUni — The best SMP on Minehut. Come join us! /join SmpUni"
-    - "Play with us on SmpUni! Connect via Minehut: /join SmpUni"
-    - "SmpUni is LIVE on Minehut! Don't miss out — /join SmpUni"
-    - "The ultimate SMP experience is on SmpUni — /join SmpUni"
-    - "Your next adventure starts here! /join SmpUni on Minehut"
-    - "Escape the ordinary. SmpUni on Minehut is LIVE! /join SmpUni"
-    - "Best SMP on Minehut — SmpUni is waiting for YOU! /join SmpUni"
-    - "Join the community! SmpUni on Minehut — /join SmpUni"
+  messages-list:
+    - "⚔ Join SmpUni on Minehut! Type /join SmpUni to play now!"
+    - "🌍 Looking for a great SMP? SmpUni is waiting for you — /join SmpUni"
+    - "⚡ SmpUni — The best SMP on Minehut. Come join us! /join SmpUni"
+    - "🏆 Play with us on SmpUni! Connect via Minehut: /join SmpUni"
+    - "🔥 SmpUni is LIVE on Minehut! Don't miss out — /join SmpUni"
+    - "💎 The ultimate SMP experience is on SmpUni — /join SmpUni"
+    - "🚀 Your next adventure starts here! /join SmpUni on Minehut"
+    - "✨ Escape the ordinary. SmpUni on Minehut is LIVE! /join SmpUni"
+    - "⭐ Best SMP on Minehut — SmpUni is waiting for YOU! /join SmpUni"
+    - "🎮 Join the community! SmpUni on Minehut — /join SmpUni"
+    - "🛡 Custom economy, teams, bounties & more! /join SmpUni on Minehut"
+    - "⚔ PvP, trading, skill trees — all on SmpUni! /join SmpUni"
+    - "🌟 SmpUni — Where legends are made. /join SmpUni on Minehut!"
+    - "💰 Grind, trade, dominate! SmpUni SMP is live — /join SmpUni"
+    - "🏰 Build your empire on SmpUni! /join SmpUni on Minehut"
   messages:
     cooldown: "&cYou can use /ad again in &e%seconds% &cseconds."
     confirmed: "&aThanks for advertising SmpUni! &7Next use in &e%minutes% minutes&7."
@@ -791,4 +808,62 @@ playtime-rewards:
 # ---- Back (Death Teleport) ----
 back:
   cooldown-seconds: 30
+
+# ---- Combat System ----
+combat:
+  # How long the combat tag lasts (seconds)
+  tag-duration-seconds: 15
+  # Kill and drop items if a player logs out while in combat
+  punish-logout: true
+  drop-items-on-logout: true
+  # Block commands during combat
+  block-commands: true
+  # Block ender pearl usage during combat
+  block-ender-pearl: false
+  # Block chorus fruit during combat
+  block-chorus-fruit: true
+  # Block any teleportation during combat
+  block-teleport: true
+  # Disable flying when entering combat
+  block-flying: true
+  # Commands blocked while in combat (checked with startsWith)
+  blocked-commands:
+    - "/home"
+    - "/sethome"
+    - "/tpa"
+    - "/tpaccept"
+    - "/tpdeny"
+    - "/spawn"
+    - "/rtp"
+    - "/back"
+    - "/warp"
+    - "/tp"
+    - "/fly"
+    - "/afk"
+    - "/logout"
+    - "/hub"
+    - "/leave"
+    - "/kit"
+    - "/sell"
+    - "/shop"
+    - "/skills"
+    - "/rewards"
+  # Commands always allowed in combat (whitelist override)
+  allowed-commands:
+    - "/msg"
+    - "/r"
+    - "/reply"
+    - "/combattimer"
+    - "/ct"
+    - "/report"
+  messages:
+    tagged: "&#FF4444⚔ You are now in combat! &7Do not log out."
+    expired: "&#55FF55✔ You are no longer in combat."
+    fly-disabled: "&#FF4444Flight disabled — you are in combat!"
+    command-blocked: "&#FF4444You cannot use that command while in combat!"
+    ender-pearl-blocked: "&#FF4444You cannot use ender pearls while in combat!"
+    chorus-blocked: "&#FF4444You cannot eat chorus fruit while in combat!"
+    teleport-blocked: "&#FF4444You cannot teleport while in combat!"
+    combat-log-broadcast: "&#FF4444⚠ &#FF6B6B%player% &#8C8C8Clogged out while in combat with &#55FF55%attacker%&#8C8C8C!"
+    actionbar: "&#FF4444⚔ COMBAT &#8C8C8C» %bar% &#FF6B6B%seconds%s"
 
