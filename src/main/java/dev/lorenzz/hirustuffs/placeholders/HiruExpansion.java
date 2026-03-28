@@ -112,6 +112,38 @@ public class HiruExpansion extends PlaceholderExpansion {
                 TeamsManager.Team team = tm.getPlayerTeam(player.getUniqueId());
                 return team != null ? team.getName() : "None";
             }
+            case "team_name" -> {
+                TeamsManager tm = TeamsManager.getInstance();
+                if (tm == null) return "";
+                TeamsManager.Team team = tm.getPlayerTeam(player.getUniqueId());
+                return team != null ? team.getName() : "";
+            }
+            case "team_role" -> {
+                TeamsManager tm = TeamsManager.getInstance();
+                if (tm == null) return "";
+                TeamsManager.Team team = tm.getPlayerTeam(player.getUniqueId());
+                if (team == null) return "";
+                TeamsManager.Role role = team.getRole(player.getUniqueId());
+                return role != null ? role.name() : "";
+            }
+            case "team_members" -> {
+                TeamsManager tm = TeamsManager.getInstance();
+                if (tm == null) return "0";
+                TeamsManager.Team team = tm.getPlayerTeam(player.getUniqueId());
+                return team != null ? String.valueOf(team.getMembers().size()) : "0";
+            }
+            case "team_leader" -> {
+                TeamsManager tm = TeamsManager.getInstance();
+                if (tm == null) return "";
+                TeamsManager.Team team = tm.getPlayerTeam(player.getUniqueId());
+                if (team == null) return "";
+                return getPlayerName(team.getLeader());
+            }
+            case "has_team" -> {
+                TeamsManager tm = TeamsManager.getInstance();
+                if (tm == null) return "false";
+                return String.valueOf(tm.hasTeam(player.getUniqueId()));
+            }
             case "homes" -> {
                 HomeManager hm = HomeManager.getInstance();
                 if (hm == null) return "0";

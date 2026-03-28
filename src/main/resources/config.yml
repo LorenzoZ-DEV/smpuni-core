@@ -41,6 +41,8 @@ modules:
   playtime-rewards: true
   back: true
   combat: true
+  warp: true
+  duel: true
 
 # ---- Database ----
 database:
@@ -55,6 +57,18 @@ messages:
   player-only: "&cOnly players can use this command!"
   reload-success: "&aConfiguration reloaded successfully!"
   player-not-found: "&cPlayer not found!"
+
+# ---- Sounds ----
+sounds:
+  teleport: "ENTITY_ENDERMAN_TELEPORT"
+  teleport-countdown: "BLOCK_NOTE_BLOCK_PLING"
+  error: "ENTITY_VILLAGER_NO"
+  success: "ENTITY_EXPERIENCE_ORB_PICKUP"
+  duel-start: "ENTITY_ENDER_DRAGON_GROWL"
+  duel-win: "UI_TOAST_CHALLENGE_COMPLETE"
+  enderchest-open: "BLOCK_ENDER_CHEST_OPEN"
+  kit-claim: "ENTITY_PLAYER_LEVELUP"
+  rtp: "ENTITY_ENDERMAN_TELEPORT"
 
 # ---- Economy ----
 economy:
@@ -137,6 +151,9 @@ tpa:
     teleported: "&7Teleported to &b%player%&7!"
     actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
     actionbar-success: "&a✔ Teleported to &b{player}"
+    tpahere-sent: "&7TPAHere request sent to &b%player%&7."
+    tpahere-received: "&7&b%player% &7wants you to teleport to them! &a/tpaccept &7or &c/tpdeny"
+    tpahere-accepted: "&b%player% &7teleported to you!"
 
 # ---- Spawn ----
 spawn:
@@ -837,6 +854,10 @@ combat:
     - "/rtp"
     - "/back"
     - "/warp"
+    - "/tpahere"
+    - "/duel"
+    - "/duelaccept"
+    - "/dueldeny"
     - "/tp"
     - "/fly"
     - "/afk"
@@ -866,4 +887,48 @@ combat:
     teleport-blocked: "&#FF4444You cannot teleport while in combat!"
     combat-log-broadcast: "&#FF4444⚠ &#FF6B6B%player% &#8C8C8Clogged out while in combat with &#55FF55%attacker%&#8C8C8C!"
     actionbar: "&#FF4444⚔ COMBAT &#8C8C8C» %bar% &#FF6B6B%seconds%s"
+
+# ---- Warp System ----
+warp:
+  teleport-delay-seconds: 3
+  gui-title: "&8Warps"
+  messages:
+    teleported: "&7Teleported to warp &b%name%&7!"
+    set: "&7Warp &b%name% &7has been set!"
+    deleted: "&7Warp &b%name% &7has been deleted!"
+    not-found: "&cWarp &e%name% &cnot found!"
+    no-warps: "&cNo warps available!"
+    teleporting: "&7Teleporting in &e{seconds} &7seconds... Don't move!"
+    moved: "&cYou moved! Teleport cancelled."
+    actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
+    actionbar-success: "&a✔ Teleported to warp &b{name}"
+
+# ---- Duel System ----
+duel:
+  challenge-timeout-seconds: 30
+  countdown-seconds: 5
+  block-commands: true
+  messages:
+    self: "&cYou can't duel yourself!"
+    challenge-sent: "&7Duel challenge sent to &b%player%&7!"
+    challenge-received: "&b%player% &7challenged you to a duel! Use &a/duelaccept &7or &c/dueldeny"
+    accepted: "&a⚔ Duel accepted! Prepare to fight!"
+    denied: "&7Duel challenge denied."
+    denied-by-target: "&b%player% &cdenied your duel challenge."
+    no-challenge: "&cYou have no pending duel challenges."
+    expired: "&7The duel challenge has expired."
+    already-in-duel: "&cYou are already in a duel!"
+    target-in-duel: "&cThat player is already in a duel!"
+    arena-not-set: "&cThe duel arena has not been configured yet!"
+    starting: "&e⚔ Duel starting in &c{seconds} &eseconds!"
+    fight: "&c&l⚔ FIGHT!"
+    won: "&a&l⚔ You won the duel against &b%player%&a!"
+    lost: "&cYou lost the duel against &b%player%&c!"
+    broadcast-end: "&e⚔ &b%winner% &edefeated &b%loser% &ein a duel!"
+    disconnect: "&c⚠ &b%player% &cdisconnected during a duel!"
+    command-blocked: "&cYou cannot use commands during a duel!"
+    pos1-set: "&aArena position 1 set!"
+    pos2-set: "&aArena position 2 set!"
+    center-set: "&aArena center set!"
+    diespawn-set: "&aDuel end/death spawn set!"
 

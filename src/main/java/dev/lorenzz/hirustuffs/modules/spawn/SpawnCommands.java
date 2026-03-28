@@ -66,6 +66,14 @@ public class SpawnCommands {
                 .replace("%name%", name));
     }
 
+    private Sound getSound(String key, Sound fallback) {
+        try {
+            return Sound.valueOf(plugin.getConfigFile().getString("sounds." + key, fallback.name()));
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
     private void teleportToSpawn(Player player, String name) {
         SpawnManager sm = SpawnManager.getInstance();
         Location loc = sm.getSpawn(name);
@@ -78,7 +86,7 @@ public class SpawnCommands {
             player.teleportAsync(loc).thenAccept(success -> {
                 if (success) {
                     Bukkit.getScheduler().runTask(plugin, () -> {
-                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1.2f);
+                        player.playSound(player.getLocation(), getSound("teleport", Sound.ENTITY_ENDERMAN_TELEPORT), 1f, 1.2f);
                         String successBar = plugin.getConfigFile().getString("spawn.messages.actionbar-success",
                                 "&a✔ Teleported to spawn &b{name}").replace("{name}", name);
                         player.sendActionBar(Messages.colorComponent(successBar));
@@ -126,7 +134,7 @@ public class SpawnCommands {
                 }
 
                 if (countdown > 0) {
-                    current.playSound(current.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+                    current.playSound(current.getLocation(), getSound("teleport-countdown", Sound.BLOCK_NOTE_BLOCK_PLING), 1f, 1f);
                     String actionBar = plugin.getConfigFile().getString("spawn.messages.actionbar-countdown",
                             "&e⏳ Teleporting in &c{seconds}s&e...").replace("{seconds}", String.valueOf(countdown));
                     current.sendActionBar(Messages.colorComponent(actionBar));
@@ -138,7 +146,7 @@ public class SpawnCommands {
                     current.teleportAsync(loc).thenAccept(success -> {
                         if (success) {
                             Bukkit.getScheduler().runTask(plugin, () -> {
-                                current.playSound(current.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1.2f);
+                                current.playSound(current.getLocation(), getSound("teleport", Sound.ENTITY_ENDERMAN_TELEPORT), 1f, 1.2f);
                                 String successBar = plugin.getConfigFile().getString("spawn.messages.actionbar-success",
                                         "&a✔ Teleported to spawn &b{name}").replace("{name}", name);
                                 current.sendActionBar(Messages.colorComponent(successBar));

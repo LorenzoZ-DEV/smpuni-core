@@ -141,3 +141,15 @@ permissions:
   hiru.combat.bypass:
     description: Bypass combat tag restrictions
     default: op
+  hiru.tpahere:
+    description: TPAHere access
+    default: true
+  hiru.warp:
+    description: Use warps
+    default: true
+  hiru.warp.bypassdelay:
+    description: Bypass warp teleport delay
+    default: op
+  hiru.duel:
+    description: Use duel system
+    default: true

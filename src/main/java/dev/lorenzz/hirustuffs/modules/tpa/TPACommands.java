@@ -31,6 +31,25 @@ public class TPACommands {
         }
     }
 
+   @Command(name = "tpahere", description = "Request a player to teleport to you", async = false)
+    @Permission("hiru.tpahere")
+    public void tpahere(@Sender Player sender, @Named("player") Player target) {
+        if (target.equals(sender)) {
+            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.self", "&cYou can't send a TPA to yourself!"));
+            return;
+        }
+        TPAManager tpa = TPAManager.getInstance();
+        if (tpa == null) { Messages.send(sender, "&cTPA not available."); return; }
+
+        if (tpa.sendHereRequest(sender, target)) {
+            Messages.send(sender, plugin.getConfigFile().getString("tpa.messages.tpahere-sent", "&7TPAHere request sent to &b%player%&7.")
+                    .replace("%player%", target.getName()));
+            Messages.send(target, plugin.getConfigFile().getString("tpa.messages.tpahere-received",
+                            "&7&b%player% &7wants you to teleport to them! &a/tpaccept &7or &c/tpdeny")
+                    .replace("%player%", sender.getName()));
+        }
+    }
+
     @Command(name = "tpaccept", description = "Accept TPA request", async = false)
     public void tpaccept(@Sender Player sender) {
         TPAManager tpa = TPAManager.getInstance();

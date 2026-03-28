@@ -10,6 +10,14 @@ import org.bukkit.entity.Player;
 
 public class EnderChestCommands
 {
+    private Sound getSound(String key, Sound fallback) {
+        try {
+            return Sound.valueOf(Hiru.getInstance().getConfigFile().getString("sounds." + key, fallback.name()));
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
     @Permission("hiru.enderchest")
     @Command(name = "enderchest", aliases = "ec", description = "Open your ender chest", usage = "/enderchest", async = false)
     public void enderchest(@Sender Player player , Player target)
@@ -18,15 +26,13 @@ public class EnderChestCommands
         Bukkit.getScheduler().runTask(Hiru.getInstance(), () -> {
             if(target == null)
             {
-                Sound sound = Sound.valueOf("ENTITY_ENDER_CHEST_OPEN");
-                player.playSound(player.getLocation(), sound, 1.0f, 1.5f);
+                player.playSound(player.getLocation(), getSound("enderchest-open", Sound.BLOCK_ENDER_CHEST_OPEN), 1.0f, 1.5f);
                 player.openInventory(player.getEnderChest());
                 return;
             }
             if(!player.hasPermission("hiru.enderchest.others"))
             {
-                Sound sound = Sound.valueOf("ENTITY_VILLAGER_NO");
-                player.playSound(player.getLocation(), sound, 1.0f, 1.0f);
+                player.playSound(player.getLocation(), getSound("error", Sound.ENTITY_VILLAGER_NO), 1.0f, 1.0f);
                 player.sendMessage("&#FF4444You don't have permission to open other players' ender chests.");
                 return;
             }

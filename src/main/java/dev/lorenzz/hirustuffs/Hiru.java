@@ -43,6 +43,8 @@ import dev.lorenzz.hirustuffs.modules.playtimerewards.PlaytimeRewardsModule;
 import dev.lorenzz.hirustuffs.modules.worth.WorthModule;
 import dev.lorenzz.hirustuffs.modules.back.BackModule;
 import dev.lorenzz.hirustuffs.modules.combat.CombatModule;
+import dev.lorenzz.hirustuffs.modules.warp.WarpModule;
+import dev.lorenzz.hirustuffs.modules.duel.DuelModule;
 import dev.lorenzz.hirustuffs.placeholders.HiruExpansion;
 import dev.lorenzz.hirustuffs.utils.Config;
 import dev.lorenzz.hirustuffs.utils.Messages;
@@ -152,6 +154,8 @@ public final class Hiru extends JavaPlugin {
         moduleManager.registerModule(new PlaytimeRewardsModule(this));
         moduleManager.registerModule(new BackModule(this));
         moduleManager.registerModule(new CombatModule(this));
+        moduleManager.registerModule(new WarpModule(this));
+        moduleManager.registerModule(new DuelModule(this));
     }
 
     public void reloadAllConfigs() {
