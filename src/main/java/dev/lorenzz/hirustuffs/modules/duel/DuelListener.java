@@ -7,10 +7,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class DuelListener implements Listener {
 
@@ -73,6 +77,12 @@ public class DuelListener implements Listener {
             if (victimState != null && attackerState != null
                     && victimState.getOpponent().equals(attacker.getUniqueId())
                     && attackerState.getOpponent().equals(victim.getUniqueId())) {
+
+                // Apply overtime damage multiplier
+                double multiplier = dm.getDamageMultiplier(victim.getUniqueId());
+                if (multiplier > 1.0) {
+                    event.setDamage(event.getDamage() * multiplier);
+                }
                 return; // Allow
             }
 
@@ -100,6 +110,33 @@ public class DuelListener implements Listener {
             event.setCancelled(true);
             Messages.send(player, plugin.getConfigFile().getString("duel.messages.command-blocked",
                     "&cYou cannot use commands during a duel!"));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
+        Player player = event.getPlayer();
+        DuelManager dm = DuelManager.getInstance();
+        if (dm == null || !dm.isInDuel(player.getUniqueId())) return;
+
+        ItemStack item = event.getItem();
+        if (dm.isKitBook(item)) {
+            event.setCancelled(true);
+            dm.giveDuelKit(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onDrop(PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        DuelManager dm = DuelManager.getInstance();
+        if (dm == null || !dm.isInDuel(player.getUniqueId())) return;
+
+        // Prevent dropping the kit book
+        if (dm.isKitBook(event.getItemDrop().getItemStack())) {
+            event.setCancelled(true);
         }
     }
 }

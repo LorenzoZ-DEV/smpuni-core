@@ -27,6 +27,10 @@ public class AFKManager {
     private final Map<UUID, Integer> afkZoneTimers = new ConcurrentHashMap<>();
     /** Active boss bars shown to players in AFK zones */
     private final Map<UUID, BossBar> afkZoneBossBars = new ConcurrentHashMap<>();
+    /** Stores the player's previous location before being teleported to the AFK zone */
+    private final Map<UUID, Location> previousLocations = new ConcurrentHashMap<>();
+    /** Players who are immune to movement detection (just teleported to AFK zone) */
+    private final Map<UUID, Long> teleportImmunity = new ConcurrentHashMap<>();
 
     private BukkitTask checkTask;
     private BukkitTask zoneTickTask;
@@ -115,7 +119,7 @@ public class AFKManager {
                     // Send ActionBar
                     player.sendActionBar(Messages.colorComponent(
                             "&#9C27B0⏳ &#E0E0E0AFK Zone &#8C8C8C| &#FFD700" + timeStr +
-                                    " &#8C8C8Cuntil &#d" + rewardShards + " Shards"));
+                                    " &#8C8C8Cuntil &d" + rewardShards + " Shards"));
 
                 } else {
                     // Player left AFK zone — clean up
@@ -223,7 +227,58 @@ public class AFKManager {
         return afkZones.stream().map(AFKZone::name).toList();
     }
 
+    /**
+     * Returns the center Location of the first AFK zone, or null if no zones exist.
+     */
+    public Location getAFKZoneCenter() {
+        if (afkZones.isEmpty()) return null;
+        AFKZone zone = afkZones.get(0);
+        var world = Bukkit.getWorld(zone.world());
+        if (world == null) return null;
+        double cx = (zone.minX() + zone.maxX()) / 2.0 + 0.5;
+        double cy = (zone.minY() + zone.maxY()) / 2.0;
+        double cz = (zone.minZ() + zone.maxZ()) / 2.0 + 0.5;
+        return new Location(world, cx, cy, cz);
+    }
+
+    /**
+     * Teleports the player to the AFK zone, saving their current location for later return.
+     * Returns true if successful, false if no AFK zone is set.
+     */
+    public boolean teleportToAFKZone(Player player) {
+        Location center = getAFKZoneCenter();
+        if (center == null) return false;
+        previousLocations.put(player.getUniqueId(), player.getLocation().clone());
+        teleportImmunity.put(player.getUniqueId(), System.currentTimeMillis() + 3000L); // 3 second immunity
+        player.teleportAsync(center);
+        return true;
+    }
+
+    /**
+     * Returns the player's saved previous location (before AFK zone teleport), or null.
+     */
+    public Location getPreviousLocation(UUID uuid) {
+        return previousLocations.get(uuid);
+    }
+
+    /**
+     * Clears and returns the previous location for the given player.
+     */
+    public Location clearPreviousLocation(UUID uuid) {
+        return previousLocations.remove(uuid);
+    }
+
     public void recordActivity(UUID uuid) {
+        // Skip if player has teleport immunity (just teleported to AFK zone)
+        Long immuneUntil = teleportImmunity.get(uuid);
+        if (immuneUntil != null) {
+            if (System.currentTimeMillis() < immuneUntil) {
+                return; // Still immune, ignore movement
+            } else {
+                teleportImmunity.remove(uuid);
+            }
+        }
+
         lastActivity.put(uuid, System.currentTimeMillis());
         if (afkPlayers.contains(uuid)) {
             Player player = Bukkit.getPlayer(uuid);
@@ -245,6 +300,17 @@ public class AFKManager {
         } else {
             afkPlayers.remove(uuid);
             lastActivity.put(uuid, System.currentTimeMillis());
+
+            // Teleport back to previous location if they were in the AFK zone
+            Location prevLoc = clearPreviousLocation(uuid);
+            if (prevLoc != null) {
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (player.isOnline()) {
+                        player.teleportAsync(prevLoc);
+                    }
+                });
+            }
+
             String msg = plugin.getConfigFile().getString("afk.messages.no-longer-afk", "&7%player% &7is no longer &eAFK&7.")
                     .replace("%player%", player.getName());
             Bukkit.broadcast(Messages.colorComponent(Messages.getPrefix() + msg));
@@ -260,6 +326,8 @@ public class AFKManager {
         afkPlayers.remove(uuid);
         lastActivity.remove(uuid);
         afkZoneTimers.remove(uuid);
+        previousLocations.remove(uuid);
+        teleportImmunity.remove(uuid);
         BossBar bar = afkZoneBossBars.remove(uuid);
         if (bar != null) {
             Player player = Bukkit.getPlayer(uuid);
@@ -277,6 +345,8 @@ public class AFKManager {
         }
         afkZoneBossBars.clear();
         afkZoneTimers.clear();
+        previousLocations.clear();
+        teleportImmunity.clear();
         afkPlayers.clear();
         lastActivity.clear();
     }

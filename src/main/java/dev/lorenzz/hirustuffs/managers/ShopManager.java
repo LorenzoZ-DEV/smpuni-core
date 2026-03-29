@@ -21,7 +21,23 @@ public class ShopManager {
     private YamlConfiguration dataConfig;
 
     public record ShopItem(Material material, double buyPrice, double sellPrice, String currency) {}
-    public record ShopCategory(String name, String displayName, Material icon, List<ShopItem> items) {}
+
+    /**
+     * Represents a custom item (spawners, crates, etc.) that executes a console command on purchase.
+     * The command string supports {player} placeholder which is replaced with the buyer's name.
+     * displayMaterial is used as the icon in the GUI.
+     */
+    public record ShopCommandItem(String id, String displayName, Material displayMaterial,
+                                   double buyPrice, String currency, String command,
+                                   List<String> lore) {}
+
+    public record ShopCategory(String name, String displayName, Material icon,
+                                List<ShopItem> items, List<ShopCommandItem> commandItems) {
+        /** Backwards-compatible constructor for categories with no command items */
+        public ShopCategory(String name, String displayName, Material icon, List<ShopItem> items) {
+            this(name, displayName, icon, items, new ArrayList<>());
+        }
+    }
 
     public ShopManager(Hiru plugin) {
         this.plugin = plugin;
@@ -168,6 +184,25 @@ public class ShopManager {
         addItem(defaults, "combat", "GOLDEN_APPLE", 1000, 500, "MONEY");
         addItem(defaults, "combat", "ENCHANTED_GOLDEN_APPLE", 25000, 12500, "SHARDS");
 
+        // ── Custom Items (spawners, crates, etc.) ──
+        defaults.set("categories.custom.display-name", "&#FF55FF&lCustom Items");
+        defaults.set("categories.custom.icon", "SPAWNER");
+        addCommandItem(defaults, "custom", "zombie_spawner", "&#55FF55Zombie Spawner",
+                "SPAWNER", 50000, "MONEY", "silkspawners:ss give {player} ZOMBIE 1",
+                List.of("&#8C8C8CA zombie mob spawner"));
+        addCommandItem(defaults, "custom", "skeleton_spawner", "&#CCCCCC Skeleton Spawner",
+                "SPAWNER", 50000, "MONEY", "silkspawners:ss give {player} SKELETON 1",
+                List.of("&#8C8C8CA skeleton mob spawner"));
+        addCommandItem(defaults, "custom", "common_crate", "&#55FF55Common Crate Key",
+                "TRIPWIRE_HOOK", 5000, "MONEY", "crates givekey {player} common 1",
+                List.of("&#8C8C8CA common crate key"));
+        addCommandItem(defaults, "custom", "rare_crate", "&#5555FFRare Crate Key",
+                "TRIPWIRE_HOOK", 15000, "MONEY", "crates givekey {player} rare 1",
+                List.of("&#8C8C8CA rare crate key"));
+        addCommandItem(defaults, "custom", "legendary_crate", "&#FFD700Legendary Crate Key",
+                "TRIPWIRE_HOOK", 50000, "SHARDS", "crates givekey {player} legendary 1",
+                List.of("&#8C8C8CA legendary crate key"));
+
         try { defaults.save(dataFile); } catch (IOException e) { e.printStackTrace(); }
     }
 
@@ -176,6 +211,18 @@ public class ShopManager {
         config.set(path + ".buy", buy);
         config.set(path + ".sell", sell);
         config.set(path + ".currency", currency);
+    }
+
+    private void addCommandItem(YamlConfiguration config, String category, String id,
+                                 String displayName, String displayMaterial, double buy,
+                                 String currency, String command, List<String> lore) {
+        String path = "categories." + category + ".command-items." + id;
+        config.set(path + ".display-name", displayName);
+        config.set(path + ".display-material", displayMaterial);
+        config.set(path + ".buy", buy);
+        config.set(path + ".currency", currency);
+        config.set(path + ".command", command);
+        config.set(path + ".lore", lore);
     }
 
     private void loadAll() {
@@ -203,7 +250,25 @@ public class ShopManager {
                     items.add(new ShopItem(mat, buy, sell, currency));
                 }
             }
-            categories.put(catKey, new ShopCategory(catKey, displayName, icon, items));
+
+            List<ShopCommandItem> commandItems = new ArrayList<>();
+            ConfigurationSection cmdSec = cs.getConfigurationSection("command-items");
+            if (cmdSec != null) {
+                for (String cmdKey : cmdSec.getKeys(false)) {
+                    ConfigurationSection cmdItem = cmdSec.getConfigurationSection(cmdKey);
+                    if (cmdItem == null) continue;
+                    String cmdDisplayName = cmdItem.getString("display-name", cmdKey);
+                    Material displayMat = Material.matchMaterial(cmdItem.getString("display-material", "BARRIER"));
+                    if (displayMat == null) displayMat = Material.BARRIER;
+                    double buy = cmdItem.getDouble("buy", 0);
+                    String currency = cmdItem.getString("currency", "MONEY");
+                    String command = cmdItem.getString("command", "");
+                    List<String> lore = cmdItem.getStringList("lore");
+                    commandItems.add(new ShopCommandItem(cmdKey, cmdDisplayName, displayMat, buy, currency, command, lore));
+                }
+            }
+
+            categories.put(catKey, new ShopCategory(catKey, displayName, icon, items, commandItems));
         }
         plugin.getLogger().info("[Hiru] Loaded " + categories.size() + " shop categories.");
     }
@@ -220,6 +285,15 @@ public class ShopManager {
                 dataConfig.set(iPath + ".buy", item.buyPrice());
                 dataConfig.set(iPath + ".sell", item.sellPrice());
                 dataConfig.set(iPath + ".currency", item.currency());
+            }
+            for (ShopCommandItem cmdItem : cat.commandItems()) {
+                String cPath = path + ".command-items." + cmdItem.id();
+                dataConfig.set(cPath + ".display-name", cmdItem.displayName());
+                dataConfig.set(cPath + ".display-material", cmdItem.displayMaterial().name());
+                dataConfig.set(cPath + ".buy", cmdItem.buyPrice());
+                dataConfig.set(cPath + ".currency", cmdItem.currency());
+                dataConfig.set(cPath + ".command", cmdItem.command());
+                dataConfig.set(cPath + ".lore", cmdItem.lore());
             }
         }
         try { dataConfig.save(dataFile); } catch (IOException e) {

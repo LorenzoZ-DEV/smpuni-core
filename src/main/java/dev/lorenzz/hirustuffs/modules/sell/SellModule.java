@@ -12,6 +12,7 @@ public class SellModule extends AbstractModule {
     @Override
     public void onEnable() {
         plugin.getCommandManager().register(new SellCommands());
+        registerListener(new SellMenuListener());
         logger.info("[Hiru] SellModule loaded.");
     }
 

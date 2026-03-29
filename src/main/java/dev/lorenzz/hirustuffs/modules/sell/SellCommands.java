@@ -7,19 +7,13 @@ import dev.lorenzz.hirustuffs.Hiru;
 import dev.lorenzz.hirustuffs.managers.EconomyManager;
 import dev.lorenzz.hirustuffs.managers.WorthManager;
 import dev.lorenzz.hirustuffs.utils.Messages;
-import net.j4c0b3y.api.menu.Menu;
-import net.j4c0b3y.api.menu.MenuSize;
-import net.j4c0b3y.api.menu.button.impl.PlaceholderButton;
-import net.j4c0b3y.api.menu.button.impl.SimpleButton;
-import net.j4c0b3y.api.menu.layer.impl.BackgroundLayer;
-import net.j4c0b3y.api.menu.layer.impl.ForegroundLayer;
-import net.j4c0b3y.api.menu.utils.Item;
-import com.cryptomorin.xseries.XMaterial;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SellCommands {
@@ -88,111 +82,51 @@ public class SellCommands {
         EconomyManager eco = EconomyManager.getInstance();
         if (wm == null || eco == null) { Messages.send(player, "&cSell system not available."); return; }
 
-        Menu menu = new Menu("&#333333&lSell Items", MenuSize.of(6), player) {
-            @Override
-            public void setup(BackgroundLayer bg, ForegroundLayer fg) {
-                // Border
-                bg.border(new PlaceholderButton(XMaterial.BLACK_STAINED_GLASS_PANE));
+        String title = Messages.color("&#333333&l" + SellMenuListener.SELL_MENU_TITLE);
+        Inventory inv = Bukkit.createInventory(null, 54, title);
 
-                // Fill row 5 (slots 45-53) with glass
-                for (int i = 45; i < 54; i++) {
-                    bg.set(i, new PlaceholderButton(XMaterial.BLACK_STAINED_GLASS_PANE));
-                }
+        // Border — fill row 0 (0-8), row 5 (45-53), and columns 0 & 8 of rows 1-4
+        ItemStack border = createGuiItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        for (int i = 0; i < 9; i++) inv.setItem(i, border);
+        for (int i = 45; i < 54; i++) inv.setItem(i, border);
+        for (int row = 1; row < 5; row++) {
+            inv.setItem(row * 9, border);
+            inv.setItem(row * 9 + 8, border);
+        }
 
-                // Info item
-                fg.set(4, new SimpleButton(
-                        new Item(XMaterial.HOPPER)
-                                .setName("&#FFD700&lPlace items below to sell")
-                                .setLore(List.of("&#8C8C8CDrop sellable items in the empty slots", "&#8C8C8CThen click the Sell button"))
-                                .build()
-                ));
+        // Info item (slot 4)
+        inv.setItem(4, createGuiItem(Material.HOPPER,
+                Messages.color("&#FFD700&lDrop items to sell"),
+                Messages.color("&#8C8C8CPlace sellable items in the empty slots"),
+                Messages.color("&#8C8C8CThen click the Sell button")));
 
-                // Sell All button
-                fg.set(49, new SimpleButton(
-                        new Item(XMaterial.LIME_STAINED_GLASS_PANE)
-                                .setName("&#55FF55&lSELL ALL")
-                                .setLore(List.of("&#8C8C8CClick to sell all items above"))
-                                .build(),
-                        click -> {
-                            Player p = click.getMenu().getPlayer();
-                            sellItemsInMenu(p, click.getMenu());
-                        }
-                ));
+        // Sell All button (slot 49)
+        inv.setItem(49, createGuiItem(Material.LIME_STAINED_GLASS_PANE,
+                Messages.color("&#55FF55&lSELL ALL"),
+                Messages.color("&#8C8C8CClick to sell all items above")));
 
-                // Cancel button
-                fg.set(45, new SimpleButton(
-                        new Item(XMaterial.RED_STAINED_GLASS_PANE)
-                                .setName("&#FF4444&lCANCEL")
-                                .setLore(List.of("&#8C8C8CClose and return items"))
-                                .build(),
-                        click -> click.getMenu().getPlayer().closeInventory()
-                ));
+        // Cancel button (slot 45)
+        inv.setItem(45, createGuiItem(Material.RED_STAINED_GLASS_PANE,
+                Messages.color("&#FF4444&lCANCEL"),
+                Messages.color("&#8C8C8CClose and return items")));
 
-                // Worth info button
-                fg.set(53, new SimpleButton(
-                        new Item(XMaterial.BOOK)
-                                .setName("&#4FC3F7&lPrices")
-                                .setLore(List.of("&#8C8C8CUse /prices to see all item values"))
-                                .build()
-                ));
-            }
+        // Prices info (slot 53)
+        inv.setItem(53, createGuiItem(Material.BOOK,
+                Messages.color("&#4FC3F7&lPrices"),
+                Messages.color("&#8C8C8CUse /prices to see all item values")));
 
-            @Override
-            public void onClose() {
-                // Return items that weren't sold
-                Player p = getPlayer();
-                for (int i = 10; i < 44; i++) {
-                    if (i % 9 == 0 || i % 9 == 8) continue;
-                    ItemStack item = getInventory().getItem(i);
-                    if (item != null && item.getType() != Material.AIR) {
-                        p.getInventory().addItem(item).values().forEach(leftover ->
-                                p.getWorld().dropItemNaturally(p.getLocation(), leftover));
-                    }
-                }
-            }
-        };
-        menu.open();
+        player.openInventory(inv);
     }
 
-    private void sellItemsInMenu(Player player, Menu menu) {
-        WorthManager wm = WorthManager.getInstance();
-        EconomyManager eco = EconomyManager.getInstance();
-        if (wm == null || eco == null) return;
-
-        double total = 0;
-        int itemsSold = 0;
-        List<String> soldItems = new ArrayList<>();
-
-        for (int i = 10; i < 44; i++) {
-            if (i % 9 == 0 || i % 9 == 8) continue;
-            ItemStack item = menu.getInventory().getItem(i);
-            if (item == null || item.getType() == Material.AIR) continue;
-
-            double price = wm.getPrice(item.getType());
-            if (price <= 0) continue;
-
-            double itemTotal = price * item.getAmount();
-            total += itemTotal;
-            itemsSold += item.getAmount();
-            soldItems.add("&#8C8C8C" + item.getAmount() + "x " + formatMat(item.getType()) + " &#55FF55$" + Messages.formatNumber(itemTotal));
-            menu.getInventory().setItem(i, null);
+    private ItemStack createGuiItem(Material material, String name, String... lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(name);
+            if (lore.length > 0) meta.setLore(List.of(lore));
+            item.setItemMeta(meta);
         }
-
-        if (itemsSold == 0) {
-            Messages.send(player, "&#8C8C8CNo sellable items found.");
-            return;
-        }
-
-        eco.addBalance(player.getUniqueId(), total);
-
-        Messages.send(player, "&#3D3D3D━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        Messages.send(player, " &#55FF55&lITEMS SOLD");
-        for (String line : soldItems) {
-            Messages.sendRaw(player, " " + line);
-        }
-        Messages.send(player, "");
-        Messages.send(player, " &#E0E0E0Total: &#FFD700&l$" + Messages.formatNumber(total));
-        Messages.send(player, "&#3D3D3D━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        return item;
     }
 
     private String formatMat(Material material) {

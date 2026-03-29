@@ -16,7 +16,18 @@ public class AFKCommand {
     public void afk(@Sender Player player) {
         AFKManager afk = AFKManager.getInstance();
         if (afk == null) { Messages.send(player, "&cAFK not available."); return; }
-        afk.toggleAFK(player);
+
+        boolean goingAfk = !afk.isAFK(player);
+        if (goingAfk) {
+            // Try to teleport to AFK zone first
+            if (!afk.teleportToAFKZone(player)) {
+                Messages.send(player, "&cNo AFK Zone set! You have been marked as AFK without teleporting.");
+            }
+            afk.setAFK(player, true);
+        } else {
+            // setAFK(false) will handle teleporting back
+            afk.setAFK(player, false);
+        }
     }
 
     @Command(name = "setafkzone", description = "Set an AFK Zone around your position")

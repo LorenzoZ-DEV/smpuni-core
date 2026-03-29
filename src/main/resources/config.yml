@@ -31,7 +31,7 @@ modules:
   billford: true
   help: true
   kits: true
-  announcements: true
+  announcements: false
   ad: true
   broadcast: true
   report: true
@@ -46,49 +46,49 @@ modules:
 
 # ---- Database ----
 database:
-  type: YAML  # YAML or SQLITE
+  type: YAML # YAML or SQLITE
   sqlite:
     file: hiru.db
 
 # ---- Messages ----
 messages:
-  prefix: "&8[&bHiru&8] "
-  no-permission: "&cYou don't have permission!"
-  player-only: "&cOnly players can use this command!"
-  reload-success: "&aConfiguration reloaded successfully!"
-  player-not-found: "&cPlayer not found!"
+  prefix: '&8[&a❇&8] '
+  no-permission: '&cYou don''t have permission!'
+  player-only: '&cOnly players can use this command!'
+  reload-success: '&aConfiguration reloaded successfully!'
+  player-not-found: '&cPlayer not found!'
 
 # ---- Sounds ----
 sounds:
-  teleport: "ENTITY_ENDERMAN_TELEPORT"
-  teleport-countdown: "BLOCK_NOTE_BLOCK_PLING"
-  error: "ENTITY_VILLAGER_NO"
-  success: "ENTITY_EXPERIENCE_ORB_PICKUP"
-  duel-start: "ENTITY_ENDER_DRAGON_GROWL"
-  duel-win: "UI_TOAST_CHALLENGE_COMPLETE"
-  enderchest-open: "BLOCK_ENDER_CHEST_OPEN"
-  kit-claim: "ENTITY_PLAYER_LEVELUP"
-  rtp: "ENTITY_ENDERMAN_TELEPORT"
+  teleport: ENTITY_ENDERMAN_TELEPORT
+  teleport-countdown: BLOCK_NOTE_BLOCK_PLING
+  error: ENTITY_VILLAGER_NO
+  success: ENTITY_EXPERIENCE_ORB_PICKUP
+  duel-start: ENTITY_ENDER_DRAGON_GROWL
+  duel-win: UI_TOAST_CHALLENGE_COMPLETE
+  enderchest-open: BLOCK_ENDER_CHEST_OPEN
+  kit-claim: ENTITY_PLAYER_LEVELUP
+  rtp: ENTITY_ENDERMAN_TELEPORT
 
 # ---- Economy ----
 economy:
   starting-balance: 1000.0
-  currency-name: "Coins"
-  currency-symbol: "$"
+  currency-name: Coins
+  currency-symbol: $
   baltop-size: 10
   messages:
-    balance: "&7Your balance: &a%symbol%%amount%"
-    balance-other: "&7Balance of &b%player%&7: &a%symbol%%amount%"
-    pay-sent: "&7You sent &a%symbol%%amount% &7to &b%player%&7."
-    pay-received: "&7You received &a%symbol%%amount% &7from &b%player%&7."
-    pay-insufficient: "&cInsufficient balance!"
-    pay-invalid-amount: "&cInvalid amount!"
-    eco-give: "&7Given &a%symbol%%amount% &7to &b%player%&7."
-    eco-take: "&7Removed &a%symbol%%amount% &7from &b%player%&7."
-    eco-set: "&7Balance of &b%player% &7set to &a%symbol%%amount%&7."
-    baltop-header: "&8&m----------&8[ &bBaltop &8]&8&m----------"
-    baltop-entry: "&7#%position% &b%player% &7- &a%symbol%%amount%"
-    baltop-footer: "&8&m---------------------------------"
+    balance: '&7Your balance: &a%symbol%%amount%'
+    balance-other: '&7Balance of &b%player%&7: &a%symbol%%amount%'
+    pay-sent: '&7You sent &a%symbol%%amount% &7to &b%player%&7.'
+    pay-received: '&7You received &a%symbol%%amount% &7from &b%player%&7.'
+    pay-insufficient: '&cInsufficient balance!'
+    pay-invalid-amount: '&cInvalid amount!'
+    eco-give: '&7Given &a%symbol%%amount% &7to &b%player%&7.'
+    eco-take: '&7Removed &a%symbol%%amount% &7from &b%player%&7.'
+    eco-set: '&7Balance of &b%player% &7set to &a%symbol%%amount%&7.'
+    baltop-header: '&8&m----------&8[ &bBaltop &8]&8&m----------'
+    baltop-entry: '&7#%position% &b%player% &7- &a%symbol%%amount%'
+    baltop-footer: '&8&m---------------------------------'
 
 # ---- ClearLag ----
 clearlag:
@@ -96,7 +96,7 @@ clearlag:
   interval-minutes: 10
   countdown-seconds: 30
   remove-animals: false
-  remove-monsters: true
+  remove-monsters: false
   remove-items: true
   remove-experience: false
   entity-whitelist:
@@ -108,20 +108,20 @@ clearlag:
     - ARMOR_STAND
     - ITEM_FRAME
   messages:
-    warning: "&c&l[ClearLag] &eEntity cleanup in &c%seconds% &eseconds!"
-    cleared: "&c&l[ClearLag] &aRemoved &e%amount% &aentities!"
+    warning: '&c[ClearLag] &fEntity cleanup in &c%seconds% &fseconds!'
+    cleared: '&c[ClearLag] &fRemoved &c%amount% &fentities!'
 
 # ---- Shards ----
 shards:
-  currency-name: "Shards"
+  currency-name: Shards
   earn:
-    mob-kill: 5
+    mob-kill: 2
     mining:
-      DIAMOND_ORE: 10
-      EMERALD_ORE: 15
+      DIAMOND_ORE: 5
+      EMERALD_ORE: 4
       GOLD_ORE: 3
       IRON_ORE: 2
-      ANCIENT_DEBRIS: 25
+      ANCIENT_DEBRIS: 10
     farming:
       WHEAT: 1
       CARROTS: 1
@@ -129,8 +129,8 @@ shards:
       BEETROOTS: 1
       NETHER_WART: 2
   messages:
-    balance: "&7Your Shards: &d%amount%"
-    earned: "&7You earned &d%amount% Shards&7!"
+    balance: '&7Your Shards: &d%amount%'
+    earned: '&7You earned &d%amount% Shards&7!'
 
 # ---- TPA ----
 tpa:
@@ -138,22 +138,23 @@ tpa:
   cooldown-seconds: 30
   teleport-delay-seconds: 3
   messages:
-    sent: "&7TPA request sent to &b%player%&7."
-    received: "&7&b%player% &7wants to teleport to you! &a/tpaccept &7or &c/tpdeny"
-    accepted: "&7TPA request accepted!"
-    denied: "&7TPA request denied."
-    expired: "&7The TPA request has expired."
-    cooldown: "&cYou must wait &e%seconds% &cseconds before sending another request."
-    no-request: "&cYou have no pending TPA requests."
-    teleporting: "&7Teleporting in &e{seconds} &7seconds... Don't move!"
-    moved: "&cYou moved! Teleport cancelled."
-    self: "&cYou can't send a TPA to yourself!"
-    teleported: "&7Teleported to &b%player%&7!"
-    actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
-    actionbar-success: "&a✔ Teleported to &b{player}"
-    tpahere-sent: "&7TPAHere request sent to &b%player%&7."
-    tpahere-received: "&7&b%player% &7wants you to teleport to them! &a/tpaccept &7or &c/tpdeny"
-    tpahere-accepted: "&b%player% &7teleported to you!"
+    sent: '&7TPA request sent to &b%player%&7.'
+    received: '&7&b%player% &7wants to teleport to you! &a/tpaccept &7or &c/tpdeny'
+    accepted: '&7TPA request accepted!'
+    denied: '&7TPA request denied.'
+    expired: '&7The TPA request has expired.'
+    cooldown: '&cYou must wait &e%seconds% &cseconds before sending another request.'
+    no-request: '&cYou have no pending TPA requests.'
+    teleporting: '&7Teleporting in &e{seconds} &7seconds... Don''t move!'
+    moved: '&cYou moved! Teleport cancelled.'
+    self: '&cYou can''t send a TPA to yourself!'
+    teleported: '&7Teleported to &b%player%&7!'
+    actionbar-countdown: '&e⏳ Teleporting in &c{seconds}s&e...'
+    actionbar-success: '&a✔ Teleported to &b{player}'
+    tpahere-sent: '&7TPAHere request sent to &b%player%&7.'
+    tpahere-received: '&7&b%player% &7wants you to teleport to them! &a/tpaccept &7or
+      &c/tpdeny'
+    tpahere-accepted: '&b%player% &7teleported to you!'
 
 # ---- Spawn ----
 spawn:
@@ -161,37 +162,45 @@ spawn:
   teleport-delay-seconds: 3
   spawns: {}
   messages:
-    teleported: "&7Teleported to spawn &b%name%&7!"
-    set: "&7Spawn &b%name% &7has been set!"
-    not-set: "&cNo spawn has been set!"
-    menu-title: "&8Spawn Menu"
-    teleporting: "&7Teleporting in &e{seconds} &7seconds... Don't move!"
-    moved: "&cYou moved! Teleport cancelled."
-    actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
-    actionbar-success: "&a✔ Teleported to spawn &b{name}"
+    teleported: '&7Teleported to spawn &b%name%&7!'
+    set: '&7Spawn &b%name% &7has been set!'
+    not-set: '&cNo spawn has been set!'
+    menu-title: '&8Spawn Menu'
+    teleporting: '&7Teleporting in &e{seconds} &7seconds... Don''t move!'
+    moved: '&cYou moved! Teleport cancelled.'
+    actionbar-countdown: '&e⏳ Teleporting in &c{seconds}s&e...'
+    actionbar-success: '&a✔ Teleported to spawn &b{name}'
 
 # ---- AFK ----
 afk:
   kick-enabled: true
   kick-after-minutes: 30
-  kick-message: "&cYou have been kicked for inactivity!"
-  exempt-permission: "hiru.afk.exempt"
+  kick-message: '&cYou have been kicked for inactivity!'
+  exempt-permission: hiru.afk.exempt
   # AFK Zone reward settings - gives shards to players standing in AFK zones
   zone-reward-interval-seconds: 60
-  zone-reward-shards: 5
+  zone-reward-shards: 1
   messages:
-    now-afk: "&7%player% &7is now &eAFK&7."
-    no-longer-afk: "&7%player% &7is no longer &eAFK&7."
-    zone-reward: "&7You received &d%amount% Shards &7for staying in the AFK Zone!"
+    now-afk: '&7%player% &7is now &eAFK&7.'
+    no-longer-afk: '&7%player% &7is no longer &eAFK&7.'
+    zone-reward: '&7You received &d%amount% Shards &7for staying in the AFK Zone!'
   zones:
     spawn-afk:
-      world: "world"
+      world: world
       min-x: -50
       min-y: 0
       min-z: -50
       max-x: 50
       max-y: 256
       max-z: 50
+    afkzone:
+      world: spawn
+      min-x: 25
+      min-y: 100
+      min-z: -16
+      max-x: 55
+      max-y: 130
+      max-z: 14
 
 # ---- RTP ----
 rtp:
@@ -212,159 +221,156 @@ rtp:
     - POWDER_SNOW
   worlds:
     overworld:
-      world-name: "world"
+      world-name: world
       min-radius: 250
       max-radius: 5000
       min-y: 64
       max-y: 256
       enabled: true
     nether:
-      world-name: "world_nether"
+      world-name: world_nether
       min-radius: 100
       max-radius: 500
       min-y: 32
       max-y: 100
       enabled: true
     end:
-      world-name: "world_the_end"
+      world-name: world_the_end
       min-radius: 500
       max-radius: 2000
       min-y: 50
       max-y: 100
       enabled: false
   messages:
-    teleporting: "&7Teleporting in &e{seconds} &7seconds... Don't move!"
-    teleported: "&7Teleported to &bX: {x} Z: {z} &7in world &b{world}&7!"
-    cooldown: "&cYou must wait &e{time} &cbefore using /rtp."
-    fail: "&cNo safe location found. Try again!"
-    cancelled: "&cTeleport cancelled."
-    moved: "&cYou moved! Teleport cancelled."
-    world-disabled: "&cWorld &e{world} &cis not enabled for RTP."
-    error-no-world: "&cWorld &e{world} &cdoes not exist!"
-    actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
-    actionbar-searching: "&e🔍 Searching for a safe location..."
-    actionbar-success: "&a✔ Teleported to world &b{world} &a(X:{x} Z:{z})"
+    teleporting: '&7Teleporting in &e{seconds} &7seconds... Don''t move!'
+    teleported: '&7Teleported to &bX: {x} Z: {z} &7in world &b{world}&7!'
+    cooldown: '&cYou must wait &e{time} &cbefore using /rtp.'
+    fail: '&cNo safe location found. Try again!'
+    cancelled: '&cTeleport cancelled.'
+    moved: '&cYou moved! Teleport cancelled.'
+    world-disabled: '&cWorld &e{world} &cis not enabled for RTP.'
+    error-no-world: '&cWorld &e{world} &cdoes not exist!'
+    actionbar-countdown: '&e⏳ Teleporting in &c{seconds}s&e...'
+    actionbar-searching: '&e🔍 Searching for a safe location...'
+    actionbar-success: '&a✔ Teleported to world &b{world} &a(X:{x} Z:{z})'
   menu:
-    title: "&0Random Teleport"
+    title: '&0Random Teleport'
     rows: 3
     filler:
       material: GRAY_STAINED_GLASS_PANE
-      name: "&f"
+      name: '&f'
     buttons:
       nether:
         slot: 10
-        target-world: "world_nether"
+        target-world: world_nether
         enabled: true
-        texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRkMzBlMmZjNWNiMDQ0NjFiYWJjMzk0MjMzODAxODdkMzUyNjUwOWNkNmQ0YzM1YzA0ZjYxNmYzMWIxYjkxZiJ9fX0="
-        name: "&#e32200&lNether"
+        texture: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMWRkMzBlMmZjNWNiMDQ0NjFiYWJjMzk0MjMzODAxODdkMzUyNjUwOWNkNmQ0YzM1YzA0ZjYxNmYzMWIxYjkxZiJ9fX0=
+        name: '&#e32200&lNether'
         lore:
-          - ""
-          - "&7Click here to randomly teleport"
-          - "&7to a zone in the &cNether"
-          - ""
-          - "&#FF8B76&l➥ Click to teleport"
+          - ''
+          - '&7Click here to randomly teleport'
+          - '&7to a zone in the &cNether'
+          - ''
+          - '&#FF8B76&l➥ Click to teleport'
       overworld:
         slot: 13
-        target-world: "world"
+        target-world: world
         enabled: true
-        texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZiYjlmYjk3YmE4N2NiNzI3Y2QwZmY0NzdmNzY5MzcwYmVhMTljY2JmYWZiNTgxNjI5Y2Q1NjM5ZjJmZWMyYiJ9fX0="
-        name: "&#1fff5a&lOverworld"
+        texture: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTZiYjlmYjk3YmE4N2NiNzI3Y2QwZmY0NzdmNzY5MzcwYmVhMTljY2JmYWZiNTgxNjI5Y2Q1NjM5ZjJmZWMyYiJ9fX0=
+        name: '&#1fff5a&lOverworld'
         lore:
-          - ""
-          - "&7Click here to randomly teleport"
-          - "&7to a zone in the &aOverworld"
-          - ""
-          - "&#72FF97&l➥ Click to teleport"
+          - ''
+          - '&7Click here to randomly teleport'
+          - '&7to a zone in the &aOverworld'
+          - ''
+          - '&#72FF97&l➥ Click to teleport'
       end:
         slot: 16
-        target-world: "world_the_end"
+        target-world: world_the_end
         enabled: true
-        texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTlmMjFmNWQ4ODMzMTZmZDY1YTkzNjZmMzJhMzMwMTMxODJlMzM4MWRlYzIxYzE3Yzc4MzU1ZDliZjRmMCJ9fX0="
-        name: "&#f7ffa1&lThe End"
+        texture: eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTlmMjFmNWQ4ODMzMTZmZDY1YTkzNjZmMzJhMzMwMTMxODJlMzM4MWRlYzIxYzE3Yzc4MzU1ZDliZjRmMCJ9fX0=
+        name: '&#f7ffa1&lThe End'
         lore:
-          - ""
-          - "&7Click here to randomly teleport"
-          - "&7to a zone in &eThe End"
-          - ""
-          - "&#FAFFC9&l➥ Click to teleport"
+          - ''
+          - '&7Click here to randomly teleport'
+          - '&7to a zone in &eThe End'
+          - ''
+          - '&#FAFFC9&l➥ Click to teleport'
 
 # ---- Profile ----
 profile:
-  menu-title: "&8Profile of %player%"
+  menu-title: '&8Profile of %player%'
 
 # ---- KeyAll ----
 keyall:
   valid-types:
-    - common
-    - rare
-    - epic
-    - legendary
+    - basic_key
   # Command executed from console for each player. Use %player%, %type%, %amount%
-  console-command: "crates give %player% %type% %amount%"
+  console-command: crates key give %player% %type% %amount%
   # Auto KeyAll - automatically gives keys at a set interval
-  auto-enabled: false
+  auto-enabled: true
   auto-interval-minutes: 60
-  auto-type: "common"
+  auto-type: basic_key
   auto-amount: 1
-  broadcast: "&a&l[KeyAll] &eEveryone received &b%amount%x %type% Key&e!"
-  received: "&7You received &b%amount%x %type% Key&7!"
+  broadcast: '&a&l[KeyAll] &eEveryone received &b%amount%x %type% Key&e!'
+  received: '&7You received &b%amount%x %type% Key&7!'
 
 # ---- Media Menu ----
 media:
-  menu-title: "&8&lMedia Menu"
+  menu-title: '&8&lMedia Menu'
   slots:
-    0:
+    '0':
       material: DIAMOND
-      name: "&bRequirements"
+      name: '&bRequirements'
       lore:
-        - "&71. 1000 Subscribers"
-        - "&72. Active channel"
-      permission: ""
-    4:
+        - '&71. 1000 Subscribers'
+        - '&72. Active channel'
+      permission: ''
+    '4':
       material: EMERALD
-      name: "&aBenefits"
+      name: '&aBenefits'
       lore:
-        - "&7Fly at spawn"
-        - "&7Exclusive kit"
-      permission: ""
+        - '&7Fly at spawn'
+        - '&7Exclusive kit'
+      permission: ''
 
 # ---- Info Menu ----
 info:
-  menu-title: "&8&lServer Info"
-  server-name: "&b&lMy SMP Server"
-  owner: "lorenzz"
-  discord: "discord.gg/example"
-  website: "www.example.com"
+  menu-title: '&8&lServer Info'
+  server-name: '&b&lMy SMP Server'
+  owner: lorenzz
+  discord: discord.gg/example
+  website: www.example.com
   slots:
-    0:
+    '0':
       material: BEACON
-      name: "&bServer"
+      name: '&bServer'
       lore:
-        - "&7Name: &b%server-name%"
-        - "&7Owner: &b%owner%"
-    4:
+        - '&7Name: &b%server-name%'
+        - '&7Owner: &b%owner%'
+    '4':
       material: BOOK
-      name: "&eSocial"
+      name: '&eSocial'
       lore:
-        - "&7Discord: &9%discord%"
-        - "&7Website: &a%website%"
+        - '&7Discord: &9%discord%'
+        - '&7Website: &a%website%'
 
 # ---- Rules ----
 rules:
-  menu-title: "&8&lServer Rules"
-  force-accept-on-first-join: true
-  auto-open-on-join: true
+  menu-title: '&8&lServer Rules'
+  force-accept-on-first-join: false
+  auto-open-on-join: false
   kick-delay-seconds: 60
-  accept-message: "&aYou have accepted the rules!"
-  deny-message: "&cYou must accept the rules to play!"
+  accept-message: '&aYou have accepted the rules!'
+  deny-message: '&cYou must accept the rules to play!'
   rules-list:
-    - "&c1. &7No hacking or cheating."
-    - "&c2. &7Respect all players."
-    - "&c3. &7No spam or advertising."
-    - "&c4. &7No griefing in protected areas."
-    - "&c5. &7Follow staff instructions."
-    - "&c6. &7No exploits or bug abuse."
-    - "&c7. &7Have fun!"
+    - '&c1. &7No hacking or cheating.'
+    - '&c2. &7Respect all players.'
+    - '&c3. &7No spam or advertising.'
+    - '&c4. &7No griefing in protected areas.'
+    - '&c5. &7Follow staff instructions.'
+    - '&c6. &7No exploits or bug abuse.'
+    - '&c7. &7Have fun!'
 
 # ---- Amethyst Tools ----
 tools:
@@ -372,20 +378,20 @@ tools:
   tools-list:
     amethyst_sword:
       material: DIAMOND_SWORD
-      name: "&d&lAmethyst Sword"
+      name: '&d&lAmethyst Sword'
       lore:
-        - "&7Amethyst sword"
-        - "&7Uses remaining: &d%uses%"
+        - '&7Amethyst sword'
+        - '&7Uses remaining: &d%uses%'
       enchantments:
         SHARPNESS: 6
       attributes:
         GENERIC_ATTACK_DAMAGE: 12.0
     amethyst_pickaxe:
       material: DIAMOND_PICKAXE
-      name: "&d&lAmethyst Pickaxe"
+      name: '&d&lAmethyst Pickaxe'
       lore:
-        - "&7Amethyst pickaxe"
-        - "&7Uses remaining: &d%uses%"
+        - '&7Amethyst pickaxe'
+        - '&7Uses remaining: &d%uses%'
       enchantments:
         EFFICIENCY: 7
         FORTUNE: 4
@@ -394,16 +400,16 @@ tools:
 
 # ---- Stats Wipe ----
 statswipe:
-  log-file: "statswipe-log.txt"
-  confirm-title: "&c&lAre you sure?"
+  log-file: statswipe-log.txt
+  confirm-title: '&c&lAre you sure?'
   messages:
-    wiped: "&c&lAll stats have been wiped!"
-    cancelled: "&7Operation cancelled."
+    wiped: '&c&lAll stats have been wiped!'
+    cancelled: '&7Operation cancelled.'
 
 # ---- Lunar Client ----
 lunar:
-  server-name: "My SMP"
-  discord-app-id: ""
+  server-name: My SMP
+  discord-app-id: ''
 
 # ---- Settings ----
 settings:
@@ -513,6 +519,7 @@ worth:
     GLOW_INK_SAC: 10.0
     HONEYCOMB: 8.0
     HONEY_BOTTLE: 12.0
+    COBWEB: 3.0
     # ── Redstone & Technical ──
     REDSTONE_TORCH: 3.0
     REPEATER: 10.0
@@ -552,12 +559,12 @@ teams:
   name-max-length: 16
   home-cooldown-seconds: 60
   messages:
-    created: "&#55FF55Team created!"
-    disbanded: "&#FF4444Team disbanded."
-    invited: "&#FFD700Invite sent!"
-    joined: "&#55FF55Joined the team!"
-    left: "&#8C8C8CYou left the team."
-    kicked: "&#FF4444You were kicked."
+    created: '&#55FF55Team created!'
+    disbanded: '&#FF4444Team disbanded.'
+    invited: '&#FFD700Invite sent!'
+    joined: '&#55FF55Joined the team!'
+    left: '&#8C8C8CYou left the team.'
+    kicked: '&#FF4444You were kicked.'
 
 # ---- Homes ----
 homes:
@@ -569,20 +576,20 @@ homes:
     mvp: 5
     admin: 10
   messages:
-    set: "&#55FF55Home set!"
-    deleted: "&#55FF55Home deleted."
-    teleported: "&#55FF55Teleported to home!"
-    limit-reached: "&#FF4444Home limit reached!"
+    set: '&#55FF55Home set!'
+    deleted: '&#55FF55Home deleted.'
+    teleported: '&#55FF55Teleported to home!'
+    limit-reached: '&#FF4444Home limit reached!'
 
 # ---- Bounty ----
 bounty:
   min-amount: 50
   tax-percent: 10
   messages:
-    placed: "&#55FF55Bounty placed!"
-    claimed: "&#55FF55Bounty claimed!"
-    broadcast-placed: "&#FF4444&l⚠ BOUNTY placed on %target%!"
-    broadcast-claimed: "&#55FF55&l⚔ BOUNTY CLAIMED on %target%!"
+    placed: '&#55FF55Bounty placed!'
+    claimed: '&#55FF55Bounty claimed!'
+    broadcast-placed: '&#FF4444&l⚠ BOUNTY placed on %target%!'
+    broadcast-claimed: '&#55FF55&l⚔ BOUNTY CLAIMED on %target%!'
 
 # ---- Leaderboard ----
 leaderboard:
@@ -592,178 +599,186 @@ leaderboard:
 # ---- Sell ----
 sell:
   messages:
-    sold: "&#55FF55Items sold!"
-    no-items: "&#8C8C8CNo sellable items found."
+    sold: '&#55FF55Items sold!'
+    no-items: '&#8C8C8CNo sellable items found.'
 
 # ---- Shop ----
 shop:
   messages:
-    bought: "&#55FF55Item purchased!"
-    sold: "&#55FF55Item sold!"
-    not-enough: "&#FF4444Not enough funds!"
+    bought: '&#55FF55Item purchased!'
+    sold: '&#55FF55Item sold!'
+    not-enough: '&#FF4444Not enough funds!'
 
 # ---- Billford ----
 billford:
   rotation-hours: 6
   active-trades: 3
   messages:
-    new-trades: "&#FFD700&l⚡ BILLFORD | New trades available!"
+    new-trades: '&#FFD700&l⚡ BILLFORD | New trades available!'
 
 # ---- Kits ----
 kits:
   auto-give-starter-on-first-join: true
-  starter-kit-id: "starter"
+  starter-kit-id: starter
+  vip-kit-id: vip
+  mvp-kit-id: mvp
+  highroller-kit-id: highroller
   gui:
-    title: "&#FFD700&l⚡ Kits"
+    title: '&#FFD700&l⚡ Kits'
   messages:
-    claimed: "&#55FF55You claimed the %kit% &#55FF55kit!"
-    not-found: "&#FF4444Kit &f%kit% &#FF4444not found!"
-    no-permission: "&#FF4444You don't have permission to claim this kit!"
-    already-claimed: "&#FF4444You have already claimed this one-time kit!"
-    cooldown: "&#FF4444Kit on cooldown! &f%time% &#FF4444remaining."
-    auto-starter: "&#55FF55You received the &#FFD700Starter Kit&#55FF55! Use &f/kit &#55FF55to claim it again later."
+    claimed: '&#55FF55You claimed the %kit% &#55FF55kit!'
+    not-found: '&#FF4444Kit &f%kit% &#FF4444not found!'
+    no-permission: '&#FF4444You don''t have permission to claim this kit!'
+    already-claimed: '&#FF4444You have already claimed this one-time kit!'
+    cooldown: '&#FF4444Kit on cooldown! &f%time% &#FF4444remaining.'
+    auto-starter: '&#55FF55You received the &#FFD700Starter Kit&#55FF55! Use &f/kit
+      &#55FF55to claim it again later.'
 
 # ---- Ad System ----
 ad:
   cooldown-seconds: 300
   messages-list:
-    - "⚔ Join SmpUni on Minehut! Type /join SmpUni to play now!"
-    - "🌍 Looking for a great SMP? SmpUni is waiting for you — /join SmpUni"
-    - "⚡ SmpUni — The best SMP on Minehut. Come join us! /join SmpUni"
-    - "🏆 Play with us on SmpUni! Connect via Minehut: /join SmpUni"
-    - "🔥 SmpUni is LIVE on Minehut! Don't miss out — /join SmpUni"
-    - "💎 The ultimate SMP experience is on SmpUni — /join SmpUni"
-    - "🚀 Your next adventure starts here! /join SmpUni on Minehut"
-    - "✨ Escape the ordinary. SmpUni on Minehut is LIVE! /join SmpUni"
-    - "⭐ Best SMP on Minehut — SmpUni is waiting for YOU! /join SmpUni"
-    - "🎮 Join the community! SmpUni on Minehut — /join SmpUni"
-    - "🛡 Custom economy, teams, bounties & more! /join SmpUni on Minehut"
-    - "⚔ PvP, trading, skill trees — all on SmpUni! /join SmpUni"
-    - "🌟 SmpUni — Where legends are made. /join SmpUni on Minehut!"
-    - "💰 Grind, trade, dominate! SmpUni SMP is live — /join SmpUni"
-    - "🏰 Build your empire on SmpUni! /join SmpUni on Minehut"
+    - ⚔ Join SmpUni on Minehut! Type /join SmpUni to play now!
+    - 🌍 Looking for a great SMP? SmpUni is waiting for you — /join SmpUni
+    - ⚡ SmpUni — The best SMP on Minehut. Come join us! /join SmpUni
+    - '🏆 Play with us on SmpUni! Connect via Minehut: /join SmpUni'
+    - 🔥 SmpUni is LIVE on Minehut! Don't miss out — /join SmpUni
+    - 💎 The ultimate SMP experience is on SmpUni — /join SmpUni
+    - 🚀 Your next adventure starts here! /join SmpUni on Minehut
+    - ✨ Escape the ordinary. SmpUni on Minehut is LIVE! /join SmpUni
+    - ⭐ Best SMP on Minehut — SmpUni is waiting for YOU! /join SmpUni
+    - 🎮 Join the community! SmpUni on Minehut — /join SmpUni
+    - 🛡 Custom economy, teams, bounties & more! /join SmpUni on Minehut
+    - ⚔ PvP, trading, skill trees — all on SmpUni! /join SmpUni
+    - 🌟 SmpUni — Where legends are made. /join SmpUni on Minehut!
+    - 💰 Grind, trade, dominate! SmpUni SMP is live — /join SmpUni
+    - 🏰 Build your empire on SmpUni! /join SmpUni on Minehut
   messages:
-    cooldown: "&cYou can use /ad again in &e%seconds% &cseconds."
-    confirmed: "&aThanks for advertising SmpUni! &7Next use in &e%minutes% minutes&7."
+    cooldown: '&cYou can use /ad again in &e%seconds% &cseconds.'
+    confirmed: '&aThanks for advertising SmpUni! &7Next use in &e%minutes% minutes&7.'
 
 # ---- Broadcast ----
 broadcast:
-  prefix: "&#FF4444&l⚡ BROADCAST &#8C8C8C» &f"
-  separator: "&8&m                                                    "
+  prefix: '&#FF4444&l⚡ BROADCAST &#8C8C8C» &f'
+  separator: '&8&m                                                    '
   show-separator: true
   play-sound: true
-  sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+  sound: ENTITY_EXPERIENCE_ORB_PICKUP
 
 # ---- Report System ----
 report:
   cooldown-seconds: 60
-  discord-webhook: "https://discord.com/api/webhooks/1480732112209444965/A4JlGVTiA6KQc3zy5z0kgAJ7jKQ_8VmQLc0IqLQNc0rlntRRm83t7YzEeSFJ0K83smDd"
+  discord-webhook: https://discord.com/api/webhooks/1480732112209444965/A4JlGVTiA6KQc3zy5z0kgAJ7jKQ_8VmQLc0IqLQNc0rlntRRm83t7YzEeSFJ0K83smDd
   messages:
-    cooldown: "&#FF4444You must wait &#FFD700%seconds% &#FF4444seconds before reporting again."
-    staff-notify: "&#FF4444&l⚠ REPORT &#8C8C8C» &#FF6B6B%reporter% &#8C8C8Creported &#FFD700%target% &#8C8C8Cfor: &#E0E0E0%reason%"
+    cooldown: '&#FF4444You must wait &#FFD700%seconds% &#FF4444seconds before reporting
+      again.'
+    staff-notify: '&#FF4444&l⚠ REPORT &#8C8C8C» &#FF6B6B%reporter% &#8C8C8Creported
+      &#FFD700%target% &#8C8C8Cfor: &#E0E0E0%reason%'
 
 # ---- Request System ----
 request:
   cooldown-seconds: 120
-  discord-webhook: "https://discord.com/api/webhooks/1480732318917201993/68xgZHf9YcDrpImmcrZ8Eu_bBXoKI3b-VPyBrvfkOkLiPDTUin8ttr1k0Edmqnrlst4g"
+  discord-webhook: https://discord.com/api/webhooks/1480732318917201993/68xgZHf9YcDrpImmcrZ8Eu_bBXoKI3b-VPyBrvfkOkLiPDTUin8ttr1k0Edmqnrlst4g
   messages:
-    cooldown: "&#FF4444You must wait &#FFD700%seconds% &#FF4444seconds before sending another request."
-    staff-notify: "&#4FC3F7&l✉ REQUEST &#8C8C8C» &#4FC3F7%player% &#8C8C8Crequests: &#E0E0E0%message%"
+    cooldown: '&#FF4444You must wait &#FFD700%seconds% &#FF4444seconds before sending
+      another request.'
+    staff-notify: '&#4FC3F7&l✉ REQUEST &#8C8C8C» &#4FC3F7%player% &#8C8C8Crequests:
+      &#E0E0E0%message%'
 
 # ---- Clear Chat ----
 clearchat:
-  message: "&#FF4444&l⚡ &#8C8C8CChat has been cleared by &#55FF55%player%"
+  message: '&#FF4444&l⚡ &#8C8C8CChat has been cleared by &#55FF55%player%'
 
 # ---- Skill Tree ----
 skilltree:
   reset-refund-percent: 50.0
   skills:
     mining_boost:
-      display-name: "&#FFD700&l⛏ Mining Boost"
-      description: "Chance for double ore drops"
-      icon: "DIAMOND_PICKAXE"
+      display-name: '&#FFD700&l⛏ Mining Boost'
+      description: Chance for double ore drops
+      icon: DIAMOND_PICKAXE
       max-level: 5
       base-cost: 100
       cost-per-level: 75
-      effect-type: "MULTIPLIER"
-      potion-effect: "NONE"
+      effect-type: MULTIPLIER
+      potion-effect: NONE
       potion-amplifier-per-level: 0
       multiplier-per-level: 0.1
     farming_boost:
-      display-name: "&#55FF55&l🌾 Farming Boost"
-      description: "Chance for double crop drops"
-      icon: "GOLDEN_HOE"
+      display-name: '&#55FF55&l🌾 Farming Boost'
+      description: Chance for double crop drops
+      icon: GOLDEN_HOE
       max-level: 5
       base-cost: 80
       cost-per-level: 60
-      effect-type: "MULTIPLIER"
-      potion-effect: "NONE"
+      effect-type: MULTIPLIER
+      potion-effect: NONE
       potion-amplifier-per-level: 0
       multiplier-per-level: 0.1
     speed:
-      display-name: "&#4FC3F7&l💨 Speed"
-      description: "Permanent speed boost"
-      icon: "SUGAR"
+      display-name: '&#4FC3F7&l💨 Speed'
+      description: Permanent speed boost
+      icon: SUGAR
       max-level: 3
       base-cost: 150
       cost-per-level: 100
-      effect-type: "POTION"
-      potion-effect: "SPEED"
+      effect-type: POTION
+      potion-effect: SPEED
       potion-amplifier-per-level: 1
       multiplier-per-level: 0.0
     haste:
-      display-name: "&#FFD700&l⚡ Haste"
-      description: "Permanent mining speed boost"
-      icon: "GOLDEN_PICKAXE"
+      display-name: '&#FFD700&l⚡ Haste'
+      description: Permanent mining speed boost
+      icon: GOLDEN_PICKAXE
       max-level: 2
       base-cost: 200
       cost-per-level: 150
-      effect-type: "POTION"
-      potion-effect: "HASTE"
+      effect-type: POTION
+      potion-effect: HASTE
       potion-amplifier-per-level: 1
       multiplier-per-level: 0.0
     health_boost:
-      display-name: "&#FF4444&l❤ Health Boost"
-      description: "Extra hearts permanently"
-      icon: "GOLDEN_APPLE"
+      display-name: '&#FF4444&l❤ Health Boost'
+      description: Extra hearts permanently
+      icon: GOLDEN_APPLE
       max-level: 3
       base-cost: 250
       cost-per-level: 200
-      effect-type: "POTION"
-      potion-effect: "HEALTH_BOOST"
+      effect-type: POTION
+      potion-effect: HEALTH_BOOST
       potion-amplifier-per-level: 1
       multiplier-per-level: 0.0
     xp_boost:
-      display-name: "&#CE93D8&l✦ XP Boost"
-      description: "Multiplied XP from mob kills"
-      icon: "EXPERIENCE_BOTTLE"
+      display-name: '&#CE93D8&l✦ XP Boost'
+      description: Multiplied XP from mob kills
+      icon: EXPERIENCE_BOTTLE
       max-level: 5
       base-cost: 100
       cost-per-level: 80
-      effect-type: "MULTIPLIER"
-      potion-effect: "NONE"
+      effect-type: MULTIPLIER
+      potion-effect: NONE
       potion-amplifier-per-level: 0
       multiplier-per-level: 0.15
     luck:
-      display-name: "&#55FF55&l🍀 Luck"
-      description: "Bonus Shards on mob kills"
-      icon: "EMERALD"
+      display-name: '&#55FF55&l🍀 Luck'
+      description: Bonus Shards on mob kills
+      icon: EMERALD
       max-level: 5
       base-cost: 120
       cost-per-level: 90
-      effect-type: "MULTIPLIER"
-      potion-effect: "NONE"
+      effect-type: MULTIPLIER
+      potion-effect: NONE
       potion-amplifier-per-level: 0
       multiplier-per-level: 0.1
     night_vision:
-      display-name: "&#FAFFC9&l👁 Night Vision"
-      description: "See in the dark permanently"
-      icon: "GOLDEN_CARROT"
+      display-name: '&#FAFFC9&l👁 Night Vision'
+      description: See in the dark permanently
+      icon: GOLDEN_CARROT
       max-level: 1
       base-cost: 300
       cost-per-level: 0
-      effect-type: "POTION"
-      potion-effect: "NIGHT_VISION"
+      effect-type: POTION
+      potion-effect: NIGHT_VISION
       potion-amplifier-per-level: 0
       multiplier-per-level: 0.0
 
@@ -772,55 +787,55 @@ playtime-rewards:
   milestones:
     milestone_30m:
       minutes: 30
-      display-name: "&#55FF55&l⏱ 30 Minutes"
-      icon: "CLOCK"
+      display-name: '&#55FF55&l⏱ 30 Minutes'
+      icon: CLOCK
       reward-money: 500
       reward-shards: 50
       reward-commands: []
     milestone_1h:
       minutes: 60
-      display-name: "&#FFD700&l⏱ 1 Hour"
-      icon: "GOLD_INGOT"
+      display-name: '&#FFD700&l⏱ 1 Hour'
+      icon: GOLD_INGOT
       reward-money: 1500
       reward-shards: 150
       reward-commands: []
     milestone_2h:
       minutes: 120
-      display-name: "&#4FC3F7&l⏱ 2 Hours"
-      icon: "DIAMOND"
+      display-name: '&#4FC3F7&l⏱ 2 Hours'
+      icon: DIAMOND
       reward-money: 3000
       reward-shards: 300
       reward-commands: []
     milestone_5h:
       minutes: 300
-      display-name: "&#CE93D8&l⏱ 5 Hours"
-      icon: "EMERALD"
+      display-name: '&#CE93D8&l⏱ 5 Hours'
+      icon: EMERALD
       reward-money: 10000
       reward-shards: 750
       reward-commands: []
     milestone_10h:
       minutes: 600
-      display-name: "&#FF4444&l⏱ 10 Hours"
-      icon: "NETHERITE_INGOT"
+      display-name: '&#FF4444&l⏱ 10 Hours'
+      icon: NETHERITE_INGOT
       reward-money: 25000
       reward-shards: 2000
       reward-commands: []
     milestone_24h:
       minutes: 1440
-      display-name: "&#FFD700&l⭐ 24 Hours"
-      icon: "NETHER_STAR"
+      display-name: '&#FFD700&l⭐ 24 Hours'
+      icon: NETHER_STAR
       reward-money: 100000
       reward-shards: 10000
       reward-commands:
-        - "give %player% diamond_block 16"
+        - give %player% diamond_block 16
     milestone_48h:
       minutes: 2880
-      display-name: "&#FF4444&l🏆 48 Hours"
-      icon: "DRAGON_EGG"
+      display-name: '&#FF4444&l🏆 48 Hours'
+      icon: DRAGON_EGG
       reward-money: 250000
       reward-shards: 25000
       reward-commands:
-        - "give %player% netherite_block 4"
+        - give %player% netherite_block 4
 
 # ---- Back (Death Teleport) ----
 back:
@@ -845,63 +860,59 @@ combat:
   block-flying: true
   # Commands blocked while in combat (checked with startsWith)
   blocked-commands:
-    - "/home"
-    - "/sethome"
-    - "/tpa"
-    - "/tpaccept"
-    - "/tpdeny"
-    - "/spawn"
-    - "/rtp"
-    - "/back"
-    - "/warp"
-    - "/tpahere"
-    - "/duel"
-    - "/duelaccept"
-    - "/dueldeny"
-    - "/tp"
-    - "/fly"
-    - "/afk"
-    - "/logout"
-    - "/hub"
-    - "/leave"
-    - "/kit"
-    - "/sell"
-    - "/shop"
-    - "/skills"
-    - "/rewards"
+    - /home
+    - /sethome
+    - /tpa
+    - /tpaccept
+    - /tpdeny
+    - /spawn
+    - /rtp
+    - /back
+    - /warp
+    - /tp
+    - /fly
+    - /afk
+    - /logout
+    - /hub
+    - /leave
+    - /kit
+    - /sell
+    - /shop
+    - /skills
+    - /rewards
   # Commands always allowed in combat (whitelist override)
   allowed-commands:
-    - "/msg"
-    - "/r"
-    - "/reply"
-    - "/combattimer"
-    - "/ct"
-    - "/report"
+    - /msg
+    - /r
+    - /reply
+    - /combattimer
+    - /ct
+    - /report
   messages:
-    tagged: "&#FF4444⚔ You are now in combat! &7Do not log out."
-    expired: "&#55FF55✔ You are no longer in combat."
-    fly-disabled: "&#FF4444Flight disabled — you are in combat!"
-    command-blocked: "&#FF4444You cannot use that command while in combat!"
-    ender-pearl-blocked: "&#FF4444You cannot use ender pearls while in combat!"
-    chorus-blocked: "&#FF4444You cannot eat chorus fruit while in combat!"
-    teleport-blocked: "&#FF4444You cannot teleport while in combat!"
-    combat-log-broadcast: "&#FF4444⚠ &#FF6B6B%player% &#8C8C8Clogged out while in combat with &#55FF55%attacker%&#8C8C8C!"
-    actionbar: "&#FF4444⚔ COMBAT &#8C8C8C» %bar% &#FF6B6B%seconds%s"
-
+    tagged: '&#FF4444⚔ You are now in combat! &7Do not log out.'
+    expired: '&#55FF55✔ You are no longer in combat.'
+    fly-disabled: '&#FF4444Flight disabled — you are in combat!'
+    command-blocked: '&#FF4444You cannot use that command while in combat!'
+    ender-pearl-blocked: '&#FF4444You cannot use ender pearls while in combat!'
+    chorus-blocked: '&#FF4444You cannot eat chorus fruit while in combat!'
+    teleport-blocked: '&#FF4444You cannot teleport while in combat!'
+    combat-log-broadcast: '&#FF4444⚠ &#FF6B6B%player% &#8C8C8Clogged out while in
+      combat with &#55FF55%attacker%&#8C8C8C!'
+    actionbar: '&#FF4444⚔ COMBAT &#8C8C8C» %bar% &#FF6B6B%seconds%s'
 # ---- Warp System ----
 warp:
   teleport-delay-seconds: 3
-  gui-title: "&8Warps"
+  gui-title: '&8Warps'
   messages:
-    teleported: "&7Teleported to warp &b%name%&7!"
-    set: "&7Warp &b%name% &7has been set!"
-    deleted: "&7Warp &b%name% &7has been deleted!"
-    not-found: "&cWarp &e%name% &cnot found!"
-    no-warps: "&cNo warps available!"
-    teleporting: "&7Teleporting in &e{seconds} &7seconds... Don't move!"
-    moved: "&cYou moved! Teleport cancelled."
-    actionbar-countdown: "&e⏳ Teleporting in &c{seconds}s&e..."
-    actionbar-success: "&a✔ Teleported to warp &b{name}"
+    teleported: '&7Teleported to warp &b%name%&7!'
+    set: '&7Warp &b%name% &7has been set!'
+    deleted: '&7Warp &b%name% &7has been deleted!'
+    not-found: '&cWarp &e%name% &cnot found!'
+    no-warps: '&cNo warps available!'
+    teleporting: '&7Teleporting in &e{seconds} &7seconds... Don''t move!'
+    moved: '&cYou moved! Teleport cancelled.'
+    actionbar-countdown: '&e⏳ Teleporting in &c{seconds}s&e...'
+    actionbar-success: '&a✔ Teleported to warp &b{name}'
 
 # ---- Duel System ----
 duel:
@@ -909,26 +920,27 @@ duel:
   countdown-seconds: 5
   block-commands: true
   messages:
-    self: "&cYou can't duel yourself!"
-    challenge-sent: "&7Duel challenge sent to &b%player%&7!"
-    challenge-received: "&b%player% &7challenged you to a duel! Use &a/duelaccept &7or &c/dueldeny"
-    accepted: "&a⚔ Duel accepted! Prepare to fight!"
-    denied: "&7Duel challenge denied."
-    denied-by-target: "&b%player% &cdenied your duel challenge."
-    no-challenge: "&cYou have no pending duel challenges."
-    expired: "&7The duel challenge has expired."
-    already-in-duel: "&cYou are already in a duel!"
-    target-in-duel: "&cThat player is already in a duel!"
-    arena-not-set: "&cThe duel arena has not been configured yet!"
-    starting: "&e⚔ Duel starting in &c{seconds} &eseconds!"
-    fight: "&c&l⚔ FIGHT!"
-    won: "&a&l⚔ You won the duel against &b%player%&a!"
-    lost: "&cYou lost the duel against &b%player%&c!"
-    broadcast-end: "&e⚔ &b%winner% &edefeated &b%loser% &ein a duel!"
-    disconnect: "&c⚠ &b%player% &cdisconnected during a duel!"
-    command-blocked: "&cYou cannot use commands during a duel!"
-    pos1-set: "&aArena position 1 set!"
-    pos2-set: "&aArena position 2 set!"
-    center-set: "&aArena center set!"
-    diespawn-set: "&aDuel end/death spawn set!"
+    self: '&cYou can''t duel yourself!'
+    challenge-sent: '&7Duel challenge sent to &b%player%&7!'
+    challenge-received: '&b%player% &7challenged you to a duel! Use &a/duelaccept
+      &7or &c/dueldeny'
+    accepted: '&a⚔ Duel accepted! Prepare to fight!'
+    denied: '&7Duel challenge denied.'
+    denied-by-target: '&b%player% &cdenied your duel challenge.'
+    no-challenge: '&cYou have no pending duel challenges.'
+    expired: '&7The duel challenge has expired.'
+    already-in-duel: '&cYou are already in a duel!'
+    target-in-duel: '&cThat player is already in a duel!'
+    arena-not-set: '&cThe duel arena has not been configured yet!'
+    starting: '&e⚔ Duel starting in &c{seconds} &eseconds!'
+    fight: '&c&l⚔ FIGHT!'
+    won: '&a&l⚔ You won the duel against &b%player%&a!'
+    lost: '&cYou lost the duel against &b%player%&c!'
+    broadcast-end: '&e⚔ &b%winner% &edefeated &b%loser% &ein a duel!'
+    disconnect: '&c⚠ &b%player% &cdisconnected during a duel!'
+    command-blocked: '&cYou cannot use commands during a duel!'
+    pos1-set: '&aArena position 1 set!'
+    pos2-set: '&aArena position 2 set!'
+    center-set: '&aArena center set!'
+    diespawn-set: '&aDuel end/death spawn set!'
 

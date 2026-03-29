@@ -2,14 +2,20 @@ package dev.lorenzz.hirustuffs.managers;
 
 import dev.lorenzz.hirustuffs.Hiru;
 import dev.lorenzz.hirustuffs.utils.Messages;
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.NamespacedKey;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -26,6 +32,9 @@ public class DuelManager {
     private final Map<UUID, UUID> pendingChallenges = new ConcurrentHashMap<>(); // target -> challenger
     private final Map<UUID, BukkitTask> expiryTasks = new ConcurrentHashMap<>();
     private final Map<UUID, DuelState> activeDuels = new ConcurrentHashMap<>(); // player UUID -> state
+    private final Map<UUID, BossBar> duelBossBars = new ConcurrentHashMap<>();
+    private final Map<UUID, BukkitTask> duelTimerTasks = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> duelStartTimes = new ConcurrentHashMap<>();
 
     // Arena locations
     private Location pos1;
@@ -259,6 +268,15 @@ public class DuelManager {
         player2.setFoodLevel(20);
         player2.setSaturation(20f);
 
+        // Clear inventory and give kit book
+        player1.getInventory().clear();
+        player1.getInventory().setArmorContents(new ItemStack[4]);
+        player2.getInventory().clear();
+        player2.getInventory().setArmorContents(new ItemStack[4]);
+
+        player1.getInventory().setItem(4, createKitBook());
+        player2.getInventory().setItem(4, createKitBook());
+
         String startingMsg = plugin.getConfigFile().getString("duel.messages.starting",
                 "&e⚔ Duel starting in &c{seconds} &eseconds!");
 
@@ -289,14 +307,272 @@ public class DuelManager {
                     Messages.send(player2, fightMsg);
                     player1.playSound(player1.getLocation(), getSound("duel-start", Sound.ENTITY_ENDER_DRAGON_GROWL), 0.5f, 1.5f);
                     player2.playSound(player2.getLocation(), getSound("duel-start", Sound.ENTITY_ENDER_DRAGON_GROWL), 0.5f, 1.5f);
+
+                    // Start BossBar timer
+                    startDuelBossBar(player1, player2);
                 }
             }
         }.runTaskTimer(plugin, 0L, 20L);
     }
 
+    // ── Duel Kit ──
+
+    /** Unique display name used to identify the kit book */
+    public static final String KIT_BOOK_NAME = "§d§l⚔ Duel Kit §7(Right-click)";
+
+    /**
+     * Creates the enchanted book item that players right-click to receive their duel kit.
+     */
+    public ItemStack createKitBook() {
+        ItemStack book = new ItemStack(Material.ENCHANTED_BOOK);
+        ItemMeta meta = book.getItemMeta();
+        meta.setDisplayName(Messages.color(KIT_BOOK_NAME));
+        meta.setLore(java.util.List.of(
+                Messages.color("&7Right-click to receive your"),
+                Messages.color("&7combat kit for the duel!"),
+                "",
+                Messages.color("&e&lRight-click to use")
+        ));
+        book.setItemMeta(meta);
+        return book;
+    }
+
+    /**
+     * Gives a full combat kit to the player for the duel.
+     */
+    public void giveDuelKit(Player player) {
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(new ItemStack[4]);
+
+        // Armor: full iron protection II (nerfed)
+        Enchantment protection = Enchantment.getByKey(NamespacedKey.minecraft("protection"));
+        ItemStack helmet = new ItemStack(Material.IRON_HELMET);
+        if (protection != null) helmet.addEnchantment(protection, 2);
+        ItemStack chestplate = new ItemStack(Material.IRON_CHESTPLATE);
+        if (protection != null) chestplate.addEnchantment(protection, 2);
+        ItemStack leggings = new ItemStack(Material.IRON_LEGGINGS);
+        if (protection != null) leggings.addEnchantment(protection, 2);
+        ItemStack boots = new ItemStack(Material.IRON_BOOTS);
+        if (protection != null) boots.addEnchantment(protection, 2);
+
+        player.getInventory().setHelmet(helmet);
+        player.getInventory().setChestplate(chestplate);
+        player.getInventory().setLeggings(leggings);
+        player.getInventory().setBoots(boots);
+
+        // Sword: diamond sharpness III
+        Enchantment sharpness = Enchantment.getByKey(NamespacedKey.minecraft("sharpness"));
+        ItemStack sword = new ItemStack(Material.DIAMOND_SWORD);
+        if (sharpness != null) sword.addEnchantment(sharpness, 3);
+        player.getInventory().setItem(0, sword);
+
+        // Bow: power III
+        Enchantment power = Enchantment.getByKey(NamespacedKey.minecraft("power"));
+        ItemStack bow = new ItemStack(Material.BOW);
+        if (power != null) bow.addEnchantment(power, 3);
+        player.getInventory().setItem(1, bow);
+
+        // Golden apples (reduced)
+        player.getInventory().setItem(2, new ItemStack(Material.GOLDEN_APPLE, 8));
+
+        // Arrows
+        player.getInventory().setItem(8, new ItemStack(Material.ARROW, 16));
+
+        // Cooked beef
+        player.getInventory().setItem(3, new ItemStack(Material.COOKED_BEEF, 16));
+
+        // Ender pearls (reduced)
+        player.getInventory().setItem(4, new ItemStack(Material.ENDER_PEARL, 2));
+
+        player.updateInventory();
+        Messages.send(player, "&a⚔ You received the duel combat kit!");
+    }
+
+    /**
+     * Checks if the given item is the duel kit book.
+     */
+    public boolean isKitBook(ItemStack item) {
+        if (item == null || item.getType() != Material.ENCHANTED_BOOK) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasDisplayName()) return false;
+        return meta.getDisplayName().contains("Duel Kit");
+    }
+
+    // ── Duel BossBar Timer ──
+
+    private void startDuelBossBar(Player player1, Player player2) {
+        int maxDuration = plugin.getConfigFile().getInt("duel.max-duration-seconds", 300);
+        long startTime = System.currentTimeMillis();
+
+        duelStartTimes.put(player1.getUniqueId(), startTime);
+        duelStartTimes.put(player2.getUniqueId(), startTime);
+
+        // Create shared BossBar
+        Component title = Messages.colorComponent("&#FF4444&l⚔ DUEL &#8C8C8C» &#E0E0E0" +
+                formatDuelTime(0) + " &#8C8C8C/ &#E0E0E0" + formatDuelTime(maxDuration));
+        BossBar bossBar = BossBar.bossBar(title, 1.0f, BossBar.Color.RED, BossBar.Overlay.PROGRESS);
+
+        duelBossBars.put(player1.getUniqueId(), bossBar);
+        duelBossBars.put(player2.getUniqueId(), bossBar);
+
+        player1.showBossBar(bossBar);
+        player2.showBossBar(bossBar);
+
+        // Update timer every second
+        BukkitTask timerTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!isInDuel(player1.getUniqueId()) || !isInDuel(player2.getUniqueId())) {
+                    cancel();
+                    return;
+                }
+
+                long elapsed = (System.currentTimeMillis() - startTime) / 1000;
+                float progress = Math.max(0f, Math.min(1f, 1f - ((float) elapsed / maxDuration)));
+
+                int overtimeThreshold = plugin.getConfigFile().getInt("duel.overtime-threshold-seconds", 300);
+                boolean overtime = elapsed >= overtimeThreshold;
+
+                // Build title with overtime indicator
+                String titleStr;
+                if (overtime) {
+                    double mult = getDamageMultiplier(player1.getUniqueId());
+                    String multStr = String.format("%.0f%%", (mult - 1.0) * 100);
+                    titleStr = "&#FF4444&l⚔ DUEL &#8C8C8C» &#E0E0E0" +
+                            formatDuelTime((int) elapsed) + " &#FF4444&l⚠ OVERTIME &#FF6B6B(+" + multStr + " dmg)";
+                } else {
+                    titleStr = "&#FF4444&l⚔ DUEL &#8C8C8C» &#E0E0E0" +
+                            formatDuelTime((int) elapsed) + " &#8C8C8C/ &#E0E0E0" + formatDuelTime(maxDuration);
+                }
+
+                Component updatedTitle = Messages.colorComponent(titleStr);
+                bossBar.name(updatedTitle);
+                bossBar.progress(progress);
+
+                // Change color based on state
+                if (overtime) {
+                    bossBar.color(BossBar.Color.RED);
+
+                    // Apply overtime health drain — 1 damage (0.5 hearts) per second
+                    long overtimeSecs = elapsed - overtimeThreshold;
+                    double drainPerTick = 1.0; // 0.5 hearts per second
+
+                    // Increase drain over time
+                    if (overtimeSecs >= 180) drainPerTick = 3.0;
+                    else if (overtimeSecs >= 120) drainPerTick = 2.0;
+                    else if (overtimeSecs >= 60) drainPerTick = 1.5;
+
+                    applyOvertimeDrain(player1, drainPerTick);
+                    applyOvertimeDrain(player2, drainPerTick);
+
+                    // ActionBar warning
+                    player1.sendActionBar(Messages.colorComponent("&#FF4444&l⚠ OVERTIME! &#FF6B6BYou are taking extra damage!"));
+                    player2.sendActionBar(Messages.colorComponent("&#FF4444&l⚠ OVERTIME! &#FF6B6BYou are taking extra damage!"));
+                } else if (progress <= 0.2f) {
+                    bossBar.color(BossBar.Color.RED);
+                } else if (progress <= 0.5f) {
+                    bossBar.color(BossBar.Color.YELLOW);
+                } else {
+                    bossBar.color(BossBar.Color.GREEN);
+                }
+
+                // Auto-end duel if time runs out (draw)
+                if (elapsed >= maxDuration) {
+                    cancel();
+                    Messages.send(player1, "&c⏱ Time's up! The duel ended in a draw.");
+                    Messages.send(player2, "&c⏱ Time's up! The duel ended in a draw.");
+                    // End as draw — no winner
+                    endDuel(player1.getUniqueId(), player2.getUniqueId(), false);
+                }
+            }
+        }.runTaskTimer(plugin, 20L, 20L);
+
+        duelTimerTasks.put(player1.getUniqueId(), timerTask);
+        duelTimerTasks.put(player2.getUniqueId(), timerTask);
+    }
+
+    /**
+     * Applies overtime health drain to a player. If health reaches 0, the duel ends.
+     */
+    private void applyOvertimeDrain(Player player, double damage) {
+        if (player == null || !player.isOnline()) return;
+        double newHealth = player.getHealth() - damage;
+        if (newHealth <= 0) {
+            player.setHealth(0); // Will trigger death event and end duel
+        } else {
+            player.setHealth(newHealth);
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 0.3f, 1.2f);
+        }
+    }
+
+    private void removeDuelBossBar(UUID playerId) {
+        BossBar bar = duelBossBars.remove(playerId);
+        if (bar != null) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null && player.isOnline()) {
+                player.hideBossBar(bar);
+            }
+        }
+        BukkitTask task = duelTimerTasks.remove(playerId);
+        if (task != null) task.cancel();
+        duelStartTimes.remove(playerId);
+    }
+
+    private String formatDuelTime(int totalSeconds) {
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return String.format("%d:%02d", minutes, seconds);
+    }
+
+    /**
+     * Returns how many seconds the duel has been going for a given player, or -1 if not tracked.
+     */
+    public long getDuelElapsedSeconds(UUID playerId) {
+        Long start = duelStartTimes.get(playerId);
+        if (start == null) return -1;
+        return (System.currentTimeMillis() - start) / 1000;
+    }
+
+    /**
+     * Returns the damage multiplier for overtime penalty.
+     * After 5 minutes (300s), damage increases progressively:
+     *   5:00-6:00 → 1.25x
+     *   6:00-7:00 → 1.5x
+     *   7:00-8:00 → 2.0x
+     *   8:00+     → 3.0x
+     * Also removes 0.5 hearts per second from both players after 5m via the BossBar task.
+     */
+    public double getDamageMultiplier(UUID playerId) {
+        long elapsed = getDuelElapsedSeconds(playerId);
+        if (elapsed < 0) return 1.0;
+
+        int overtimeThreshold = plugin.getConfigFile().getInt("duel.overtime-threshold-seconds", 300);
+        if (elapsed < overtimeThreshold) return 1.0;
+
+        long overtime = elapsed - overtimeThreshold;
+        if (overtime < 60) return 1.25;
+        if (overtime < 120) return 1.5;
+        if (overtime < 180) return 2.0;
+        return 3.0;
+    }
+
+    /**
+     * Whether this player's duel is in overtime (past the penalty threshold).
+     */
+    public boolean isInOvertime(UUID playerId) {
+        long elapsed = getDuelElapsedSeconds(playerId);
+        if (elapsed < 0) return false;
+        int overtimeThreshold = plugin.getConfigFile().getInt("duel.overtime-threshold-seconds", 300);
+        return elapsed >= overtimeThreshold;
+    }
+
     public void endDuel(UUID winnerId, UUID loserId, boolean disconnect) {
         DuelState winnerState = activeDuels.remove(winnerId);
         DuelState loserState = activeDuels.remove(loserId);
+
+        // Remove BossBars
+        removeDuelBossBar(winnerId);
+        removeDuelBossBar(loserId);
 
         Player winner = Bukkit.getPlayer(winnerId);
         Player loser = Bukkit.getPlayer(loserId);
@@ -305,9 +581,13 @@ public class DuelManager {
         if (loser != null && loser.isOnline() && loserState != null) {
             Location tp = dieSpawn != null ? dieSpawn : loserState.getPreviousLocation();
             loser.teleport(tp);
+            loser.getInventory().clear();
+            loser.getInventory().setContents(loserState.getPreviousInventory());
+            loser.getInventory().setArmorContents(loserState.getPreviousArmor());
             loser.setHealth(loserState.getPreviousHealth());
             loser.setFoodLevel(loserState.getPreviousFoodLevel());
             loser.setGameMode(loserState.getPreviousGameMode());
+            loser.updateInventory();
             Messages.send(loser, plugin.getConfigFile().getString("duel.messages.lost",
                             "&cYou lost the duel against &b%player%&c!")
                     .replace("%player%", winner != null ? winner.getName() : "???"));
@@ -317,9 +597,13 @@ public class DuelManager {
         if (winner != null && winner.isOnline() && winnerState != null) {
             Location tp = dieSpawn != null ? dieSpawn : winnerState.getPreviousLocation();
             winner.teleport(tp);
+            winner.getInventory().clear();
+            winner.getInventory().setContents(winnerState.getPreviousInventory());
+            winner.getInventory().setArmorContents(winnerState.getPreviousArmor());
             winner.setHealth(winner.getMaxHealth());
             winner.setFoodLevel(winnerState.getPreviousFoodLevel());
             winner.setGameMode(winnerState.getPreviousGameMode());
+            winner.updateInventory();
             Messages.send(winner, plugin.getConfigFile().getString("duel.messages.won",
                             "&a&l⚔ You won the duel against &b%player%&a!")
                     .replace("%player%", loser != null ? loser.getName() : "???"));
@@ -348,6 +632,11 @@ public class DuelManager {
     }
 
     public void shutdown() {
+        // Clean up all BossBars
+        for (UUID uuid : new HashSet<>(duelBossBars.keySet())) {
+            removeDuelBossBar(uuid);
+        }
+
         // End all active duels gracefully
         Set<UUID> processed = new HashSet<>();
         for (Map.Entry<UUID, DuelState> entry : activeDuels.entrySet()) {
@@ -360,8 +649,12 @@ public class DuelManager {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
                 player.teleport(state.getPreviousLocation());
+                player.getInventory().clear();
+                player.getInventory().setContents(state.getPreviousInventory());
+                player.getInventory().setArmorContents(state.getPreviousArmor());
                 player.setHealth(state.getPreviousHealth());
                 player.setFoodLevel(state.getPreviousFoodLevel());
+                player.updateInventory();
             }
 
             DuelState opponentState = activeDuels.get(state.getOpponent());
@@ -369,8 +662,12 @@ public class DuelManager {
                 Player opponent = Bukkit.getPlayer(state.getOpponent());
                 if (opponent != null && opponent.isOnline()) {
                     opponent.teleport(opponentState.getPreviousLocation());
+                    opponent.getInventory().clear();
+                    opponent.getInventory().setContents(opponentState.getPreviousInventory());
+                    opponent.getInventory().setArmorContents(opponentState.getPreviousArmor());
                     opponent.setHealth(opponentState.getPreviousHealth());
                     opponent.setFoodLevel(opponentState.getPreviousFoodLevel());
+                    opponent.updateInventory();
                 }
             }
         }
