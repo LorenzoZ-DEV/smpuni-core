@@ -8,9 +8,17 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,8 +40,13 @@ public class AFKManager {
     /** Players who are immune to movement detection (just teleported to AFK zone) */
     private final Map<UUID, Long> teleportImmunity = new ConcurrentHashMap<>();
 
+    /** Dedicated file for AFK zone data (separate from config.yml to prevent resets) */
+    private File afkZonesFile;
+    private YamlConfiguration afkZonesConfig;
+
     private BukkitTask checkTask;
     private BukkitTask zoneTickTask;
+    private BukkitTask backupTask;
 
     public AFKManager(Hiru plugin) {
         this.plugin = plugin;
@@ -133,6 +146,15 @@ public class AFKManager {
                 }
             }
         }, 20L, 20L); // Every second
+
+        // Hourly backup task for AFK zones
+        backupTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (!afkZones.isEmpty()) {
+                saveAFKZonesFile();
+                createBackup();
+                plugin.getLogger().info("[AFK] Hourly backup of AFK zones completed (" + afkZones.size() + " zone(s)).");
+            }
+        }, 20L * 60 * 60, 20L * 60 * 60); // Every hour
     }
 
     /**
@@ -148,21 +170,142 @@ public class AFKManager {
 
     private void loadAFKZones() {
         afkZones.clear();
-        Config config = plugin.getConfigFile();
-        ConfigurationSection zones = config.getConfigurationSection("afk.zones");
-        if (zones == null) return;
 
-        for (String key : zones.getKeys(false)) {
-            String path = "afk.zones." + key;
-            String worldName = config.getString(path + ".world", "world");
-            int minX = config.getInt(path + ".min-x");
-            int minY = config.getInt(path + ".min-y");
-            int minZ = config.getInt(path + ".min-z");
-            int maxX = config.getInt(path + ".max-x");
-            int maxY = config.getInt(path + ".max-y");
-            int maxZ = config.getInt(path + ".max-z");
-            afkZones.add(new AFKZone(key, worldName, minX, minY, minZ, maxX, maxY, maxZ));
+        // Setup dedicated file
+        afkZonesFile = new File(plugin.getDataFolder(), "afkzones.yml");
+        afkZonesConfig = new YamlConfiguration();
+
+        boolean fileExists = afkZonesFile.exists();
+
+        // If the dedicated file exists, load from it
+        if (fileExists) {
+            try {
+                afkZonesConfig.load(afkZonesFile);
+            } catch (Exception ex) {
+                plugin.getLogger().warning("[AFK] Failed to load afkzones.yml, attempting backup restore...");
+                if (restoreFromBackup()) {
+                    try {
+                        afkZonesConfig.load(afkZonesFile);
+                    } catch (Exception ex2) {
+                        plugin.getLogger().severe("[AFK] Failed to load afkzones.yml even from backup: " + ex2.getMessage());
+                    }
+                }
+            }
         }
+
+        // Migrate from config.yml if afkzones.yml is empty/missing zones
+        ConfigurationSection zonesSection = afkZonesConfig.getConfigurationSection("zones");
+        if (zonesSection == null || zonesSection.getKeys(false).isEmpty()) {
+            // Try to migrate from config.yml
+            Config config = plugin.getConfigFile();
+            ConfigurationSection oldZones = config.getConfigurationSection("afk.zones");
+            if (oldZones != null && !oldZones.getKeys(false).isEmpty()) {
+                plugin.getLogger().info("[AFK] Migrating AFK zones from config.yml to afkzones.yml...");
+                for (String key : oldZones.getKeys(false)) {
+                    String oldPath = "afk.zones." + key;
+                    String newPath = "zones." + key;
+                    afkZonesConfig.set(newPath + ".world", config.getString(oldPath + ".world", "world"));
+                    afkZonesConfig.set(newPath + ".min-x", config.getInt(oldPath + ".min-x"));
+                    afkZonesConfig.set(newPath + ".min-y", config.getInt(oldPath + ".min-y"));
+                    afkZonesConfig.set(newPath + ".min-z", config.getInt(oldPath + ".min-z"));
+                    afkZonesConfig.set(newPath + ".max-x", config.getInt(oldPath + ".max-x"));
+                    afkZonesConfig.set(newPath + ".max-y", config.getInt(oldPath + ".max-y"));
+                    afkZonesConfig.set(newPath + ".max-z", config.getInt(oldPath + ".max-z"));
+                }
+                saveAFKZonesFile();
+                // Remove old zones from config.yml to avoid confusion
+                config.set("afk.zones", null);
+                config.saveFile();
+                plugin.getLogger().info("[AFK] Migration complete. Old zones removed from config.yml.");
+                zonesSection = afkZonesConfig.getConfigurationSection("zones");
+            }
+        }
+
+        // Load zones into memory
+        if (zonesSection != null) {
+            for (String key : zonesSection.getKeys(false)) {
+                String path = "zones." + key;
+                String worldName = afkZonesConfig.getString(path + ".world", "world");
+                int minX = afkZonesConfig.getInt(path + ".min-x");
+                int minY = afkZonesConfig.getInt(path + ".min-y");
+                int minZ = afkZonesConfig.getInt(path + ".min-z");
+                int maxX = afkZonesConfig.getInt(path + ".max-x");
+                int maxY = afkZonesConfig.getInt(path + ".max-y");
+                int maxZ = afkZonesConfig.getInt(path + ".max-z");
+                afkZones.add(new AFKZone(key, worldName, minX, minY, minZ, maxX, maxY, maxZ));
+            }
+        }
+
+        plugin.getLogger().info("[AFK] Loaded " + afkZones.size() + " AFK zone(s).");
+
+        // Create initial backup
+        if (!afkZones.isEmpty()) {
+            createBackup();
+        }
+    }
+
+    /**
+     * Saves the afkzones.yml file to disk.
+     */
+    private void saveAFKZonesFile() {
+        try {
+            afkZonesConfig.save(afkZonesFile);
+        } catch (IOException ex) {
+            plugin.getLogger().severe("[AFK] Failed to save afkzones.yml: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Creates a backup of afkzones.yml.
+     */
+    private void createBackup() {
+        try {
+            File backupDir = new File(plugin.getDataFolder(), "backups");
+            if (!backupDir.exists()) backupDir.mkdirs();
+
+            // Keep a rolling backup
+            File backupFile = new File(backupDir, "afkzones_backup.yml");
+            if (afkZonesFile.exists() && afkZonesFile.length() > 0) {
+                Files.copy(afkZonesFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Also keep a timestamped backup (max 5)
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm"));
+            File timestampedBackup = new File(backupDir, "afkzones_" + timestamp + ".yml");
+            if (afkZonesFile.exists() && afkZonesFile.length() > 0) {
+                Files.copy(afkZonesFile.toPath(), timestampedBackup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Clean old timestamped backups (keep last 5)
+            File[] backups = backupDir.listFiles((dir, name) -> name.startsWith("afkzones_") && name.endsWith(".yml") && !name.equals("afkzones_backup.yml"));
+            if (backups != null && backups.length > 5) {
+                Arrays.sort(backups, Comparator.comparingLong(File::lastModified));
+                for (int i = 0; i < backups.length - 5; i++) {
+                    backups[i].delete();
+                }
+            }
+        } catch (IOException ex) {
+            plugin.getLogger().warning("[AFK] Failed to create backup: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Attempts to restore afkzones.yml from the latest backup.
+     * Returns true if restored successfully.
+     */
+    private boolean restoreFromBackup() {
+        File backupDir = new File(plugin.getDataFolder(), "backups");
+        File backupFile = new File(backupDir, "afkzones_backup.yml");
+        if (backupFile.exists() && backupFile.length() > 0) {
+            try {
+                Files.copy(backupFile.toPath(), afkZonesFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                plugin.getLogger().info("[AFK] Restored afkzones.yml from backup.");
+                return true;
+            } catch (IOException ex) {
+                plugin.getLogger().severe("[AFK] Failed to restore from backup: " + ex.getMessage());
+            }
+        }
+        return false;
     }
 
     public boolean isInAFKZone(Player player) {
@@ -178,7 +321,7 @@ public class AFKManager {
 
     /**
      * Sets an AFK zone around the given location with the specified radius.
-     * Saves it to config.yml under afk.zones.
+     * Saves it to afkzones.yml.
      */
     public void setAFKZone(String name, Location location, int radius) {
         int minX = location.getBlockX() - radius;
@@ -194,17 +337,17 @@ public class AFKManager {
         afkZones.removeIf(z -> z.name().equalsIgnoreCase(name));
         afkZones.add(zone);
 
-        // Save to config
-        Config config = plugin.getConfigFile();
-        String path = "afk.zones." + name;
-        config.set(path + ".world", worldName);
-        config.set(path + ".min-x", minX);
-        config.set(path + ".min-y", minY);
-        config.set(path + ".min-z", minZ);
-        config.set(path + ".max-x", maxX);
-        config.set(path + ".max-y", maxY);
-        config.set(path + ".max-z", maxZ);
-        config.saveFile();
+        // Save to dedicated file
+        String path = "zones." + name;
+        afkZonesConfig.set(path + ".world", worldName);
+        afkZonesConfig.set(path + ".min-x", minX);
+        afkZonesConfig.set(path + ".min-y", minY);
+        afkZonesConfig.set(path + ".min-z", minZ);
+        afkZonesConfig.set(path + ".max-x", maxX);
+        afkZonesConfig.set(path + ".max-y", maxY);
+        afkZonesConfig.set(path + ".max-z", maxZ);
+        saveAFKZonesFile();
+        createBackup();
     }
 
     /**
@@ -213,9 +356,9 @@ public class AFKManager {
     public boolean removeAFKZone(String name) {
         boolean removed = afkZones.removeIf(z -> z.name().equalsIgnoreCase(name));
         if (removed) {
-            Config config = plugin.getConfigFile();
-            config.set("afk.zones." + name, null);
-            config.saveFile();
+            afkZonesConfig.set("zones." + name, null);
+            saveAFKZonesFile();
+            createBackup();
         }
         return removed;
     }
@@ -338,6 +481,15 @@ public class AFKManager {
     public void shutdown() {
         if (checkTask != null) checkTask.cancel();
         if (zoneTickTask != null) zoneTickTask.cancel();
+        if (backupTask != null) backupTask.cancel();
+
+        // Save AFK zones and create backup on shutdown
+        if (!afkZones.isEmpty()) {
+            saveAFKZonesFile();
+            createBackup();
+            plugin.getLogger().info("[AFK] AFK zones saved on shutdown (" + afkZones.size() + " zone(s)).");
+        }
+
         // Clean up all boss bars
         for (Map.Entry<UUID, BossBar> entry : afkZoneBossBars.entrySet()) {
             Player player = Bukkit.getPlayer(entry.getKey());

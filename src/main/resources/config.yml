@@ -184,23 +184,7 @@ afk:
     now-afk: '&7%player% &7is now &eAFK&7.'
     no-longer-afk: '&7%player% &7is no longer &eAFK&7.'
     zone-reward: '&7You received &d%amount% Shards &7for staying in the AFK Zone!'
-  zones:
-    spawn-afk:
-      world: world
-      min-x: -50
-      min-y: 0
-      min-z: -50
-      max-x: 50
-      max-y: 256
-      max-z: 50
-    afkzone:
-      world: spawn
-      min-x: 25
-      min-y: 100
-      min-z: -16
-      max-x: 55
-      max-y: 130
-      max-z: 14
+  # AFK zones are now stored in afkzones.yml (auto-created, with backup system)
 
 # ---- RTP ----
 rtp:
