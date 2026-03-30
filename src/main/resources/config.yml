@@ -44,6 +44,7 @@ modules:
   warp: true
   duel: true
   changelog: true
+  chatgames: true
 
 # ---- Database ----
 database:
@@ -70,6 +71,8 @@ sounds:
   enderchest-open: BLOCK_ENDER_CHEST_OPEN
   kit-claim: ENTITY_PLAYER_LEVELUP
   rtp: ENTITY_ENDERMAN_TELEPORT
+  chatgame-start: BLOCK_NOTE_BLOCK_BELL
+  chatgame-win: ENTITY_PLAYER_LEVELUP
 
 # ---- Economy ----
 economy:
@@ -622,25 +625,30 @@ kits:
 # ---- Ad System ----
 ad:
   cooldown-seconds: 300
+  tags:
+    - ANARCHY
+    - SMP
+    - LK STAFF
+    - JOIN NOW
   messages-list:
-    - ⚔ Join SmpUni on Minehut! Type /join SmpUni to play now!
-    - 🌍 Looking for a great SMP? SmpUni is waiting for you — /join SmpUni
-    - ⚡ SmpUni — The best SMP on Minehut. Come join us! /join SmpUni
-    - '🏆 Play with us on SmpUni! Connect via Minehut: /join SmpUni'
-    - 🔥 SmpUni is LIVE on Minehut! Don't miss out — /join SmpUni
-    - 💎 The ultimate SMP experience is on SmpUni — /join SmpUni
-    - 🚀 Your next adventure starts here! /join SmpUni on Minehut
-    - ✨ Escape the ordinary. SmpUni on Minehut is LIVE! /join SmpUni
-    - ⭐ Best SMP on Minehut — SmpUni is waiting for YOU! /join SmpUni
-    - 🎮 Join the community! SmpUni on Minehut — /join SmpUni
-    - 🛡 Custom economy, teams, bounties & more! /join SmpUni on Minehut
-    - ⚔ PvP, trading, skill trees — all on SmpUni! /join SmpUni
-    - 🌟 SmpUni — Where legends are made. /join SmpUni on Minehut!
-    - 💰 Grind, trade, dominate! SmpUni SMP is live — /join SmpUni
-    - 🏰 Build your empire on SmpUni! /join SmpUni on Minehut
+    - "UNINET SEASON 1 RELEASED — Join the ultimate SMP experience!"
+    - "UNINET IS LIVE — PvP, custom economy, teams & more!"
+    - "UNINET S1 — The #1 SMP server on Minehut. Don't miss out!"
+    - "UNINET ♦ Custom skills, bounties, duels & a huge world!"
+    - "UNINET — Grind, trade, dominate. Your adventure starts here!"
+    - "UNINET S1 — Build your empire, fight for glory!"
+    - "UNINET — Where legends are forged. Season 1 is LIVE!"
+    - "UNINET ♦ Economy, gangs, skill trees & so much more!"
+    - "UNINET IS OPEN — Join now and claim your spot!"
+    - "UNINET S1 — The SMP you've been waiting for!"
+    - "UNINET — Custom enchants, RTP, kits & a toxic-free community!"
+    - "UNINET SEASON 1 — Compete, conquer, dominate!"
+    - "UNINET ♦ Leaderboards, bounties & epic PvP — /join UniNet"
+    - "UNINET — Fresh season, fresh start. Join today!"
+    - "UNINET S1 — The grind never stops. Are you ready?"
   messages:
     cooldown: '&cYou can use /ad again in &e%seconds% &cseconds.'
-    confirmed: '&aThanks for advertising SmpUni! &7Next use in &e%minutes% minutes&7.'
+    confirmed: '&aThanks for advertising UniNet! &7Next use in &e%minutes% minutes&7.'
 
 # ---- Broadcast ----
 broadcast:
@@ -929,3 +937,48 @@ duel:
     center-set: '&aArena center set!'
     diespawn-set: '&aDuel end/death spawn set!'
 
+# ---- Chat Games ----
+chatgames:
+  interval-seconds: 300
+  timeout-seconds: 30
+  default-crate-command: 'crate give %player% basic_key 1'
+  words:
+    - diamond
+    - emerald
+    - netherite
+    - enchantment
+    - creeper
+    - enderman
+    - obsidian
+    - redstone
+    - pickaxe
+    - adventure
+    - skeleton
+    - blaze
+    - fortress
+    - overworld
+    - potion
+    - villager
+    - trident
+    - elytra
+    - beacon
+    - warden
+  phrases:
+    - 'The quick brown fox jumps'
+    - 'Minecraft is the best game'
+    - 'UniNet Season One is live'
+    - 'Diamonds are forever'
+    - 'Never dig straight down'
+    - 'The End is near beware'
+    - 'Creepers gonna creep'
+    - 'Iron sharpens iron daily'
+    - 'Fortune favors the bold'
+    - 'Ender dragon has been slain'
+  rewards:
+    - type: money
+      amount: 500
+    - type: shards
+      amount: 500
+    - type: command
+      command: 'crate give %player% basic_key 1'
+      display: '1x Basic Key'

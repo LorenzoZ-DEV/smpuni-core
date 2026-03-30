@@ -25,13 +25,13 @@ public class AdCommand {
     @Command(name = "ad", description = "Get an ad message to copy-paste", async = false)
     public void ad(@Sender Player player, @Optional @Named("server") String server) {
 
-        // Default to "smpuni" if no argument
+        // Default to "uninet" if no argument
         if (server == null || server.isEmpty()) {
-            server = "smpuni";
+            server = "uninet";
         }
 
-        if (!server.equalsIgnoreCase("smpuni")) {
-            Messages.send(player, "&cUsage: &f/ad smpuni");
+        if (!server.equalsIgnoreCase("uninet")) {
+            Messages.send(player, "&cUsage: &f/ad uninet");
             return;
         }
 
@@ -53,26 +53,51 @@ public class AdCommand {
             return;
         }
 
+        // Get tags from config
+        List<String> tags = plugin.getConfigFile().getStringList("ad.tags");
+        if (tags.isEmpty()) {
+            tags = Arrays.asList("ANARCHY", "SMP", "CUSTOM", "JOIN NOW");
+        }
+
         // Pick a random message
         String chosen = allMessages.get(ThreadLocalRandom.current().nextInt(allMessages.size()));
 
-        // Build the copyable text: the ad message itself
+        // Build the copyable plain text with tags: "UNINET ♦ <message> [TAG1] [TAG2] ... | /join UniNet"
+        StringBuilder copyText = new StringBuilder();
+        copyText.append("UNINET ♦ ").append(chosen);
+        for (String tag : tags) {
+            copyText.append(" [").append(tag).append("]");
+        }
+        copyText.append(" | /join UniNet");
+        String copyString = copyText.toString();
+
         Audience audience = player;
 
         // Separator line
         Component separator = Messages.colorComponent("&8&m                                                    ");
 
-        // Header
+        // Header: ⚡ UNINET AD
         Component header = Component.empty()
-                .append(Component.text("  ⚡ ", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true))
-                .append(Component.text("AD MESSAGE", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true))
-                .append(Component.text(" — ", NamedTextColor.GRAY))
-                .append(Component.text("SmpUni", TextColor.color(0x55, 0xFF, 0xFF)).decoration(TextDecoration.BOLD, true));
+                .append(Component.text("  ⚡ ", TextColor.color(0xFF, 0x44, 0x44)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text("UNINET", TextColor.color(0xFF, 0x44, 0x44)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text(" AD", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true));
 
-        // The ad message preview (white)
+        // The ad message preview
         Component messagePreview = Component.text("  ", NamedTextColor.DARK_GRAY)
                 .append(Component.text("» ", TextColor.color(0xFF, 0xAA, 0x00)))
-                .append(Messages.colorComponent("&f" + chosen));
+                .append(Component.text(chosen, NamedTextColor.WHITE));
+
+        // Tags preview line
+        Component tagsLine = Component.text("  ", NamedTextColor.DARK_GRAY);
+        for (int i = 0; i < tags.size(); i++) {
+            tagsLine = tagsLine
+                    .append(Component.text("[", TextColor.color(0x8C, 0x8C, 0x8C)))
+                    .append(Component.text(tags.get(i), TextColor.color(0x55, 0xFF, 0xFF)).decoration(TextDecoration.BOLD, true))
+                    .append(Component.text("]", TextColor.color(0x8C, 0x8C, 0x8C)));
+            if (i < tags.size() - 1) {
+                tagsLine = tagsLine.append(Component.text(" ", NamedTextColor.DARK_GRAY));
+            }
+        }
 
         // Click-to-copy button
         Component clickButton = Component.empty()
@@ -81,23 +106,24 @@ public class AdCommand {
                 .append(Component.text("CLICK TO COPY", TextColor.color(0x55, 0xFF, 0x55)).decoration(TextDecoration.BOLD, true))
                 .append(Component.text(" — ", NamedTextColor.GRAY))
                 .append(Component.text("paste it in another server's chat!", NamedTextColor.GRAY))
-                .clickEvent(ClickEvent.copyToClipboard(chosen))
+                .clickEvent(ClickEvent.copyToClipboard(copyString))
                 .hoverEvent(HoverEvent.showText(
-                        Component.text("Click to copy the ad message!", TextColor.color(0x55, 0xFF, 0x55))
+                        Component.text("Click to copy the ad!", TextColor.color(0x55, 0xFF, 0x55))
                                 .append(Component.newline())
-                                .append(Component.text(chosen, NamedTextColor.WHITE))
+                                .append(Component.newline())
+                                .append(Component.text(copyString, NamedTextColor.WHITE))
                 ));
 
-        // Tip: /join SmpUni
+        // Tip: /join UniNet
         Component joinTip = Component.empty()
                 .append(Component.text("  ", NamedTextColor.DARK_GRAY))
                 .append(Component.text("  ⓘ ", TextColor.color(0x4F, 0xC3, 0xF7)))
                 .append(Component.text("Players can join with: ", NamedTextColor.GRAY))
-                .append(Component.text("/join SmpUni", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true)
-                        .clickEvent(ClickEvent.copyToClipboard("/join SmpUni"))
+                .append(Component.text("/join UniNet", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true)
+                        .clickEvent(ClickEvent.copyToClipboard("/join UniNet"))
                         .hoverEvent(HoverEvent.showText(
                                 Component.text("Click to copy ", NamedTextColor.GRAY)
-                                        .append(Component.text("/join SmpUni", TextColor.color(0xFF, 0xD7, 0x00)))
+                                        .append(Component.text("/join UniNet", TextColor.color(0xFF, 0xD7, 0x00)))
                         ))
                 );
 
@@ -107,6 +133,7 @@ public class AdCommand {
         audience.sendMessage(header);
         audience.sendMessage(Component.empty());
         audience.sendMessage(messagePreview);
+        audience.sendMessage(tagsLine);
         audience.sendMessage(Component.empty());
         audience.sendMessage(clickButton);
         audience.sendMessage(joinTip);
@@ -119,7 +146,7 @@ public class AdCommand {
 
         // Confirmation
         String confirm = plugin.getConfigFile().getString("ad.messages.confirmed",
-                "&aThanks for advertising SmpUni! &7Next use in &e%minutes% minutes&7.");
+                "&aThanks for advertising UniNet! &7Next use in &e%minutes% minutes&7.");
         Messages.send(player, confirm.replace("%minutes%", String.valueOf(cooldownSeconds / 60))
                 .replace("%seconds%", String.valueOf(cooldownSeconds)));
     }
