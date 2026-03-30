@@ -26,7 +26,7 @@ public class SkillTreeCommand {
         openSkillTreeGUI(player);
     }
 
-    @Subcommand(name = "reset", description = "Reset all your skills")
+    @Command(name = "skillreset", aliases = {"skillsreset"}, description = "Reset all your skills", async = false)
     @Permission("hiru.skills.reset")
     public void reset(@Sender Player player) {
         SkillTreeManager stm = SkillTreeManager.getInstance();

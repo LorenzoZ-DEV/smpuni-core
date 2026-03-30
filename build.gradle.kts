@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.lorenzz"
-version = "1.0.1"
+version = "1.0.2"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -50,8 +50,8 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.36")
 
     // Custom CommandAPI
-    implementation("dev.lorenzz:commandapi-common:2.0.0")
-    implementation("dev.lorenzz:commandapi-bukkit:2.0.0")
+    implementation("dev.lorenzz:commandapi-common:2.0.2")
+    implementation("dev.lorenzz:commandapi-bukkit:2.0.2")
 
     // Hooks (compileOnly)
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")

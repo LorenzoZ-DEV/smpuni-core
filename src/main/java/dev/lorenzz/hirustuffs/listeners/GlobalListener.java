@@ -65,11 +65,25 @@ public class GlobalListener implements Listener {
                 &r
                 &r
                 &r
-                &#0053ff&lSMPUNI &7- &e&lSEASON 1
+                &#0053ff&lSMPUNI &7- &#d0cfd3S&#c9d7dae&#c3dfe1a&#bce6e9s&#b6eef0o&#aff6f7n ➀
+                &r&7(/store - /crates - /duels - /afkzone - /changelog - /rtp - /billfords - /skilltree - /sell - /shop - /buy)
                 &r
-                &fWelcome to &bSMPUni&f, a unique SMP experience with custom features and a friendly community! Join our Discord for support, announcements, and to connect with other players: &bhttps://discord.gg/smpuni
-                &fThis server is supported also in 26.1 version, but we recommend using 1.21+ for the best experience.
-                &fThe season 1 map is now live! Explore the world, gather resources, and build your base. Use &b/warp &fto find warps around the world, and &b/spawn &fto return to the main spawn area.
+                &#d8e4e4Hello! 
+                &#d8e4e4The first season of the SMPUNI is launched at &#89b4ca 29 March 2026! 
+                &#d8e4e4After the beta testing phase, the world will be reset and all progress will be wiped.
+                &#d8e4e4Thank you for being part of the testing phase, we fixxed any bugs!
+                &#d8e4e4All players banned has been unbanned. for give another chance.
+                
+                &#89b4caWhat we addded? 
+                &#d8e4e4- New Spawners shoppable with the Shards on the &#89b4ca/shop 
+                &#d8e4e4- New VIP ranks with perks, purchasable with Shards on the &#89b4ca/buy
+                &#d8e4e4- Duel System: Challenge other players to duels with custom kits and win Shards &#89b4ca/duels
+                &#d8e4e4- Crates with random rewards, purchasable with Shards on the &#89b4ca/shop 
+                &#d8e4e4- Afkzone with AFK rewards, earn Shards while being AFK in the &#89b4ca/afkzone
+                &#d8e4e4- New AntiCheat System to ensure fair play and catch cheaters.
+                
+                &#d8e4e4- If you are intrested the changelogs of the server checkout our command &#89b4ca/changelog
+                &r
                 """));  // 2 second delay
     }
 

@@ -43,6 +43,7 @@ modules:
   combat: true
   warp: true
   duel: true
+  changelog: true
 
 # ---- Database ----
 database:

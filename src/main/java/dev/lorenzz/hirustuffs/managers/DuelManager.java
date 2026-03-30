@@ -596,7 +596,11 @@ public class DuelManager {
         // Restore winner
         if (winner != null && winner.isOnline() && winnerState != null) {
             Location tp = dieSpawn != null ? dieSpawn : winnerState.getPreviousLocation();
-            winner.teleport(tp);
+            try{
+                winner.teleport(tp);
+            } catch (Exception ex){
+                SpawnManager.getInstance().getSpawn(winner.getName());
+            }
             winner.getInventory().clear();
             winner.getInventory().setContents(winnerState.getPreviousInventory());
             winner.getInventory().setArmorContents(winnerState.getPreviousArmor());

@@ -19,6 +19,7 @@ public class ShardsModule extends AbstractModule {
 
         registerListener(new ShardsListener(plugin));
         plugin.getCommandManager().register(new ShardsCommand());
+        plugin.getCommandManager().register(new ShardAdminCommands());
 
         logger.info("[Hiru] ShardsModule loaded.");
     }
