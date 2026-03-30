@@ -1,0 +1,42 @@
+package dev.lorenzz.hirustuffs.modules.chatgames;
+
+import dev.lorenzz.hirustuffs.Hiru;
+import dev.lorenzz.hirustuffs.managers.AbstractModule;
+import org.bukkit.Bukkit;
+
+public class ChatGameModule extends AbstractModule {
+
+    private ChatGameManager chatGameManager;
+
+    public ChatGameModule(Hiru plugin) {
+        super(plugin, "chatgames");
+    }
+
+    @Override
+    public void onEnable() {
+        chatGameManager = new ChatGameManager(plugin);
+        chatGameManager.start();
+
+        ChatGameListener listener = new ChatGameListener(chatGameManager);
+        // Use both AbstractModule's registerListener AND direct Bukkit registration
+        // to ensure the listener is definitely registered
+        registerListener(listener);
+        logger.info("[Hiru] ChatGameModule: listener registered via AbstractModule");
+
+        plugin.getCommandManager().register(new ChatGameCommands(chatGameManager));
+
+        logger.info("[Hiru] ChatGameModule loaded.");
+    }
+
+    @Override
+    public void onDisable() {
+        super.onDisable();
+        if (chatGameManager != null) {
+            chatGameManager.stop();
+        }
+    }
+
+    public ChatGameManager getChatGameManager() {
+        return chatGameManager;
+    }
+}
