@@ -8,6 +8,7 @@ import dev.lorenzz.hirustuffs.managers.BountyManager;
 import dev.lorenzz.hirustuffs.managers.TeamsManager;
 import dev.lorenzz.hirustuffs.managers.HomeManager;
 import dev.lorenzz.hirustuffs.managers.PlaytimeRewardsManager;
+import dev.lorenzz.hirustuffs.modules.easter.EasterModule;
 import dev.lorenzz.hirustuffs.modules.keyall.KeyAllCommands;
 import dev.lorenzz.hirustuffs.utils.Messages;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -160,6 +161,31 @@ public class HiruExpansion extends PlaceholderExpansion {
             case "keyall_amount" -> {
                 int amount = KeyAllCommands.getLastKeyAllAmount();
                 return amount == 0 ? "0" : String.valueOf(amount);
+            }
+            case "easter_eggs" -> {
+                EasterModule easterModule = plugin.getModuleManager().getModule("easter");
+                if (easterModule == null || easterModule.getEasterManager() == null) return "0";
+                return String.valueOf(easterModule.getEasterManager().getPlayerEggs(player.getUniqueId()));
+            }
+            case "easter_active" -> {
+                EasterModule easterModule = plugin.getModuleManager().getModule("easter");
+                if (easterModule == null || easterModule.getEasterManager() == null) return "false";
+                return String.valueOf(easterModule.getEasterManager().isActive());
+            }
+            case "easter_remaining" -> {
+                EasterModule easterModule = plugin.getModuleManager().getModule("easter");
+                if (easterModule == null || easterModule.getEasterManager() == null) return "0";
+                return String.valueOf(easterModule.getEasterManager().getRemainingEggs());
+            }
+            case "easter_total" -> {
+                EasterModule easterModule = plugin.getModuleManager().getModule("easter");
+                if (easterModule == null || easterModule.getEasterManager() == null) return "0";
+                return String.valueOf(easterModule.getEasterManager().getTotalCollected());
+            }
+            case "easter_time" -> {
+                EasterModule easterModule = plugin.getModuleManager().getModule("easter");
+                if (easterModule == null || easterModule.getEasterManager() == null) return "N/A";
+                return easterModule.getEasterManager().getTimeRemaining();
             }
         }
 

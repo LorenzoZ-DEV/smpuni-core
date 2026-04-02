@@ -4,7 +4,6 @@ import dev.lorenzz.common.annotations.*;
 import dev.lorenzz.common.annotations.Optional;
 import dev.lorenzz.hirustuffs.Hiru;
 import dev.lorenzz.hirustuffs.utils.Messages;
-import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -15,12 +14,15 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class AdCommand {
 
     private final Hiru plugin = Hiru.getInstance();
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+
+    // The two copy-paste texts (what players paste in Minehut lobby)
+    private static final String AD_NO_VIP = "./ad uninet SMPUNI Season I has been released [SKILLS] [ECONOMY] [LK STAFF] [JOIN NOW]";
+    private static final String AD_VIP = "./ad uninet &9&lSMPUNI &fSeason I has been released &d[SKILLS] &3[ECONOMY] &6[LK STAFF] &a[JOIN NOW]";
 
     @Command(name = "ad", description = "Get an ad message to copy-paste", async = false)
     public void ad(@Sender Player player, @Optional @Named("server") String server) {
@@ -46,107 +48,93 @@ public class AdCommand {
             return;
         }
 
-        // Get all ad messages from config
-        List<String> allMessages = plugin.getConfigFile().getStringList("ad.messages-list");
-        if (allMessages.isEmpty()) {
-            Messages.send(player, "&cNo ad messages configured!");
-            return;
-        }
+        // Read texts from config (with hardcoded defaults)
+        String noVipText = plugin.getConfigFile().getString("ad.copy-novip", AD_NO_VIP);
+        String vipText = plugin.getConfigFile().getString("ad.copy-vip", AD_VIP);
 
-        // Get tags from config
-        List<String> tags = plugin.getConfigFile().getStringList("ad.tags");
-        if (tags.isEmpty()) {
-            tags = Arrays.asList("ANARCHY", "SMP", "CUSTOM", "JOIN NOW");
-        }
+        // ── Build the UI ──
 
-        // Pick a random message
-        String chosen = allMessages.get(ThreadLocalRandom.current().nextInt(allMessages.size()));
-
-        // Build the copyable plain text with tags: "UNINET ♦ <message> [TAG1] [TAG2] ... | /join UniNet"
-        StringBuilder copyText = new StringBuilder();
-        copyText.append("UNINET ♦ ").append(chosen);
-        for (String tag : tags) {
-            copyText.append(" [").append(tag).append("]");
-        }
-        copyText.append(" | /join UniNet");
-        String copyString = copyText.toString();
-
-        Audience audience = player;
-
-        // Separator line
         Component separator = Messages.colorComponent("&8&m                                                    ");
 
-        // Header: ⚡ UNINET AD
+        // Header
         Component header = Component.empty()
                 .append(Component.text("  ⚡ ", TextColor.color(0xFF, 0x44, 0x44)).decoration(TextDecoration.BOLD, true))
-                .append(Component.text("UNINET", TextColor.color(0xFF, 0x44, 0x44)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text("SMPUNI", TextColor.color(0xFF, 0x44, 0x44)).decoration(TextDecoration.BOLD, true))
                 .append(Component.text(" AD", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true));
 
-        // The ad message preview
-        Component messagePreview = Component.text("  ", NamedTextColor.DARK_GRAY)
+        // Instructions
+        Component instructions = Component.text("  ", NamedTextColor.DARK_GRAY)
                 .append(Component.text("» ", TextColor.color(0xFF, 0xAA, 0x00)))
-                .append(Component.text(chosen, NamedTextColor.WHITE));
+                .append(Component.text("Click a button below to copy the ad,", NamedTextColor.GRAY));
 
-        // Tags preview line
-        Component tagsLine = Component.text("  ", NamedTextColor.DARK_GRAY);
-        for (int i = 0; i < tags.size(); i++) {
-            tagsLine = tagsLine
-                    .append(Component.text("[", TextColor.color(0x8C, 0x8C, 0x8C)))
-                    .append(Component.text(tags.get(i), TextColor.color(0x55, 0xFF, 0xFF)).decoration(TextDecoration.BOLD, true))
-                    .append(Component.text("]", TextColor.color(0x8C, 0x8C, 0x8C)));
-            if (i < tags.size() - 1) {
-                tagsLine = tagsLine.append(Component.text(" ", NamedTextColor.DARK_GRAY));
-            }
-        }
+        Component instructions2 = Component.text("  ", NamedTextColor.DARK_GRAY)
+                .append(Component.text("  ", TextColor.color(0xFF, 0xAA, 0x00)))
+                .append(Component.text("then paste it in the ", NamedTextColor.GRAY))
+                .append(Component.text("Minehut Lobby", TextColor.color(0x55, 0xFF, 0xFF)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text(" chat!", NamedTextColor.GRAY));
 
-        // Click-to-copy button
-        Component clickButton = Component.empty()
+        // ── NO VIP button ──
+        Component noVipButton = Component.empty()
                 .append(Component.text("  ", NamedTextColor.DARK_GRAY))
-                .append(Component.text("  ✂ ", TextColor.color(0x55, 0xFF, 0x55)).decoration(TextDecoration.BOLD, true))
-                .append(Component.text("CLICK TO COPY", TextColor.color(0x55, 0xFF, 0x55)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text("  ✂ ", TextColor.color(0xFF, 0xAA, 0x00)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text("NO VIP", TextColor.color(0xFF, 0xAA, 0x00)).decoration(TextDecoration.BOLD, true))
                 .append(Component.text(" — ", NamedTextColor.GRAY))
-                .append(Component.text("paste it in another server's chat!", NamedTextColor.GRAY))
-                .clickEvent(ClickEvent.copyToClipboard(copyString))
+                .append(Component.text("plain text (no colors)", NamedTextColor.GRAY))
+                .clickEvent(ClickEvent.copyToClipboard(noVipText))
                 .hoverEvent(HoverEvent.showText(
-                        Component.text("Click to copy the ad!", TextColor.color(0x55, 0xFF, 0x55))
+                        Component.text("Click to copy (No VIP version)", TextColor.color(0xFF, 0xAA, 0x00))
                                 .append(Component.newline())
                                 .append(Component.newline())
-                                .append(Component.text(copyString, NamedTextColor.WHITE))
+                                .append(Component.text(noVipText, NamedTextColor.WHITE))
                 ));
 
-        // Tip: /join UniNet
-        Component joinTip = Component.empty()
+        // ── VIP button ──
+        Component vipButton = Component.empty()
                 .append(Component.text("  ", NamedTextColor.DARK_GRAY))
-                .append(Component.text("  ⓘ ", TextColor.color(0x4F, 0xC3, 0xF7)))
-                .append(Component.text("Players can join with: ", NamedTextColor.GRAY))
-                .append(Component.text("/join UniNet", TextColor.color(0xFF, 0xD7, 0x00)).decoration(TextDecoration.BOLD, true)
-                        .clickEvent(ClickEvent.copyToClipboard("/join UniNet"))
-                        .hoverEvent(HoverEvent.showText(
-                                Component.text("Click to copy ", NamedTextColor.GRAY)
-                                        .append(Component.text("/join UniNet", TextColor.color(0xFF, 0xD7, 0x00)))
-                        ))
-                );
+                .append(Component.text("  ✂ ", TextColor.color(0x55, 0xFF, 0x55)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text("VIP", TextColor.color(0x55, 0xFF, 0x55)).decoration(TextDecoration.BOLD, true))
+                .append(Component.text(" — ", NamedTextColor.GRAY))
+                .append(Component.text("with colors (Minehut VIP only)", NamedTextColor.GRAY))
+                .clickEvent(ClickEvent.copyToClipboard(vipText))
+                .hoverEvent(HoverEvent.showText(
+                        Component.text("Click to copy (VIP version with colors)", TextColor.color(0x55, 0xFF, 0x55))
+                                .append(Component.newline())
+                                .append(Component.newline())
+                                .append(Component.text(vipText, NamedTextColor.WHITE))
+                ));
 
-        // Send all components
-        audience.sendMessage(Component.empty());
-        audience.sendMessage(separator);
-        audience.sendMessage(header);
-        audience.sendMessage(Component.empty());
-        audience.sendMessage(messagePreview);
-        audience.sendMessage(tagsLine);
-        audience.sendMessage(Component.empty());
-        audience.sendMessage(clickButton);
-        audience.sendMessage(joinTip);
-        audience.sendMessage(Component.empty());
-        audience.sendMessage(separator);
-        audience.sendMessage(Component.empty());
+        // Preview of what it looks like
+        Component previewLabel = Component.text("  ", NamedTextColor.DARK_GRAY)
+                .append(Component.text("  ⓘ ", TextColor.color(0x4F, 0xC3, 0xF7)))
+                .append(Component.text("VIP Preview:", NamedTextColor.GRAY));
+
+        Component previewLine = Component.text("  ", NamedTextColor.DARK_GRAY)
+                .append(Component.text("    "))
+                .append(Messages.colorComponent("&9&lSMPUNI &fSeason I has been released &d[SKILLS] &3[ECONOMY] &6[LK STAFF] &a[JOIN NOW]"));
+
+        // Send all
+        player.sendMessage(Component.empty());
+        player.sendMessage(separator);
+        player.sendMessage(header);
+        player.sendMessage(Component.empty());
+        player.sendMessage(instructions);
+        player.sendMessage(instructions2);
+        player.sendMessage(Component.empty());
+        player.sendMessage(noVipButton);
+        player.sendMessage(vipButton);
+        player.sendMessage(Component.empty());
+        player.sendMessage(previewLabel);
+        player.sendMessage(previewLine);
+        player.sendMessage(Component.empty());
+        player.sendMessage(separator);
+        player.sendMessage(Component.empty());
 
         // Start cooldown
         cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
 
         // Confirmation
         String confirm = plugin.getConfigFile().getString("ad.messages.confirmed",
-                "&aThanks for advertising UniNet! &7Next use in &e%minutes% minutes&7.");
+                "&aThanks for advertising! &7Next use in &e%minutes% minutes&7.");
         Messages.send(player, confirm.replace("%minutes%", String.valueOf(cooldownSeconds / 60))
                 .replace("%seconds%", String.valueOf(cooldownSeconds)));
     }
