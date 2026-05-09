@@ -49,7 +49,6 @@ public class RtpMenu implements InventoryHolder, Listener {
     private void setupInventory() {
         Config config = plugin.getConfigFile();
 
-        // Fill with filler
         String fillerMaterialName = config.getString("rtp.menu.filler.material", "GRAY_STAINED_GLASS_PANE");
         String fillerName = config.getString("rtp.menu.filler.name", "&f");
         ItemStack filler = createFiller(fillerMaterialName, fillerName);
@@ -57,7 +56,6 @@ public class RtpMenu implements InventoryHolder, Listener {
             inventory.setItem(i, filler);
         }
 
-        // Load world buttons from config
         ConfigurationSection buttonsSection = config.getConfigurationSection("rtp.menu.buttons");
         if (buttonsSection == null) return;
 

@@ -25,11 +25,9 @@ public class RTPCommand extends BaseCommand {
     @CommandCompletion("@nothing|world|world_nether|world_the_end")
     public void rtp(Player player, @Optional @Single String world) {
         if (world == null || world.isEmpty()) {
-            // No argument -> open the visual menu (configurable in config.yml under rtp.menu).
             new RtpMenu(player).open();
             return;
         }
-        // Explicit world -> teleport directly.
         service.handleCommand(player, world);
     }
 }

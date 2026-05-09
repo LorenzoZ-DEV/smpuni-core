@@ -2,14 +2,17 @@ package dev.lorenzz.solum.modules.keyall;
 
 import dev.lorenzz.solum.Solum;
 import dev.lorenzz.solum.managers.AbstractModule;
-import dev.lorenzz.solum.utils.Messages;
+import dev.lorenzz.solum.utils.Config;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.List;
+
 public class KeyAllModule extends AbstractModule {
 
     private BukkitTask autoKeyAllTask;
+    private int seconds;
 
     public KeyAllModule(Solum plugin) {
         super(plugin, "keyall");
@@ -17,53 +20,52 @@ public class KeyAllModule extends AbstractModule {
 
     @Override
     public void onEnable() {
-        plugin.getCommandManager().register(new KeyAllCommands());
+        int interval = plugin.getConfigFile().getInt("KeyAll.every", 3600);
+        long lastExecution = plugin.getConfigFile().getLong("KeyAll.last-execution");
 
-        // Auto KeyAll timer
-        int intervalMinutes = plugin.getConfigFile().getInt("keyall.auto-interval-minutes", 60);
-        boolean autoEnabled = plugin.getConfigFile().getBoolean("keyall.auto-enabled", false);
-        String autoType = plugin.getConfigFile().getString("keyall.auto-type", "common");
-        int autoAmount = plugin.getConfigFile().getInt("keyall.auto-amount", 1);
-
-        // Set the interval for the countdown placeholder
-        KeyAllCommands.setIntervalMinutes(intervalMinutes);
-
-        if (autoEnabled && intervalMinutes > 0) {
-            long intervalTicks = intervalMinutes * 60L * 20L;
-            autoKeyAllTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-                String commandTemplate = plugin.getConfigFile().getString("keyall.console-command",
-                        "crates give %player% %type% %amount%");
-
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    String cmd = commandTemplate
-                            .replace("%player%", player.getName())
-                            .replace("%type%", autoType)
-                            .replace("%amount%", String.valueOf(autoAmount));
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
-
-                    Messages.send(player, plugin.getConfigFile().getString("keyall.received",
-                                    "&7You received &b%amount%x %type% Key!")
-                            .replace("%amount%", String.valueOf(autoAmount)).replace("%type%", autoType));
-                }
-
-                KeyAllCommands.updateLastKeyAll(autoType, autoAmount);
-
-                Bukkit.broadcast(Messages.colorComponent(
-                        plugin.getConfigFile().getString("keyall.broadcast",
-                                        "&a&l[KeyAll] &eEveryone received &b%amount%x %type% Key&e!")
-                                .replace("%amount%", String.valueOf(autoAmount)).replace("%type%", autoType)));
-            }, intervalTicks, intervalTicks);
+        if (lastExecution > 0) {
+            long elapsedSeconds = (System.currentTimeMillis() - lastExecution) / 1000L;
+            this.seconds = Math.max(1, (int) (interval - elapsedSeconds));
+        } else {
+            this.seconds = interval;
         }
 
-        logger.info("[Solum] KeyAllModule loaded.");
+        autoKeyAllTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            seconds--;
+
+            if (seconds <= 0) {
+                seconds = plugin.getConfigFile().getInt("KeyAll.every", 3600);
+                List<String> commands = plugin.getConfigFile().getStringList("KeyAll.commands");
+
+                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                    for (String cmd : commands) {
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                                cmd.replace("{player}", onlinePlayer.getName()));
+                    }
+                }
+
+                saveTimestamp();
+            }
+        }, 0L, 20L);
     }
 
     @Override
     public void onDisable() {
-        super.onDisable();
         if (autoKeyAllTask != null) {
             autoKeyAllTask.cancel();
             autoKeyAllTask = null;
         }
+        saveTimestamp();
+        super.onDisable();
+    }
+
+    private void saveTimestamp() {
+        Config config = plugin.getConfigFile();
+        config.set("KeyAll.last-execution", System.currentTimeMillis());
+        config.saveFile();
+    }
+
+    public int getSeconds() {
+        return seconds;
     }
 }
