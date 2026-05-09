@@ -6,12 +6,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-/**
- * Listener that wires {@link TablistManager#attach(org.bukkit.entity.Player)}
- * and {@link TablistManager#detach(org.bukkit.entity.Player)} to the player
- * connection lifecycle, then triggers a global refresh so other players see
- * the new sort/team state immediately.
- */
 public class TablistListener implements Listener {
 
     private final TablistManager manager;

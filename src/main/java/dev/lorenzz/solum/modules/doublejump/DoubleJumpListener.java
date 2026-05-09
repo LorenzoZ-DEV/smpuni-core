@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DoubleJumpListener implements Listener {
 
     private static final String PERMISSION = "solum.doublejump";
-    private static final String BYPASS_PERMISSION = "solum.doublejump.bypass";
 
     private final Solum plugin;
     private final ConcurrentHashMap<UUID, Long> cooldowns = new ConcurrentHashMap<>();
@@ -47,8 +46,8 @@ public class DoubleJumpListener implements Listener {
 
     public void refreshConfig() {
         FileConfiguration cfg = plugin.getConfig();
-        cfgEnabled = cfg.getBoolean("double-jump.enabled", true);
-        cfgSpawnWorld = cfg.getString("double-jump.spawn-world", cfg.getString("spawn-world", "spawn"));
+        cfgEnabled = cfg.getBoolean("double-jump.enabled");
+        cfgSpawnWorld = cfg.getString("double-jump.spawn-world", cfg.getString("spawn-world"));
         cfgPower = cfg.getDouble("double-jump.power", 1.0);
         cfgHMul = cfg.getDouble("double-jump.horizontal-multiplier", 2.5);
         cfgVMul = cfg.getDouble("double-jump.vertical-multiplier", 1.0);
@@ -155,13 +154,9 @@ public class DoubleJumpListener implements Listener {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
 
-        // Bypass: i giocatori con fly reale non sono toccati dal sistema
-        if (player.hasPermission(BYPASS_PERMISSION)) return;
 
-        // Toggle off (sta atterrando) -> lascia gestire al server
         if (!event.isFlying()) return;
 
-        // Attivazione fly da terra -> probabilmente comando /fly, non un double jump
         if (player.isOnGround()) return;
 
         if (!active.contains(uuid)) return;

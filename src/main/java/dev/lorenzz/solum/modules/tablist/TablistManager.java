@@ -23,22 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Tab list manager (NEZNAMY/TAB style).
- * <ul>
- *   <li>Header / footer applied via Paper's Adventure player list API.</li>
- *   <li>Per-player prefix / suffix via Bukkit Scoreboard Teams, sorted by
- *       a "weight" pulled from the LuckPerms primary group.</li>
- * </ul>
- * Because we only touch real players (no fake 80-slot grid) the vanilla
- * Minecraft client decides how many columns to display based on the player
- * count: 1-20 → 1 col, 21-40 → 2 cols, 41-60 → 3 cols, 61-80 → 4 cols.
- *
- * @see <a href="https://github.com/NEZNAMY/TAB">NEZNAMY/TAB</a>
- */
 public class TablistManager {
 
-    /** Legacy → Component serializer (supports {@code §} + Bungee hex). */
     private static final LegacyComponentSerializer LEGACY =
             LegacyComponentSerializer.builder()
                     .character('\u00A7')
@@ -48,24 +34,15 @@ public class TablistManager {
 
     private final Solum plugin;
     private final Config config;
-    /** Track team names we created so we can clean up. */
     private final Set<String> ownedTeams = new HashSet<>();
-    /** Cached weights so the comparator is deterministic mid-sort. */
     private final Map<String, Integer> weightCache = new HashMap<>();
 
-    /** Supported sort strategies (NEZNAMY/TAB compatible names). */
     public enum SortType {
-        /** Order strictly by the {@code sort-groups} list (then by name). */
         GROUPS,
-        /** Like {@link #GROUPS} but explicit fallback to alphabetical. */
         GROUPS_THEN_NAME,
-        /** Order by per-group {@code weight} (lower = higher in list). */
         WEIGHT,
-        /** Like {@link #WEIGHT} with alphabetical tiebreak. */
         WEIGHT_THEN_NAME,
-        /** Alphabetical only. */
         NAME,
-        /** Disable Solum sorting (clients keep server insertion order). */
         NONE
     }
 
@@ -81,21 +58,14 @@ public class TablistManager {
 
     public Config getConfig() { return config; }
 
-    // ---------------------------------------------------------------------
-    // Lifecycle
-    // ---------------------------------------------------------------------
-
     public void start() {
         if (!config.getBoolean("enabled", true)) {
             plugin.getLogger().info("[Solum] Tablist disabled in tablist.yml.");
             return;
         }
         loadSortConfig(true);
-        // Use the main scoreboard so other plugins reading from it (e.g.
-        // sidebar managers) keep working alongside our teams.
         this.scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
-        // Initial pass over already-online players (handy on /reload).
         for (Player p : Bukkit.getOnlinePlayers()) attach(p);
 
         long ticks = Math.max(20L, config.getLong("update-interval", 40L));
@@ -108,10 +78,12 @@ public class TablistManager {
             updateTask.cancel();
             updateTask = null;
         }
+
         Component empty = Component.empty();
         for (Player p : Bukkit.getOnlinePlayers()) {
             try { p.sendPlayerListHeaderAndFooter(empty, empty); } catch (Throwable ignored) {}
         }
+
         if (scoreboard != null) {
             for (String name : new ArrayList<>(ownedTeams)) {
                 Team t = scoreboard.getTeam(name);
@@ -120,14 +92,12 @@ public class TablistManager {
                 }
             }
         }
+
         ownedTeams.clear();
         weightCache.clear();
         scoreboard = null;
-    }
 
-    // ---------------------------------------------------------------------
-    // Hooks called by TablistListener
-    // ---------------------------------------------------------------------
+    }
 
     public void attach(Player player) {
         applyHeaderFooter(player);
@@ -137,7 +107,6 @@ public class TablistManager {
     public void detach(Player player) {
         weightCache.remove(player.getName());
         if (scoreboard == null) return;
-        // Find any owned team that still references this player and clean up.
         for (String name : new ArrayList<>(ownedTeams)) {
             Team team = scoreboard.getTeam(name);
             if (team == null) { ownedTeams.remove(name); continue; }
@@ -161,16 +130,14 @@ public class TablistManager {
         }
     }
 
-    // ---------------------------------------------------------------------
-    // Header / Footer
-    // ---------------------------------------------------------------------
-
     private void applyHeaderFooter(Player player) {
         String design = config.getString("default-design", "default");
         List<String> headerLines = config.getStringList("designs." + design + ".header");
         List<String> footerLines = config.getStringList("designs." + design + ".footer");
+
         Component header = buildComponent(player, headerLines);
         Component footer = buildComponent(player, footerLines);
+
         try {
             player.sendPlayerListHeaderAndFooter(header, footer);
         } catch (Throwable t) {
@@ -188,15 +155,6 @@ public class TablistManager {
         return LEGACY.deserialize(Messages.color(sb.toString()));
     }
 
-    // ---------------------------------------------------------------------
-    // Team prefix / suffix + display name
-    // ---------------------------------------------------------------------
-
-    /**
-     * Build (or update) a Scoreboard Team for the given player. The team
-     * name is prefixed with a 4-digit zero-padded weight so vanilla MC
-     * sorts the tab list by group rank automatically.
-     */
     private void applyTeamFor(Player player) {
         if (scoreboard == null) return;
         String teamName = teamNameFor(player);
@@ -218,7 +176,6 @@ public class TablistManager {
                 config.getString(section + ".tabsuffix", ""));
         String custom = applyPlaceholders(player,
                 config.getString(section + ".customtabname", "%player_name%"));
-        // Nametag (above head + chat): fall back to tab values if not configured.
         String tagPrefix = applyPlaceholders(player,
                 config.getString(section + ".tagprefix",
                         config.getString(section + ".tabprefix", "")));
@@ -226,8 +183,6 @@ public class TablistManager {
                 config.getString(section + ".tagsuffix",
                         config.getString(section + ".tabsuffix", "")));
 
-        // The Scoreboard Team prefix/suffix controls the NAMETAG above the
-        // player's head (and chat name in vanilla). Use tagprefix/tagsuffix.
         try {
             team.prefix(LEGACY.deserialize(Messages.color(tagPrefix)));
             team.suffix(LEGACY.deserialize(Messages.color(tagSuffix)));
@@ -238,8 +193,6 @@ public class TablistManager {
             } catch (Throwable ignored) {}
         }
 
-        // Make sure THIS player is the only entry in this team and remove
-        // them from any other Solum team they may belong to.
         if (!team.hasEntry(player.getName())) {
             for (String other : new ArrayList<>(ownedTeams)) {
                 if (other.equals(teamName)) continue;
@@ -255,33 +208,25 @@ public class TablistManager {
             try { team.addEntry(player.getName()); } catch (Throwable ignored) {}
         }
 
-        // Customise the player-list display name (the actual cell content).
         try {
             Component disp = LEGACY.deserialize(Messages.color(tabPrefix + custom + tabSuffix));
             player.playerListName(disp);
         } catch (Throwable ignored) {}
     }
 
-    /**
-     * Team name = "z" + 4-char sort key (depending on {@link SortType}) +
-     * "_" + first chars of player name, capped at 16 characters (Bukkit
-     * legacy limit). Minecraft sorts the tab list alphabetically by team
-     * name, so a deterministic prefix means a deterministic order.
-     */
     private String teamNameFor(Player player) {
         String key = sortKeyFor(player);
         String base = "z" + key + "_" + player.getName();
         return base.length() > 16 ? base.substring(0, 16) : base;
     }
 
-    /** 4-character sort key used as the team-name prefix. */
     private String sortKeyFor(Player player) {
         switch (sortType) {
             case GROUPS:
             case GROUPS_THEN_NAME: {
                 String group = getPrimaryGroup(player);
                 int idx = sortGroups.indexOf(group == null ? "" : group.toLowerCase());
-                if (idx < 0) idx = sortGroups.size(); // unknown groups go last
+                if (idx < 0) idx = sortGroups.size();
                 return String.format("%04d", Math.min(9999, idx));
             }
             case NAME:
@@ -297,7 +242,6 @@ public class TablistManager {
         }
     }
 
-    /** Read {@code sort-type} + {@code sort-groups} from tablist.yml. */
     private void loadSortConfig() {
         loadSortConfig(false);
     }
@@ -320,10 +264,6 @@ public class TablistManager {
                     + (sortGroups.isEmpty() ? "" : " groups=" + sortGroups));
         }
     }
-
-    // ---------------------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------------------
 
     private String resolveGroupSection(Player player) {
         String group = getPrimaryGroup(player);

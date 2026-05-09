@@ -1,26 +1,16 @@
 package dev.lorenzz.solum.modules.auctionhouse;
 
-import com.cryptomorin.xseries.XMaterial;
 import dev.lorenzz.solum.Solum;
+import dev.lorenzz.solum.utils.GUI;
 import dev.lorenzz.solum.utils.Messages;
-import net.j4c0b3y.api.menu.Menu;
-import net.j4c0b3y.api.menu.MenuSize;
-import net.j4c0b3y.api.menu.button.impl.PlaceholderButton;
-import net.j4c0b3y.api.menu.button.impl.SimpleButton;
-import net.j4c0b3y.api.menu.layer.impl.BackgroundLayer;
-import net.j4c0b3y.api.menu.layer.impl.ForegroundLayer;
-import net.j4c0b3y.api.menu.utils.Item;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * GUI rendering for /ah and /ah claim. Pagination is handled by reopening the
- * menu with an updated page index.
- */
 public class AuctionHouseGUI {
 
     private static final int PAGE_SIZE = 28;
@@ -39,80 +29,72 @@ public class AuctionHouseGUI {
         this.manager = manager;
     }
 
-    /* -------- Main /ah view -------- */
-
     public void openMain(Player viewer, int page) {
         List<AuctionListing> all = manager.getActiveListingsSorted();
         int totalPages = Math.max(1, (int) Math.ceil(all.size() / (double) PAGE_SIZE));
         int safePage = Math.max(0, Math.min(page, totalPages - 1));
         int from = safePage * PAGE_SIZE;
         int to = Math.min(from + PAGE_SIZE, all.size());
-        List<AuctionListing> visible = all.subList(from, to);
+        List<AuctionListing> visible = new ArrayList<>(all.subList(from, to));
 
         String title = plugin.getConfigFile().getString("auctionhouse.gui.title", "&8Auction House &7(%page%/%pages%)")
                 .replace("%page%", String.valueOf(safePage + 1))
                 .replace("%pages%", String.valueOf(totalPages));
 
-        new Menu(Messages.color(title), MenuSize.of(6), viewer) {
-            @Override
-            public void setup(BackgroundLayer bg, ForegroundLayer fg) {
-                bg.fill(new PlaceholderButton(XMaterial.BLACK_STAINED_GLASS_PANE));
+        GUI.Builder b = GUI.builder(title, 6).border(Material.BLACK_STAINED_GLASS_PANE);
 
-                // Listings
-                for (int i = 0; i < visible.size(); i++) {
-                    AuctionListing l = visible.get(i);
-                    int slot = CONTENT_SLOTS[i];
-                    fg.set(slot, new SimpleButton(buildListingDisplay(l, viewer), click -> {
-                        Player p = click.getMenu().getPlayer();
-                        boolean ownsIt = l.getSeller().equals(p.getUniqueId());
-                        if (ownsIt) {
-                            // Cancel
-                            if (manager.cancel(p, l.getId())) {
-                                Messages.send(p, plugin.getConfigFile().getString("auctionhouse.messages.cancelled",
-                                        "&aListing cancelled. Item moved to your claim queue."));
-                            } else {
-                                Messages.send(p, plugin.getConfigFile().getString("auctionhouse.messages.cancel-failed",
-                                        "&cCould not cancel that listing."));
-                            }
-                            click.getMenu().close();
-                            openMain(p, safePage);
-                        } else {
-                            // Buy
-                            handleBuy(p, l);
-                            click.getMenu().close();
-                            openMain(p, safePage);
-                        }
-                    }));
+        for (int i = 0; i < visible.size(); i++) {
+            AuctionListing l = visible.get(i);
+            int slot = CONTENT_SLOTS[i];
+            ItemStack display = buildListingDisplay(l, viewer);
+            final int currentPage = safePage;
+            b.item(slot, display, p -> {
+                boolean ownsIt = l.getSeller().equals(p.getUniqueId());
+                if (ownsIt) {
+                    if (manager.cancel(p, l.getId())) {
+                        Messages.send(p, plugin.getConfigFile().getString("auctionhouse.messages.cancelled",
+                                "&aListing cancelled. Item moved to your claim queue."));
+                    } else {
+                        Messages.send(p, plugin.getConfigFile().getString("auctionhouse.messages.cancel-failed",
+                                "&cCould not cancel that listing."));
+                    }
+                } else {
+                    handleBuy(p, l);
                 }
+                openMain(p, currentPage);
+            });
+        }
 
-                // Navigation row (slots 45..53)
-                if (safePage > 0) {
-                    fg.set(45, new SimpleButton(simpleItem(Material.ARROW, "&aPrevious page",
-                            List.of("&7Click to go back")),
-                            click -> openMain(click.getMenu().getPlayer(), safePage - 1)));
-                }
-                fg.set(49, new SimpleButton(buildInfoItem(viewer)));
-                fg.set(48, new SimpleButton(simpleItem(Material.CHEST, "&eYour claim queue",
-                        List.of("&7Items waiting to be reclaimed: &b" + manager.getClaimQueue(viewer.getUniqueId()).size(),
-                                "",
-                                "&aClick to open")),
-                        click -> openClaim(click.getMenu().getPlayer(), 0)));
-                fg.set(50, new SimpleButton(simpleItem(Material.BARRIER, "&cClose", List.of()),
-                        click -> click.getMenu().close()));
-                if (safePage < totalPages - 1) {
-                    fg.set(53, new SimpleButton(simpleItem(Material.ARROW, "&aNext page",
-                            List.of("&7Click to advance")),
-                            click -> openMain(click.getMenu().getPlayer(), safePage + 1)));
-                }
-            }
-        }.open();
+        if (visible.isEmpty()) {
+            b.item(22, Material.BARRIER, "&cNo active listings",
+                    List.of("&7Be the first! Use &b/ah sell <price>",
+                            "&7holding the item you want to list."));
+        }
+
+        if (safePage > 0) {
+            b.item(45, Material.ARROW, "&aPrevious page", List.of("&7Click to go back"),
+                    p -> openMain(p, safePage - 1));
+        }
+        b.item(48, Material.CHEST, "&eYour claim queue",
+                List.of("&7Items waiting to be reclaimed: &b" + manager.getClaimQueue(viewer.getUniqueId()).size(),
+                        "",
+                        "&aClick to open"),
+                p -> openClaim(p, 0));
+        b.item(49, buildInfoItem(viewer));
+        b.item(50, Material.BARRIER, "&cClose", List.of(), Player::closeInventory);
+        if (safePage < totalPages - 1) {
+            b.item(53, Material.ARROW, "&aNext page", List.of("&7Click to advance"),
+                    p -> openMain(p, safePage + 1));
+        }
+
+        b.open(viewer);
     }
 
     private void handleBuy(Player buyer, AuctionListing listing) {
         AuctionHouseManager.BuyResult r = manager.buy(buyer, listing.getId());
         switch (r) {
             case OK -> Messages.send(buyer, plugin.getConfigFile().getString("auctionhouse.messages.bought",
-                    "&aPurchased &b%item% &afor &e%price%&a!")
+                            "&aPurchased &b%item% &afor &e%price%&a!")
                     .replace("%item%", itemName(listing.getItem()))
                     .replace("%price%", Messages.formatNumber(listing.getPrice())));
             case NOT_FOUND -> Messages.send(buyer, plugin.getConfigFile().getString("auctionhouse.messages.not-found",
@@ -127,64 +109,56 @@ public class AuctionHouseGUI {
         }
     }
 
-    /* -------- Claim queue view -------- */
-
     public void openClaim(Player viewer, int page) {
         List<ItemStack> items = new ArrayList<>(manager.getClaimQueue(viewer.getUniqueId()));
         int totalPages = Math.max(1, (int) Math.ceil(items.size() / (double) PAGE_SIZE));
         int safePage = Math.max(0, Math.min(page, totalPages - 1));
-        int from = safePage * PAGE_SIZE;
-        int to = Math.min(from + PAGE_SIZE, items.size());
-        List<ItemStack> visible = items.subList(from, to);
+        int fromIdx = safePage * PAGE_SIZE;
+        int toIdx = Math.min(fromIdx + PAGE_SIZE, items.size());
+        List<ItemStack> visible = new ArrayList<>(items.subList(fromIdx, toIdx));
 
         String title = plugin.getConfigFile().getString("auctionhouse.gui.claim-title",
-                "&8Claim Queue &7(%page%/%pages%)")
+                        "&8Claim Queue &7(%page%/%pages%)")
                 .replace("%page%", String.valueOf(safePage + 1))
                 .replace("%pages%", String.valueOf(totalPages));
 
-        new Menu(Messages.color(title), MenuSize.of(6), viewer) {
-            @Override
-            public void setup(BackgroundLayer bg, ForegroundLayer fg) {
-                bg.fill(new PlaceholderButton(XMaterial.BLACK_STAINED_GLASS_PANE));
+        GUI.Builder b = GUI.builder(title, 6).border(Material.BLACK_STAINED_GLASS_PANE);
 
-                for (int i = 0; i < visible.size(); i++) {
-                    final int globalIndex = from + i;
-                    int slot = CONTENT_SLOTS[i];
-                    ItemStack base = visible.get(i).clone();
-                    ItemStack display = withAppendedLore(base, List.of("", Messages.color("&aClick to claim")));
-                    fg.set(slot, new SimpleButton(display, click -> {
-                        Player p = click.getMenu().getPlayer();
-                        manager.claimOne(p, globalIndex);
-                        click.getMenu().close();
-                        openClaim(p, safePage);
-                    }));
-                }
+        for (int i = 0; i < visible.size(); i++) {
+            final int globalIndex = fromIdx + i;
+            int slot = CONTENT_SLOTS[i];
+            ItemStack display = withAppendedLore(visible.get(i).clone(), List.of("", Messages.color("&aClick to claim")));
+            b.item(slot, display, p -> {
+                manager.claimOne(p, globalIndex);
+                openClaim(p, safePage);
+            });
+        }
 
-                if (safePage > 0) {
-                    fg.set(45, new SimpleButton(simpleItem(Material.ARROW, "&aPrevious page", List.of()),
-                            click -> openClaim(click.getMenu().getPlayer(), safePage - 1)));
-                }
-                fg.set(48, new SimpleButton(simpleItem(Material.HOPPER, "&aClaim All",
-                                List.of("&7Click to claim everything you can")),
-                        click -> {
-                            manager.claimAll(click.getMenu().getPlayer());
-                            click.getMenu().close();
-                            openClaim(click.getMenu().getPlayer(), 0);
-                        }));
-                fg.set(49, new SimpleButton(simpleItem(Material.BOOK, "&eAuction House",
-                                List.of("&7Click to go back")),
-                        click -> openMain(click.getMenu().getPlayer(), 0)));
-                fg.set(50, new SimpleButton(simpleItem(Material.BARRIER, "&cClose", List.of()),
-                        click -> click.getMenu().close()));
-                if (safePage < totalPages - 1) {
-                    fg.set(53, new SimpleButton(simpleItem(Material.ARROW, "&aNext page", List.of()),
-                            click -> openClaim(click.getMenu().getPlayer(), safePage + 1)));
-                }
-            }
-        }.open();
+        if (visible.isEmpty()) {
+            b.item(22, Material.BARRIER, "&7Nothing to claim", List.of("&8Your queue is empty."));
+        }
+
+        if (safePage > 0) {
+            b.item(45, Material.ARROW, "&aPrevious page", List.of(),
+                    p -> openClaim(p, safePage - 1));
+        }
+        b.item(48, Material.HOPPER, "&aClaim All",
+                List.of("&7Click to claim everything you can"),
+                p -> {
+                    manager.claimAll(p);
+                    openClaim(p, 0);
+                });
+        b.item(49, Material.BOOK, "&eAuction House",
+                List.of("&7Click to go back"),
+                p -> openMain(p, 0));
+        b.item(50, Material.BARRIER, "&cClose", List.of(), Player::closeInventory);
+        if (safePage < totalPages - 1) {
+            b.item(53, Material.ARROW, "&aNext page", List.of(),
+                    p -> openClaim(p, safePage + 1));
+        }
+
+        b.open(viewer);
     }
-
-    /* -------- Item builders -------- */
 
     private ItemStack buildListingDisplay(AuctionListing listing, Player viewer) {
         ItemStack display = listing.getItem().clone();
@@ -211,22 +185,21 @@ public class AuctionHouseGUI {
         int yourListings = manager.getListingsBySeller(viewer.getUniqueId()).size();
         int total = manager.getListings().size();
         int claim = manager.getClaimQueue(viewer.getUniqueId()).size();
-        return simpleItem(Material.PAPER, "&eAuction House",
-                List.of("&7Active listings: &b" + total,
-                        "&7Your listings: &b" + yourListings,
-                        "&7Pending claims: &b" + claim,
-                        "",
-                        "&7Use &b/ah sell <price> &7to list",
-                        "&7the item in your hand."));
-    }
-
-    private ItemStack simpleItem(Material material, String name, List<String> lore) {
-        Item item = new Item(XMaterial.matchXMaterial(material));
-        item.setName(Messages.color(name));
-        if (lore != null && !lore.isEmpty()) {
-            item.setLore(lore.stream().map(Messages::color).toList());
+        ItemStack item = new ItemStack(Material.PAPER);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(Messages.color("&eAuction House"));
+            meta.setLore(List.of(
+                    Messages.color("&7Active listings: &b" + total),
+                    Messages.color("&7Your listings: &b" + yourListings),
+                    Messages.color("&7Pending claims: &b" + claim),
+                    "",
+                    Messages.color("&7Use &b/ah sell <price> &7to list"),
+                    Messages.color("&7the item in your hand.")
+            ));
+            item.setItemMeta(meta);
         }
-        return item.build();
+        return item;
     }
 
     private ItemStack withAppendedLore(ItemStack base, List<String> extra) {
