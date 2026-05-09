@@ -3,6 +3,7 @@ package dev.lorenzz.solum.modules.nametag;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -25,11 +26,14 @@ public class NametagListener implements Listener {
         manager.detach(event.getPlayer());
     }
 
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
+    public void onDeath(PlayerDeathEvent event) {
+        manager.detach(event.getEntity());
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent event) {
-        // Re-attach on respawn in case the display got removed/desynced.
         manager.detach(event.getPlayer());
         manager.attach(event.getPlayer());
     }
 }
-

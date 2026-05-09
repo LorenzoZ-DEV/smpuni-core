@@ -22,13 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Manages a {@link TextDisplay} entity per online player, rendered just below the
- * vanilla nametag, showing shards / health / team info on a separate line.
- *
- * The display is teleported every tick to follow the owning player. It is invisible
- * to the owner (so they don't see their own stats floating in front of them).
- */
 public class NametagManager {
 
     private static final LegacyComponentSerializer LEGACY =
@@ -43,23 +36,13 @@ public class NametagManager {
 
     private final Solum plugin;
     private final NamespacedKey markerKey;
-    private final Map<UUID, UUID> displays = new ConcurrentHashMap<>(); // player -> display
+    private final Map<UUID, UUID> displays = new ConcurrentHashMap<>();
 
     private BukkitTask updateTask;
-    private BukkitTask followTask;
 
-    /**
-     * Vertical distance ABOVE the player's eye height where the TextDisplay anchor
-     * is placed. With Billboard.CENTER + scale 1.0 the text extends ~0.25 blocks
-     * upward from this point, so the rendered top sits ~(eye + extra + 0.25) above
-     * the feet — i.e. just below the vanilla nameplate base (~eye + 0.50).
-     *
-     * Default 0.18 → top of stats line ≈ eye + 0.43 → flush below nameplate (eye + 0.50).
-     * Tweak ±0.02 to taste. Using eye height (not a fixed Y) means sneak / swim /
-     * crawl are handled automatically: the line follows the player's head pose.
-     */
     private double extraAboveEyes = -0.07;
     private long updateIntervalTicks = 20L;
+    @SuppressWarnings("unused")
     private int teleportDuration = 3;
     private String format = DEFAULT_FORMAT;
     private boolean hideFromOwner = true;
@@ -77,17 +60,13 @@ public class NametagManager {
 
         updateTask = Bukkit.getScheduler().runTaskTimer(plugin, this::updateAll,
                 updateIntervalTicks, updateIntervalTicks);
-        // TAB-style follow: teleport every tick; client-side interpolation
-        // (setTeleportDuration) smooths the motion → zero jitter, perfect sync.
-        followTask = Bukkit.getScheduler().runTaskTimer(plugin, this::followAll, 1L, 1L);
 
         plugin.getLogger().info("[Solum] NametagManager started (extra-above-eyes="
-                + extraAboveEyes + ", teleport-duration=" + teleportDuration + ").");
+                + extraAboveEyes + ", mode=passenger).");
     }
 
     public void stop() {
         if (updateTask != null) { updateTask.cancel(); updateTask = null; }
-        if (followTask != null) { followTask.cancel(); followTask = null; }
 
         for (UUID id : displays.values()) {
             Entity e = Bukkit.getEntity(id);
@@ -104,12 +83,10 @@ public class NametagManager {
 
     private void loadConfig() {
         org.bukkit.configuration.ConfigurationSection cfg = plugin.getConfigFile();
-        // New key (preferred). Fallback to legacy 'y-offset' converted from absolute → relative.
         if (cfg.isSet("nametag.extra-above-eyes")) {
             this.extraAboveEyes = cfg.getDouble("nametag.extra-above-eyes", -0.07);
         } else if (cfg.isSet("nametag.y-offset")) {
-            // Legacy: y-offset was absolute from feet. Convert: extra = y-offset - 1.62 (eye standing).
-            this.extraAboveEyes = cfg.getDouble("nametag.y-offset", 1.55) - 1.62;
+            this.extraAboveEyes = cfg.getDouble("nametag.y-offset", 1.60) - 1.62;
         } else {
             this.extraAboveEyes = -0.07;
         }
@@ -119,7 +96,6 @@ public class NametagManager {
         this.hideFromOwner = cfg.getBoolean("nametag.hide-from-owner", true);
     }
 
-    /** Live setter — used by the admin command for runtime tuning without reload. */
     public void setExtraAboveEyes(double value) {
         this.extraAboveEyes = value;
         plugin.getConfig().set("nametag.extra-above-eyes", value);
@@ -128,7 +104,6 @@ public class NametagManager {
 
     public double getExtraAboveEyes() { return extraAboveEyes; }
 
-    /** Live toggle of the "hide from owner" behavior. Re-applies visibility to all online players. */
     public void setHideFromOwner(boolean hide) {
         this.hideFromOwner = hide;
         plugin.getConfig().set("nametag.hide-from-owner", hide);
@@ -147,19 +122,17 @@ public class NametagManager {
 
     public boolean isHideFromOwner() { return hideFromOwner; }
 
-    /** Anchor Y for the TextDisplay relative to player feet. */
     private double computeAnchorY(Player p) {
         return p.getEyeHeight() + extraAboveEyes;
     }
 
     public void attach(Player player) {
         if (player == null || !player.isOnline()) return;
+        if (player.isDead()) return;
         if (displays.containsKey(player.getUniqueId())) return;
 
-        Location loc = player.getLocation().clone();
-        loc.setY(loc.getY() + computeAnchorY(player));
-        loc.setYaw(0f);
-        loc.setPitch(0f);
+        Location loc = player.getLocation();
+        final float anchor = (float) computeAnchorY(player);
 
         TextDisplay td = player.getWorld().spawn(loc, TextDisplay.class, t -> {
             t.setBillboard(Display.Billboard.CENTER);
@@ -167,21 +140,27 @@ public class NametagManager {
             t.setShadowed(false);
             t.setPersistent(false);
             t.setViewRange(1.0f);
-            // No translation — position handled directly by entity location.
             Transformation tr = t.getTransformation();
             t.setTransformation(new Transformation(
-                    new Vector3f(0f, 0f, 0f),
+                    new Vector3f(0f, anchor, 0f),
                     tr.getLeftRotation(),
                     tr.getScale(),
                     tr.getRightRotation()
             ));
             t.setInterpolationDuration(0);
-            // Smooth teleport interpolation (Paper 1.20.2+) — TAB uses the same trick.
-            try { t.setTeleportDuration(teleportDuration); } catch (Throwable ignored) {}
             t.getPersistentDataContainer().set(markerKey, PersistentDataType.STRING,
                     player.getUniqueId().toString());
             t.text(buildComponent(player));
         });
+
+        boolean mounted = false;
+        try { mounted = player.addPassenger(td); } catch (Throwable ignored) {}
+        if (!mounted) {
+            plugin.getLogger().warning("[Solum] Failed to mount nametag display on "
+                    + player.getName());
+            td.remove();
+            return;
+        }
 
         if (hideFromOwner) {
             try { player.hideEntity(plugin, td); } catch (Throwable ignored) {}
@@ -195,31 +174,9 @@ public class NametagManager {
         UUID id = displays.remove(player.getUniqueId());
         if (id == null) return;
         Entity e = Bukkit.getEntity(id);
-        if (e != null) e.remove();
-    }
-
-    /** Per-tick: glue each TextDisplay to its player's head. Client interpolates. */
-    private void followAll() {
-        for (Map.Entry<UUID, UUID> entry : displays.entrySet()) {
-            Player p = Bukkit.getPlayer(entry.getKey());
-            if (p == null || !p.isOnline()) continue;
-            Entity e = Bukkit.getEntity(entry.getValue());
-            if (!(e instanceof TextDisplay td) || td.isDead()) continue;
-
-            Location target = p.getLocation().clone();
-            // Eye-relative anchor → automatically follows sneak / swim / crawl
-            // (no manual sneak compensation needed).
-            target.setY(target.getY() + computeAnchorY(p));
-            target.setYaw(0f);
-            target.setPitch(0f);
-
-            if (!td.getWorld().equals(target.getWorld())) {
-                td.remove();
-                displays.remove(entry.getKey());
-                attach(p);
-                continue;
-            }
-            td.teleport(target);
+        if (e != null) {
+            try { e.leaveVehicle(); } catch (Throwable ignored) {}
+            e.remove();
         }
     }
 
@@ -228,7 +185,7 @@ public class NametagManager {
         while (it.hasNext()) {
             Map.Entry<UUID, UUID> entry = it.next();
             Player p = Bukkit.getPlayer(entry.getKey());
-            if (p == null || !p.isOnline()) {
+            if (p == null || !p.isOnline() || p.isDead()) {
                 Entity e = Bukkit.getEntity(entry.getValue());
                 if (e != null) e.remove();
                 it.remove();
@@ -240,10 +197,17 @@ public class NametagManager {
                 attach(p);
                 continue;
             }
+            if (td.getVehicle() == null || !td.getVehicle().equals(p)) {
+                td.remove();
+                it.remove();
+                attach(p);
+                continue;
+            }
             td.text(buildComponent(p));
         }
 
         for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p.isDead()) continue;
             if (!displays.containsKey(p.getUniqueId())) attach(p);
         }
     }
@@ -258,7 +222,6 @@ public class NametagManager {
         return LEGACY.deserialize(Messages.color(s));
     }
 
-    /** Removes any leftover TextDisplay entities tagged by us (e.g. after a crash). */
     private void cleanupOrphans() {
         for (org.bukkit.World w : Bukkit.getWorlds()) {
             for (Entity e : w.getEntitiesByClass(TextDisplay.class)) {
