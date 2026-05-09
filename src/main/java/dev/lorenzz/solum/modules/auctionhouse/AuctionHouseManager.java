@@ -14,18 +14,12 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Central manager for AuctionHouse: tracks active listings, handles purchases,
- * cancellations, expiration sweep, and per-seller claim queue (expired/unclaimed items).
- */
 public class AuctionHouseManager {
 
     private final Solum plugin;
     private final AuctionStorage storage;
 
-    /** Active listings keyed by id. */
     private final Map<UUID, AuctionListing> listings = new ConcurrentHashMap<>();
-    /** Per-seller queue of items returned (expired or cancelled) waiting to be reclaimed. */
     private final Map<UUID, List<ItemStack>> claimQueue = new ConcurrentHashMap<>();
 
     private long defaultDurationMs;
@@ -43,14 +37,12 @@ public class AuctionHouseManager {
     }
 
     public void init() {
-        // Config (read from main config.yml under auctionhouse.*)
         defaultDurationMs = Math.max(60_000L, plugin.getConfigFile().getLong("auctionhouse.duration-seconds", 86400L) * 1000L);
         maxListingsPerPlayer = plugin.getConfigFile().getInt("auctionhouse.max-listings-per-player", 5);
         minPrice = plugin.getConfigFile().getDouble("auctionhouse.min-price", 1.0);
         maxPrice = plugin.getConfigFile().getDouble("auctionhouse.max-price", 1_000_000_000.0);
         taxPercent = plugin.getConfigFile().getDouble("auctionhouse.tax-percent", 0.0);
 
-        // Vault economy
         RegisteredServiceProvider<Economy> rsp = Bukkit.getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
             plugin.getLogger().warning("[Solum-AH] No Vault economy found; AuctionHouse will not function.");
@@ -58,14 +50,12 @@ public class AuctionHouseManager {
             economy = rsp.getProvider();
         }
 
-        // Storage
         storage.load();
         for (AuctionListing l : storage.loadAllListings()) {
             listings.put(l.id(), l);
         }
         claimQueue.putAll(storage.loadAllExpired());
 
-        // Sweep expired every 30s
         sweepTask = Bukkit.getScheduler().runTaskTimer(plugin, this::sweepExpired, 600L, 600L);
 
         plugin.getLogger().info("[Solum] AuctionHouse loaded with " + listings.size() + " active listing(s).");
@@ -76,7 +66,6 @@ public class AuctionHouseManager {
             sweepTask.cancel();
             sweepTask = null;
         }
-        // Persist current snapshot
         for (AuctionListing l : listings.values()) storage.putListing(l);
         for (Map.Entry<UUID, List<ItemStack>> e : claimQueue.entrySet()) storage.putExpired(e.getKey(), e.getValue());
         storage.saveSync();
@@ -108,8 +97,6 @@ public class AuctionHouseManager {
         return claimQueue.getOrDefault(owner, Collections.emptyList());
     }
 
-    /* -------- Listing creation -------- */
-
     public enum ListResult { OK, NO_ITEM, INVALID_PRICE, TOO_MANY_LISTINGS, NO_ECONOMY }
 
     public ListResult listItem(Player seller, ItemStack item, double price) {
@@ -122,7 +109,6 @@ public class AuctionHouseManager {
         }
 
         ItemStack copy = item.clone();
-        // Remove from hand
         item.setAmount(0);
 
         long now = System.currentTimeMillis();
@@ -135,8 +121,6 @@ public class AuctionHouseManager {
         return ListResult.OK;
     }
 
-    /* -------- Buy -------- */
-
     public enum BuyResult { OK, NOT_FOUND, OWN_LISTING, NO_FUNDS, INVENTORY_FULL, NO_ECONOMY }
 
     public BuyResult buy(Player buyer, UUID listingId) {
@@ -146,23 +130,19 @@ public class AuctionHouseManager {
         if (listing.seller().equals(buyer.getUniqueId())) return BuyResult.OWN_LISTING;
 
         if (economy.getBalance(buyer) < listing.price()) return BuyResult.NO_FUNDS;
-        // Check inventory space
         if (buyer.getInventory().firstEmpty() == -1) return BuyResult.INVENTORY_FULL;
 
         EconomyResponse w = economy.withdrawPlayer(buyer, listing.price());
         if (!w.transactionSuccess()) return BuyResult.NO_FUNDS;
 
-        // Pay seller (after tax)
         double net = listing.price() * (1.0 - Math.max(0.0, Math.min(1.0, taxPercent / 100.0)));
         OfflinePlayer sellerOff = Bukkit.getOfflinePlayer(listing.seller());
         economy.depositPlayer(sellerOff, net);
 
-        // Remove listing & give item
         listings.remove(listingId);
         storage.removeListing(listingId);
         buyer.getInventory().addItem(listing.item().clone());
 
-        // Notify seller if online
         Player sellerOnline = Bukkit.getPlayer(listing.seller());
         if (sellerOnline != null) {
             Messages.send(sellerOnline,
@@ -176,8 +156,6 @@ public class AuctionHouseManager {
         return BuyResult.OK;
     }
 
-    /* -------- Cancel -------- */
-
     public boolean cancel(Player seller, UUID listingId) {
         AuctionListing listing = listings.get(listingId);
         if (listing == null) return false;
@@ -188,8 +166,6 @@ public class AuctionHouseManager {
         storage.saveAsync();
         return true;
     }
-
-    /* -------- Expired sweep -------- */
 
     private void sweepExpired() {
         long now = System.currentTimeMillis();
@@ -212,12 +188,6 @@ public class AuctionHouseManager {
         storage.putExpired(owner, list);
     }
 
-    /* -------- Claim -------- */
-
-    /**
-     * Tries to give a single item from the player's claim queue back to them.
-     * Returns true if an item was claimed.
-     */
     public boolean claimOne(Player player, int index) {
         List<ItemStack> list = claimQueue.get(player.getUniqueId());
         if (list == null || list.isEmpty()) return false;
@@ -249,8 +219,6 @@ public class AuctionHouseManager {
         storage.saveAsync();
         return any;
     }
-
-    /* -------- Misc getters -------- */
 
     public double getMinPrice() { return minPrice; }
     public double getMaxPrice() { return maxPrice; }

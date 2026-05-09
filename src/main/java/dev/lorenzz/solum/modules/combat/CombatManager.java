@@ -16,11 +16,10 @@ public class CombatManager {
     private static CombatManager INSTANCE;
 
     private final Solum plugin;
-    private final Map<UUID, Long> combatTagExpiry = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> combatSeconds = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> lastAttacker = new ConcurrentHashMap<>();
     private BukkitTask actionBarTask;
 
-    // Config values
     private int combatDurationSeconds;
     private boolean punishLogout;
     private boolean dropItemsOnLogout;
@@ -44,18 +43,17 @@ public class CombatManager {
     }
 
     public void reload() {
-        combatDurationSeconds = plugin.getConfigFile().getInt("combat.tag-duration-seconds", 15);
-        punishLogout = plugin.getConfigFile().getBoolean("combat.punish-logout", true);
-        dropItemsOnLogout = plugin.getConfigFile().getBoolean("combat.drop-items-on-logout", true);
-        blockCommands = plugin.getConfigFile().getBoolean("combat.block-commands", true);
-        blockEnderPearl = plugin.getConfigFile().getBoolean("combat.block-ender-pearl", false);
-        blockChorusFruit = plugin.getConfigFile().getBoolean("combat.block-chorus-fruit", true);
-        blockTeleport = plugin.getConfigFile().getBoolean("combat.block-teleport", true);
-        blockFlying = plugin.getConfigFile().getBoolean("combat.block-flying", true);
+        combatDurationSeconds = plugin.getConfigFile().getInt("combat.tag-duration-seconds");
+        punishLogout = plugin.getConfigFile().getBoolean("combat.punish-logout");
+        dropItemsOnLogout = plugin.getConfigFile().getBoolean("combat.drop-items-on-logout");
+        blockCommands = plugin.getConfigFile().getBoolean("combat.block-commands");
+        blockEnderPearl = plugin.getConfigFile().getBoolean("combat.block-ender-pearl");
+        blockChorusFruit = plugin.getConfigFile().getBoolean("combat.block-chorus-fruit");
+        blockTeleport = plugin.getConfigFile().getBoolean("combat.block-teleport");
+        blockFlying = plugin.getConfigFile().getBoolean("combat.block-flying");
         blockedCommands = plugin.getConfigFile().getStringList("combat.blocked-commands");
         allowedCommands = plugin.getConfigFile().getStringList("combat.allowed-commands");
 
-        // Defaults if lists empty
         if (blockedCommands.isEmpty()) {
             blockedCommands = List.of(
                     "/home", "/sethome", "/tpa", "/tpaccept", "/spawn",
@@ -65,16 +63,12 @@ public class CombatManager {
         }
     }
 
-    /**
-     * Tags both players in combat.
-     */
     public void tagPlayer(UUID attacker, UUID victim) {
-        long expiryTime = System.currentTimeMillis() + (combatDurationSeconds * 1000L);
         boolean attackerNewlyTagged = !isInCombat(attacker);
         boolean victimNewlyTagged = !isInCombat(victim);
 
-        combatTagExpiry.put(attacker, expiryTime);
-        combatTagExpiry.put(victim, expiryTime);
+        combatSeconds.put(attacker, combatDurationSeconds);
+        combatSeconds.put(victim, combatDurationSeconds);
         lastAttacker.put(victim, attacker);
         lastAttacker.put(attacker, victim);
 
@@ -82,68 +76,48 @@ public class CombatManager {
         Player victimPlayer = Bukkit.getPlayer(victim);
 
         if (attackerNewlyTagged && attackerPlayer != null && attackerPlayer.isOnline()) {
-            Messages.send(attackerPlayer, getMessage("tagged",
-                    "&#FF4444⚔ You are now in combat! &7Do not log out."));
-            // Disable flying if enabled
+            Messages.send(attackerPlayer, getMessage("tagged"));
             if (blockFlying && attackerPlayer.isFlying()) {
                 attackerPlayer.setFlying(false);
                 attackerPlayer.setAllowFlight(false);
-                Messages.send(attackerPlayer, getMessage("fly-disabled",
-                        "&#FF4444Flight disabled — you are in combat!"));
+                Messages.send(attackerPlayer, getMessage("fly-disabled"));
             }
         }
 
         if (victimNewlyTagged && victimPlayer != null && victimPlayer.isOnline()) {
-            Messages.send(victimPlayer, getMessage("tagged",
-                    "&#FF4444⚔ You are now in combat! &7Do not log out."));
+            Messages.send(victimPlayer, getMessage("tagged"));
             if (blockFlying && victimPlayer.isFlying()) {
                 victimPlayer.setFlying(false);
                 victimPlayer.setAllowFlight(false);
-                Messages.send(victimPlayer, getMessage("fly-disabled",
-                        "&#FF4444Flight disabled — you are in combat!"));
+                Messages.send(victimPlayer, getMessage("fly-disabled"));
             }
         }
     }
 
-    /**
-     * Remove combat tag for a player.
-     */
     public void untagPlayer(UUID uuid) {
-        combatTagExpiry.remove(uuid);
+        combatSeconds.remove(uuid);
         lastAttacker.remove(uuid);
 
         Player player = Bukkit.getPlayer(uuid);
         if (player != null && player.isOnline()) {
-            Messages.send(player, getMessage("expired",
-                    "&#55FF55✔ You are no longer in combat."));
+            Messages.send(player, getMessage("leave"));
         }
     }
 
     public boolean isInCombat(UUID uuid) {
-        Long expiry = combatTagExpiry.get(uuid);
-        if (expiry == null) return false;
-        if (System.currentTimeMillis() >= expiry) {
-            combatTagExpiry.remove(uuid);
-            lastAttacker.remove(uuid);
-            return false;
-        }
-        return true;
+        Integer seconds = combatSeconds.get(uuid);
+        return seconds != null && seconds > 0;
     }
 
     public long getRemainingSeconds(UUID uuid) {
-        Long expiry = combatTagExpiry.get(uuid);
-        if (expiry == null) return 0;
-        long remaining = (expiry - System.currentTimeMillis()) / 1000L;
-        return Math.max(0, remaining);
+        Integer seconds = combatSeconds.get(uuid);
+        return seconds == null ? 0 : Math.max(0, seconds);
     }
 
     public UUID getLastAttacker(UUID victim) {
         return lastAttacker.get(victim);
     }
 
-    /**
-     * Handle combat logout — kill the player, drop inventory, notify.
-     */
     public void handleCombatLogout(Player player) {
         if (!punishLogout) return;
         if (!isInCombat(player.getUniqueId())) return;
@@ -151,7 +125,6 @@ public class CombatManager {
 
         UUID attackerUUID = lastAttacker.get(player.getUniqueId());
 
-        // Drop items at their location
         if (dropItemsOnLogout) {
             player.getInventory().forEach(item -> {
                 if (item != null) {
@@ -162,22 +135,18 @@ public class CombatManager {
             player.getInventory().setArmorContents(null);
         }
 
-        // Kill the player
         player.setHealth(0);
 
-        // Broadcast message
         String killerName = "Unknown";
         if (attackerUUID != null) {
             Player attacker = Bukkit.getPlayer(attackerUUID);
             if (attacker != null) {
                 killerName = attacker.getName();
-                // Untag the attacker since the fight is over
                 untagPlayer(attackerUUID);
             }
         }
 
-        String broadcastMsg = getMessage("combat-log-broadcast",
-                "&#FF4444⚠ &#FF6B6B%player% &#8C8C8Clogged out while in combat with &#55FF55%attacker%&#8C8C8C!")
+        String broadcastMsg = getMessage("combat-log-broadcast")
                 .replace("%player%", player.getName())
                 .replace("%attacker%", killerName);
 
@@ -185,23 +154,18 @@ public class CombatManager {
             Messages.sendRaw(online, broadcastMsg);
         }
 
-        combatTagExpiry.remove(player.getUniqueId());
+        combatSeconds.remove(player.getUniqueId());
         lastAttacker.remove(player.getUniqueId());
     }
 
-    /**
-     * Check if a command is blocked during combat.
-     */
     public boolean isCommandBlocked(String command) {
         if (!blockCommands) return false;
         String cmd = command.toLowerCase().split(" ")[0];
 
-        // Check allowed commands first (whitelist)
         for (String allowed : allowedCommands) {
             if (cmd.equalsIgnoreCase(allowed.toLowerCase())) return false;
         }
 
-        // Check blocked commands
         for (String blocked : blockedCommands) {
             if (cmd.equalsIgnoreCase(blocked.toLowerCase()) || cmd.startsWith(blocked.toLowerCase() + " ")) {
                 return true;
@@ -226,48 +190,37 @@ public class CombatManager {
         return blockFlying;
     }
 
-    /**
-     * Action bar task to show combat timer to all tagged players.
-     */
     private void startActionBarTask() {
-        actionBarTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
-            Iterator<Map.Entry<UUID, Long>> it = combatTagExpiry.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry<UUID, Long> entry = it.next();
+        actionBarTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            Iterator<Map.Entry<UUID, Integer>> iterator = combatSeconds.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<UUID, Integer> entry = iterator.next();
                 UUID uuid = entry.getKey();
-                long expiry = entry.getValue();
-                long now = System.currentTimeMillis();
+                int seconds = entry.getValue();
+                Player player = Bukkit.getPlayer(uuid);
 
-                if (now >= expiry) {
-                    it.remove();
+                if (player == null || !player.isOnline()) {
+                    iterator.remove();
                     lastAttacker.remove(uuid);
-                    // Send expiry message on main thread
-                    Bukkit.getScheduler().runTask(plugin, () -> {
-                        Player player = Bukkit.getPlayer(uuid);
-                        if (player != null && player.isOnline()) {
-                            Messages.send(player, getMessage("expired",
-                                    "&#55FF55✔ You are no longer in combat."));
-                        }
-                    });
                     continue;
                 }
 
-                Player player = Bukkit.getPlayer(uuid);
-                if (player != null && player.isOnline()) {
-                    long remainingSeconds = (expiry - now) / 1000L;
-                    // Build a progress bar
-                    String bar = buildProgressBar(remainingSeconds, combatDurationSeconds);
-                    String actionBarText = getMessage("actionbar",
-                            "&#FF4444⚔ COMBAT &#8C8C8C» %bar% &#FF6B6B%seconds%s")
+                if (seconds > 0) {
+                    entry.setValue(seconds - 1);
+                    String bar = buildProgressBar(seconds, combatDurationSeconds);
+                    String actionBarText = getMessage("actionbar")
                             .replace("%bar%", bar)
-                            .replace("%seconds%", String.valueOf(remainingSeconds));
-
-                    // Send action bar (sync not required for action bar via spigot API)
+                            .replace("{seconds}", String.valueOf(seconds))
+                            .replace("%seconds%", String.valueOf(seconds));
                     player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
                             TextComponent.fromLegacyText(Messages.color(actionBarText)));
+                } else {
+                    iterator.remove();
+                    lastAttacker.remove(uuid);
+                    Messages.send(player, getMessage("leave"));
                 }
             }
-        }, 0L, 5L); // Every 0.25 seconds for smooth updates
+        }, 0L, 20L);
     }
 
     private String buildProgressBar(long remaining, int total) {
@@ -277,14 +230,13 @@ public class CombatManager {
         int empty = barLength - filled;
 
         StringBuilder bar = new StringBuilder();
-        // Color based on remaining time
         String filledColor;
         if (ratio > 0.6) {
-            filledColor = "&#FF4444"; // Red — most time left (still dangerous)
+            filledColor = "&#FF4444";
         } else if (ratio > 0.3) {
-            filledColor = "&#FFD700"; // Yellow — halfway
+            filledColor = "&#FFD700";
         } else {
-            filledColor = "&#55FF55"; // Green — almost free
+            filledColor = "&#55FF55";
         }
 
         bar.append(filledColor);
@@ -298,13 +250,13 @@ public class CombatManager {
         if (actionBarTask != null) {
             actionBarTask.cancel();
         }
-        combatTagExpiry.clear();
+        combatSeconds.clear();
         lastAttacker.clear();
         INSTANCE = null;
     }
 
-    public String getMessage(String key, String def) {
-        return plugin.getConfigFile().getString("combat.messages." + key, def);
+    public String getMessage(String key) {
+        return plugin.getConfigFile().getString("combat.messages." + key, "");
     }
 
     public int getCombatDurationSeconds() {

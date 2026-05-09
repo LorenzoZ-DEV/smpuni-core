@@ -17,17 +17,6 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.List;
 
-/**
- * Replaces the vanilla join/quit broadcast with a configurable, rank-aware
- * message and shows a special first-join broadcast on a player's first login.
- *
- * Placeholders:
- *   {player}       - player's name
- *   {displayname}  - player's display name (Adventure-aware)
- *   {rank}         - LuckPerms primary group (or fallback if LP missing)
- *   {prefix}       - LuckPerms prefix (empty if none)
- *   {suffix}       - LuckPerms suffix (empty if none)
- */
 public class JoinQuitListener implements Listener {
 
     private final Solum plugin;
@@ -48,7 +37,6 @@ public class JoinQuitListener implements Listener {
         Player player = event.getPlayer();
 
         if (!player.hasPlayedBefore()) {
-            // ── First join ──
             String firstJoinFormat = plugin.getConfigFile().getString(
                     "join-quit.first-join",
                     "&6&l✦ &e{player} &fjoined for the first time! &6&lWELCOME TO SMPUNI!"
@@ -81,8 +69,6 @@ public class JoinQuitListener implements Listener {
         );
         event.quitMessage(format(quitFormat, player));
     }
-
-    /* --------------------------------------------------------------------- */
 
     private Component format(String raw, Player player) {
         String rank = "";

@@ -8,6 +8,7 @@ import co.aikar.commands.annotation.Description;
 import dev.lorenzz.solum.Solum;
 import dev.lorenzz.solum.managers.DuelManager;
 import dev.lorenzz.solum.utils.Messages;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 @CommandAlias("duel")
@@ -18,10 +19,15 @@ public class DuelCommands extends BaseCommand {
     private final Solum plugin = Solum.getInstance();
 
     @Default
-    public void duel(Player sender, Player target) {
-        if (target.equals(sender)) {
-            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.self",
-                    "&cYou can't duel yourself!"));
+    public void duel(Player sender, String targetName) {
+        Player target = Bukkit.getPlayerExact(targetName);
+        if (target == null || !target.isOnline()) {
+            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.not-found")
+                    .replace("%player%", targetName));
+            return;
+        }
+        if (target.getUniqueId().equals(sender.getUniqueId())) {
+            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.self"));
             return;
         }
 
@@ -29,11 +35,9 @@ public class DuelCommands extends BaseCommand {
         if (dm == null) { Messages.send(sender, "&cDuel system not available."); return; }
 
         if (dm.sendChallenge(sender, target)) {
-            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.challenge-sent",
-                            "&7Duel challenge sent to &b%player%&7!")
+            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.challenge-sent")
                     .replace("%player%", target.getName()));
-            Messages.send(target, plugin.getConfigFile().getString("duel.messages.challenge-received",
-                            "&b%player% &7challenged you to a duel! Use &a/duelaccept &7or &c/dueldeny")
+            Messages.send(target, plugin.getConfigFile().getString("duel.messages.challenge-received")
                     .replace("%player%", sender.getName()));
         }
     }
@@ -51,11 +55,9 @@ class DuelAcceptCommand extends BaseCommand {
         if (dm == null) { Messages.send(sender, "&cDuel system not available."); return; }
 
         if (dm.acceptChallenge(sender)) {
-            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.accepted",
-                    "&a⚔ Duel accepted! Prepare to fight!"));
+            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.accepted"));
         } else {
-            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.no-challenge",
-                    "&cYou have no pending duel challenges."));
+            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.no-challenge"));
         }
     }
 }
@@ -72,12 +74,9 @@ class DuelDenyCommand extends BaseCommand {
         if (dm == null) { Messages.send(sender, "&cDuel system not available."); return; }
 
         if (dm.denyChallenge(sender)) {
-            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.denied",
-                    "&7Duel challenge denied."));
+            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.denied"));
         } else {
-            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.no-challenge",
-                    "&cYou have no pending duel challenges."));
+            Messages.send(sender, plugin.getConfigFile().getString("duel.messages.no-challenge"));
         }
     }
 }
-

@@ -7,9 +7,11 @@ import co.aikar.commands.annotation.Description;
 import co.aikar.commands.annotation.Optional;
 import dev.lorenzz.solum.Solum;
 import dev.lorenzz.solum.utils.Messages;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 @CommandAlias("kit|kits")
 @Description("Open kit menu or claim a kit")
@@ -34,7 +36,10 @@ public class KitCommand extends BaseCommand {
 
         Kit kit = kitManager.getKit(kitName);
         if (kit == null) {
-            Messages.send(player, plugin.getConfigFile().getString("kits.messages.not-found"));
+            String notFound = plugin.getConfigFile().getString("kits.messages.not-found")
+                    .replace("%kit%", kitName);
+            Messages.send(player, notFound);
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.7f, 1.0f);
             return;
         }
 
@@ -68,8 +73,12 @@ public class KitCommand extends BaseCommand {
         }
 
         for (ItemStack item : kit.items()) {
+            ItemStack clone = item.clone();
+            if (tryEquipArmor(player, clone) || tryEquipOffhand(player, clone)) {
+                continue;
+            }
             java.util.Map<Integer, ItemStack> overflow =
-                    player.getInventory().addItem(item.clone());
+                    player.getInventory().addItem(clone);
             for (ItemStack drop : overflow.values()) {
                 player.getWorld().dropItemNaturally(player.getLocation(), drop);
             }
@@ -77,9 +86,42 @@ public class KitCommand extends BaseCommand {
 
         playerData.recordClaim(player.getUniqueId(), kit);
 
-        String msg = plugin.getConfigFile().getString("kits.messages.claimed");
+        String msg = plugin.getConfigFile().getString("kits.messages.claimed")
+                .replace("%kit%", Messages.color(kit.displayName()));
         Messages.send(player, msg);
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.2f);
+    }
+
+    private static boolean tryEquipArmor(Player player, ItemStack item) {
+        if (item == null) return false;
+        String name = item.getType().name();
+        PlayerInventory inv = player.getInventory();
+        if (name.endsWith("_HELMET") || item.getType() == Material.TURTLE_HELMET
+                || item.getType() == Material.CARVED_PUMPKIN) {
+            if (isEmpty(inv.getHelmet())) { inv.setHelmet(item); return true; }
+        } else if (name.endsWith("_CHESTPLATE") || item.getType() == Material.ELYTRA) {
+            if (isEmpty(inv.getChestplate())) { inv.setChestplate(item); return true; }
+        } else if (name.endsWith("_LEGGINGS")) {
+            if (isEmpty(inv.getLeggings())) { inv.setLeggings(item); return true; }
+        } else if (name.endsWith("_BOOTS")) {
+            if (isEmpty(inv.getBoots())) { inv.setBoots(item); return true; }
+        }
+        return false;
+    }
+
+    private static boolean tryEquipOffhand(Player player, ItemStack item) {
+        if (item == null) return false;
+        if (item.getType() == Material.SHIELD || item.getType() == Material.TOTEM_OF_UNDYING) {
+            if (isEmpty(player.getInventory().getItemInOffHand())) {
+                player.getInventory().setItemInOffHand(item);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isEmpty(ItemStack stack) {
+        return stack == null || stack.getType() == Material.AIR;
     }
 }
 
