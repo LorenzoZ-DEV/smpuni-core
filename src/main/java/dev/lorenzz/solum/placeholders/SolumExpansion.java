@@ -171,6 +171,9 @@ public class SolumExpansion extends PlaceholderExpansion {
             case "keyall" -> {
                 return KeyAllCommands.getTimeUntilNextKeyAll();
             }
+            case "keyall_formatted" -> {
+                return formatTimeKeyAll(KeyAllCommands.getRemainingSeconds());
+            }
             case "keyall_type" -> {
                 String type = KeyAllCommands.getLastKeyAllType();
                 return type.isEmpty() ? "None" : type;
@@ -284,6 +287,41 @@ public class SolumExpansion extends PlaceholderExpansion {
     private String getPlayerName(UUID uuid) {
         OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
         return p.getName() != null ? p.getName() : "???";
+    }
+
+    private String formatTimeKeyAll(long seconds) {
+        if (seconds <= 0) return "0s";
+
+        long days = seconds / (24 * 3600);
+        long hours = (seconds % (24 * 3600)) / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+
+        StringBuilder sb = new StringBuilder();
+        int count = 0;
+
+        if (days > 0 && count < 2) {
+            sb.append(days).append("d");
+            count++;
+        }
+        if (hours > 0 && count < 2) {
+            if (sb.length() > 0) sb.append(" ");
+            sb.append(hours).append("h");
+            count++;
+        }
+        if (minutes > 0 && count < 2) {
+            if (sb.length() > 0) sb.append(" ");
+            sb.append(minutes).append("m");
+            count++;
+        }
+        if (secs > 0 && count < 2 && minutes > 0) {
+            if (sb.length() > 0) sb.append(" ");
+            sb.append(secs).append("s");
+        } else if (secs > 0 && sb.length() == 0) {
+            sb.append(secs).append("s");
+        }
+
+        return sb.toString();
     }
 
 

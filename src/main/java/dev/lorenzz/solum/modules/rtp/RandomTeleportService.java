@@ -8,27 +8,18 @@ import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
-import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,15 +29,10 @@ import java.util.concurrent.TimeUnit;
 
 public final class RandomTeleportService {
 
-    public record RTPRegion(String worldName, int minX, int maxX, int minZ, int maxZ) {}
+    public record RTPRegion(String worldName, int minRadius, int maxRadius,
+                            int minY, int maxY, boolean enabled) {}
 
-    private record SoundEntry(Sound sound, float volume, float pitch) {}
-
-    private record RTPRequest(UUID playerId, String regionKey) {}
-
-    private record EffectEntry(PotionEffectType type, int amplifier, int durationTicks) {}
-
-    private record CooldownPerm(int seconds, String permission) {}
+    private record RTPRequest(UUID playerId, String worldKey) {}
 
     private static final String BYPASS_PERMISSION = "solum.rtp.bypass";
 
@@ -61,12 +47,10 @@ public final class RandomTeleportService {
     private volatile int teleportDelay;
     private volatile int maxAttempts;
     private volatile int prechunkRadius;
+
+    /** Keyed by world-name (es. "world", "world_nether"). */
     private volatile Map<String, RTPRegion> regions = Map.of();
     private volatile EnumSet<Material> blacklistedBlocks = EnumSet.noneOf(Material.class);
-    private volatile Set<Biome> blacklistedBiomes = Set.of();
-    private volatile List<EffectEntry> effects = List.of();
-    private volatile List<CooldownPerm> cooldownPermissions = List.of();
-    private volatile Map<String, SoundEntry> sounds = Map.of();
 
     public RandomTeleportService(Solum plugin) {
         this.plugin = plugin;
@@ -89,12 +73,12 @@ public final class RandomTeleportService {
         loadConfig();
     }
 
-    public Map<String, RTPRegion> getRegions() {
-        return regions;
-    }
-
     public Solum getPlugin() {
         return plugin;
+    }
+
+    public Map<String, RTPRegion> getRegions() {
+        return regions;
     }
 
     public void reload() {
@@ -109,17 +93,13 @@ public final class RandomTeleportService {
     private void loadConfig() {
         Config config = plugin.getConfigFile();
 
-        cooldownSeconds = config.getInt("Rtp.cooldown", 60);
-        teleportDelay = config.getInt("Rtp.teleport-delay", 5);
-        maxAttempts = config.getInt("Rtp.max-attempts", 15);
-        prechunkRadius = config.getInt("Rtp.prechunk-radius", 3);
+        cooldownSeconds = config.getInt("rtp.cooldown-seconds", 300);
+        teleportDelay = config.getInt("rtp.teleport-delay-seconds", 5);
+        maxAttempts = config.getInt("rtp.max-attempts", 20);
+        prechunkRadius = config.getInt("rtp.prechunk-radius", 3);
 
-        regions = loadRegions(config.getConfigurationSection("Rtp.regions"));
-        blacklistedBlocks = loadBlacklistedBlocks(config.getStringList("Rtp.blacklisted-blocks"));
-        blacklistedBiomes = loadBlacklistedBiomes(config.getStringList("Rtp.blacklisted-biomes"));
-        effects = loadEffects(config.getMapList("Rtp.effects"));
-        cooldownPermissions = loadCooldownPermissions(config.getConfigurationSection("Rtp.cooldown-permissions"));
-        sounds = loadSounds(config.getConfigurationSection("Rtp.sounds"));
+        regions = loadRegions(config.getConfigurationSection("rtp.worlds"));
+        blacklistedBlocks = loadBlacklistedBlocks(config.getStringList("rtp.unsafe-blocks"));
     }
 
     private Map<String, RTPRegion> loadRegions(ConfigurationSection section) {
@@ -127,13 +107,23 @@ public final class RandomTeleportService {
 
         Map<String, RTPRegion> regionMap = new HashMap<>();
         for (String key : section.getKeys(false)) {
-            regionMap.put(key, new RTPRegion(
-                    section.getString(key + ".world", "world"),
-                    section.getInt(key + ".min-x", -5000),
-                    section.getInt(key + ".max-x", 5000),
-                    section.getInt(key + ".min-z", -5000),
-                    section.getInt(key + ".max-z", 5000)
-            ));
+            ConfigurationSection cfg = section.getConfigurationSection(key);
+            if (cfg == null) continue;
+
+            String worldName = cfg.getString("world-name", key);
+            RTPRegion region = new RTPRegion(
+                    worldName,
+                    cfg.getInt("min-radius", 250),
+                    cfg.getInt("max-radius", 5000),
+                    cfg.getInt("min-y", 64),
+                    cfg.getInt("max-y", 256),
+                    cfg.getBoolean("enabled", true)
+            );
+
+            regionMap.put(key.toLowerCase(), region);
+            if (worldName != null) {
+                regionMap.putIfAbsent(worldName.toLowerCase(), region);
+            }
         }
         return Map.copyOf(regionMap);
     }
@@ -149,85 +139,8 @@ public final class RandomTeleportService {
         return blocks;
     }
 
-    @SuppressWarnings("deprecation")
-    private Set<Biome> loadBlacklistedBiomes(List<String> names) {
-        Set<Biome> biomeSet = new HashSet<>();
-        for (String biomeName : names) {
-            try {
-                Biome biome = Registry.BIOME.get(NamespacedKey.minecraft(biomeName.toLowerCase()));
-                if (biome != null) biomeSet.add(biome);
-            } catch (Exception ignored) {
-            }
-        }
-        return Set.copyOf(biomeSet);
-    }
-
-    private List<EffectEntry> loadEffects(List<Map<?, ?>> mapList) {
-        List<EffectEntry> effectList = new ArrayList<>();
-        for (Map<?, ?> map : mapList) {
-            Object typeObj = map.get("type");
-            if (typeObj == null) continue;
-
-            PotionEffectType type = Registry.POTION_EFFECT_TYPE.get(
-                    NamespacedKey.minecraft(typeObj.toString().toLowerCase()));
-            if (type == null) continue;
-
-            Object ampObj = map.get("amplifier");
-            int amplifier = ampObj instanceof Number number ? number.intValue() : 0;
-
-            Object durObj = map.get("duration");
-            int duration = (durObj instanceof Number number ? number.intValue() : 10) * 20;
-
-            effectList.add(new EffectEntry(type, amplifier, duration));
-        }
-        return List.copyOf(effectList);
-    }
-
-    private List<CooldownPerm> loadCooldownPermissions(ConfigurationSection section) {
-        if (section == null) return List.of();
-
-        List<CooldownPerm> permList = new ArrayList<>();
-        for (String key : section.getKeys(false)) {
-            String perm = section.getString(key);
-            if (perm == null) continue;
-            try {
-                permList.add(new CooldownPerm(Integer.parseInt(key), perm));
-            } catch (NumberFormatException ignored) {
-            }
-        }
-        permList.sort(Comparator.comparingInt(CooldownPerm::seconds));
-        return List.copyOf(permList);
-    }
-
-    private Map<String, SoundEntry> loadSounds(ConfigurationSection section) {
-        if (section == null) return Map.of();
-
-        Map<String, SoundEntry> soundMap = new HashMap<>();
-        for (String key : section.getKeys(false)) {
-            ConfigurationSection soundCfg = section.getConfigurationSection(key);
-            if (soundCfg == null) continue;
-
-            String typeName = soundCfg.getString("type", "");
-            if (typeName == null || typeName.isEmpty()) continue;
-
-            Sound snd = Registry.SOUNDS.get(NamespacedKey.minecraft(typeName.toLowerCase()));
-            if (snd == null) continue;
-
-            float volume = (float) soundCfg.getDouble("volume", 1.0);
-            float pitch = (float) soundCfg.getDouble("pitch", 1.0);
-            soundMap.put(key, new SoundEntry(snd, volume, pitch));
-        }
-        return Map.copyOf(soundMap);
-    }
-
-    public void playSound(Player player, String key) {
-        SoundEntry entry = sounds.get(key);
-        if (entry == null) return;
-        player.playSound(player.getLocation(), entry.sound(), entry.volume(), entry.pitch());
-    }
-
-    public void handleCommand(Player player, String regionKey) {
-        addToQueue(player, regionKey);
+    public void handleCommand(Player player, String worldKey) {
+        addToQueue(player, worldKey);
     }
 
     public boolean isOnCooldown(Player player) {
@@ -251,29 +164,34 @@ public final class RandomTeleportService {
         return remaining <= 0 ? 0 : (int) (remaining / 1000L);
     }
 
-    public void addToQueue(Player player, String regionKey) {
+    public void addToQueue(Player player, String worldKey) {
         if (isOnCooldown(player)) {
-            Messages.send(player, Messages.get("Rtp.cooldown")
-                    .replace("{time}", String.valueOf(getRemainingCooldown(player))));
+            sendMessage(player, "cooldown", Map.of("{time}", String.valueOf(getRemainingCooldown(player))));
             return;
         }
 
-        RTPRegion region = regions.get(regionKey);
+        RTPRegion region = resolveRegion(worldKey);
         World world = region != null ? Bukkit.getWorld(region.worldName()) : null;
+
         if (region == null || world == null) {
-            Messages.send(player, Messages.get("Rtp.world-not-found"));
+            sendMessage(player, "error-no-world", Map.of("{world}", worldKey));
+            return;
+        }
+
+        if (!region.enabled()) {
+            sendMessage(player, "world-disabled", Map.of("{world}", world.getName()));
             return;
         }
 
         boolean wasEmpty = queue.isEmpty();
-        queue.add(new RTPRequest(player.getUniqueId(), regionKey));
-
-        if (!wasEmpty) {
-            Messages.send(player, Messages.get("Rtp.queue-added")
-                    .replace("{position}", String.valueOf(queue.size())));
-        }
+        queue.add(new RTPRequest(player.getUniqueId(), worldKey));
 
         if (wasEmpty) processQueue();
+    }
+
+    private RTPRegion resolveRegion(String worldKey) {
+        if (worldKey == null) return null;
+        return regions.get(worldKey.toLowerCase());
     }
 
     private void processQueue() {
@@ -286,24 +204,23 @@ public final class RandomTeleportService {
             Player player = Bukkit.getPlayer(request.playerId());
             if (player == null || !player.isOnline()) continue;
 
-            RTPRegion region = regions.get(request.regionKey());
+            RTPRegion region = resolveRegion(request.worldKey());
             if (region == null) continue;
 
             World world = Bukkit.getWorld(region.worldName());
             if (world == null) {
-                Messages.send(player, Messages.get("Rtp.world-not-found"));
+                sendMessage(player, "error-no-world", Map.of("{world}", region.worldName()));
                 continue;
             }
 
-            Messages.send(player, Messages.get("Rtp.searching"));
+            sendMessage(player, "actionbar-searching", Map.of());
             findSafeLocation(world, region).thenAccept(location -> runSync(() -> {
                 if (!player.isOnline()) {
                     processQueue();
                     return;
                 }
                 if (location == null) {
-                    Messages.send(player, Messages.get("Rtp.no-safe-location"));
-                    playSound(player, "no-safe-location");
+                    sendMessage(player, "fail", Map.of());
                     processQueue();
                     return;
                 }
@@ -368,8 +285,7 @@ public final class RandomTeleportService {
                 double dy = current.getY() - startY;
                 double dz = current.getZ() - startZ;
                 if (dx * dx + dy * dy + dz * dz > 0.25) {
-                    Messages.send(player, Messages.get("Rtp.teleport-canceled"));
-                    playSound(player, "teleport-canceled");
+                    sendMessage(player, "moved", Map.of());
                     cancel();
                     processQueue();
                     return;
@@ -381,9 +297,7 @@ public final class RandomTeleportService {
                     return;
                 }
 
-                Messages.send(player, Messages.get("Rtp.delay-chat")
-                        .replace("{time}", String.valueOf(remaining)));
-                playSound(player, "countdown-tick");
+                sendMessage(player, "teleporting", Map.of("{seconds}", String.valueOf(remaining)));
                 remaining--;
             }
         }.runTaskTimer(plugin, 0L, 20L);
@@ -404,36 +318,32 @@ public final class RandomTeleportService {
                 }
 
                 player.setFallDistance(0.0f);
-                playSound(player, "teleport");
-                applyEffects(player);
 
-                long durationMs = getCooldownForPlayer(player) * 1000L;
+                long durationMs = cooldownSeconds * 1000L;
                 cooldowns.put(player.getUniqueId(), System.currentTimeMillis() + durationMs);
 
                 String world = worldName != null ? worldName : "";
-                Messages.send(player, Messages.get("Rtp.teleported")
-                        .replace("{world}", world)
-                        .replace("{x}", String.valueOf(location.getBlockX()))
-                        .replace("{y}", String.valueOf(location.getBlockY()))
-                        .replace("{z}", String.valueOf(location.getBlockZ())));
+                sendMessage(player, "teleported", Map.of(
+                        "{world}", world,
+                        "{x}", String.valueOf(location.getBlockX()),
+                        "{y}", String.valueOf(location.getBlockY()),
+                        "{z}", String.valueOf(location.getBlockZ())
+                ));
 
                 processQueue();
             }));
         }));
     }
 
-    private int getCooldownForPlayer(Player player) {
-        for (CooldownPerm perm : cooldownPermissions) {
-            if (player.hasPermission(perm.permission())) return perm.seconds();
-        }
-        return cooldownSeconds;
-    }
+    private void sendMessage(Player player, String key, Map<String, String> placeholders) {
+        String raw = Messages.get("rtp.messages." + key);
+        if (raw == null || raw.isEmpty() || raw.equals("rtp.messages." + key)) return;
 
-    private void applyEffects(Player player) {
-        for (EffectEntry effect : effects) {
-            player.addPotionEffect(new PotionEffect(
-                    effect.type(), effect.durationTicks(), effect.amplifier(), false, true, true));
+        String message = raw;
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            message = message.replace(entry.getKey(), entry.getValue());
         }
+        Messages.sendNoPrefix(player, message);
     }
 
     public CompletableFuture<Location> findSafeLocation(World world, RTPRegion region) {
@@ -443,34 +353,49 @@ public final class RandomTeleportService {
         Location borderCenter = border.getCenter();
         double borderRadius = border.getSize() / 2.0 - 1.0;
 
-        int minX = Math.max(region.minX(), (int) (borderCenter.getX() - borderRadius));
-        int maxX = Math.min(region.maxX(), (int) (borderCenter.getX() + borderRadius));
-        int minZ = Math.max(region.minZ(), (int) (borderCenter.getZ() - borderRadius));
-        int maxZ = Math.min(region.maxZ(), (int) (borderCenter.getZ() + borderRadius));
+        int minRadius = Math.max(1, region.minRadius());
+        int maxRadius = Math.max(minRadius + 1, region.maxRadius());
+
+        int minX = (int) Math.max(borderCenter.getX() - borderRadius, borderCenter.getX() - maxRadius);
+        int maxX = (int) Math.min(borderCenter.getX() + borderRadius, borderCenter.getX() + maxRadius);
+        int minZ = (int) Math.max(borderCenter.getZ() - borderRadius, borderCenter.getZ() - maxRadius);
+        int maxZ = (int) Math.min(borderCenter.getZ() + borderRadius, borderCenter.getZ() + maxRadius);
 
         if (minX >= maxX || minZ >= maxZ) {
             result.complete(null);
             return result;
         }
 
+        int minHeight = Math.max(world.getMinHeight(), region.minY());
+        int maxHeight = Math.min(world.getMaxHeight() - 1, region.maxY());
+
         boolean isNether = world.getEnvironment() == World.Environment.NETHER;
         boolean isEnd = world.getEnvironment() == World.Environment.THE_END;
-        boolean checkBiomes = !blacklistedBiomes.isEmpty();
-        int minHeight = world.getMinHeight();
 
         ThreadLocalRandom rng = ThreadLocalRandom.current();
         int[][] coords = new int[maxAttempts][2];
         for (int i = 0; i < maxAttempts; i++) {
-            coords[i][0] = rng.nextInt(minX, maxX + 1);
-            coords[i][1] = rng.nextInt(minZ, maxZ + 1);
+            int x;
+            int z;
+            int tries = 0;
+            do {
+                x = rng.nextInt(minX, maxX + 1);
+                z = rng.nextInt(minZ, maxZ + 1);
+                double distSq = (x - borderCenter.getX()) * (x - borderCenter.getX())
+                        + (z - borderCenter.getZ()) * (z - borderCenter.getZ());
+                if (distSq >= (double) minRadius * minRadius) break;
+                tries++;
+            } while (tries < 5);
+            coords[i][0] = x;
+            coords[i][1] = z;
         }
 
-        tryLocation(world, coords, 0, isNether, isEnd, checkBiomes, minHeight, result);
+        tryLocation(world, coords, 0, isNether, isEnd, minHeight, maxHeight, result);
         return result;
     }
 
     private void tryLocation(World world, int[][] coords, int idx, boolean isNether,
-                             boolean isEnd, boolean checkBiomes, int minHeight,
+                             boolean isEnd, int minHeight, int maxHeight,
                              CompletableFuture<Location> result) {
         if (idx >= coords.length) {
             result.complete(null);
@@ -481,111 +406,91 @@ public final class RandomTeleportService {
         int z = coords[idx][1];
 
         world.getChunkAtAsync(x >> 4, z >> 4).thenAccept(chunk -> {
-            ChunkSnapshot snapshot = chunk.getChunkSnapshot(true, checkBiomes, false);
+            ChunkSnapshot snapshot = chunk.getChunkSnapshot(true, false, false);
             CompletableFuture.runAsync(() -> {
                 int localX = x & 0xF;
                 int localZ = z & 0xF;
                 try {
-                    boolean blockedBiome = checkBiomes
-                            && blacklistedBiomes.contains(snapshot.getBiome(localX, 64, localZ));
-                    if (!blockedBiome) {
-                        Location safe = checkSafe(world, snapshot, x, z, localX, localZ,
-                                isNether, isEnd, minHeight);
-                        if (safe != null) {
-                            result.complete(safe);
-                            return;
-                        }
+                    Location safe = checkSafe(world, snapshot, x, z, localX, localZ,
+                            isNether, isEnd, minHeight, maxHeight);
+                    if (safe != null) {
+                        result.complete(safe);
+                        return;
                     }
                 } catch (Exception ignored) {
                 }
-                tryLocation(world, coords, idx + 1, isNether, isEnd, checkBiomes,
-                        minHeight, result);
+                tryLocation(world, coords, idx + 1, isNether, isEnd, minHeight, maxHeight, result);
             });
         }).exceptionally(ex -> {
-            tryLocation(world, coords, idx + 1, isNether, isEnd, checkBiomes,
-                    minHeight, result);
+            tryLocation(world, coords, idx + 1, isNether, isEnd, minHeight, maxHeight, result);
             return null;
         });
     }
 
     private Location checkSafe(World world, ChunkSnapshot snapshot, int x, int z,
                                int localX, int localZ, boolean isNether, boolean isEnd,
-                               int minHeight) {
-        if (isNether) return checkNetherSafe(world, snapshot, x, z, localX, localZ);
-        if (isEnd) return checkEndSafe(world, snapshot, x, z, localX, localZ);
-        return checkOverworldSafe(world, snapshot, x, z, localX, localZ, minHeight);
+                               int minHeight, int maxHeight) {
+        if (isNether) return checkNetherSafe(world, snapshot, x, z, localX, localZ, minHeight, maxHeight);
+        if (isEnd) return checkEndSafe(world, snapshot, x, z, localX, localZ, minHeight, maxHeight);
+        return checkOverworldSafe(world, snapshot, x, z, localX, localZ, minHeight, maxHeight);
     }
 
     private Location checkOverworldSafe(World world, ChunkSnapshot snapshot, int x, int z,
-                                        int localX, int localZ, int minHeight) {
-        int topY = snapshot.getHighestBlockYAt(localX, localZ);
+                                        int localX, int localZ, int minHeight, int maxHeight) {
+        int topY = Math.min(snapshot.getHighestBlockYAt(localX, localZ), maxHeight);
         if (topY <= minHeight) return null;
 
         for (int y = topY; y > minHeight; y--) {
-            Material ground = snapshot.getBlockType(localX, y, localZ);
-            if (!ground.isSolid() || liquidBlocks.contains(ground)
-                    || blacklistedBlocks.contains(ground)) continue;
-
-            Material feet = snapshot.getBlockType(localX, y + 1, localZ);
-            if (!isSafe(feet) || blacklistedBlocks.contains(feet)) continue;
-
-            Material head = snapshot.getBlockType(localX, y + 2, localZ);
-            if (!isSafe(head) || blacklistedBlocks.contains(head)) continue;
-
-            Material above = snapshot.getBlockType(localX, y + 3, localZ);
-            if (liquidBlocks.contains(above) || unsafePassthrough.contains(above)) continue;
-
-            return new Location(world, x + 0.5, y + 1.0, z + 0.5);
+            Location loc = trySpot(world, snapshot, x, z, localX, localZ, y);
+            if (loc != null) return loc;
         }
         return null;
     }
 
     private Location checkNetherSafe(World world, ChunkSnapshot snapshot, int x, int z,
-                                     int localX, int localZ) {
-        Location loc = scanRangeSnapshot(world, snapshot, x, z, localX, localZ, 80, 32);
-        if (loc != null) return loc;
-
-        loc = scanRangeSnapshot(world, snapshot, x, z, localX, localZ, 120, 81);
-        if (loc != null) return loc;
-
-        return scanRangeSnapshot(world, snapshot, x, z, localX, localZ, 31, 5);
+                                     int localX, int localZ, int minHeight, int maxHeight) {
+        int from = Math.min(maxHeight, 120);
+        int to = Math.max(minHeight, 5);
+        return scanRange(world, snapshot, x, z, localX, localZ, from, to);
     }
 
     private Location checkEndSafe(World world, ChunkSnapshot snapshot, int x, int z,
-                                  int localX, int localZ) {
-        for (int y = 120; y >= 1; y--) {
-            Material below = snapshot.getBlockType(localX, y - 1, localZ);
-            if (!below.isSolid() || blacklistedBlocks.contains(below)) continue;
-
-            if (!isSafe(snapshot.getBlockType(localX, y, localZ))) continue;
-            if (!isSafe(snapshot.getBlockType(localX, y + 1, localZ))) continue;
-
-            Material above = snapshot.getBlockType(localX, y + 2, localZ);
-            if (liquidBlocks.contains(above) || unsafePassthrough.contains(above)) continue;
-
-            if (!hasGroundBelow(snapshot, localX, localZ, y - 1)) continue;
-
-            return new Location(world, x + 0.5, y, z + 0.5);
+                                  int localX, int localZ, int minHeight, int maxHeight) {
+        int from = Math.min(maxHeight, 120);
+        int to = Math.max(minHeight, 1);
+        for (int y = from; y >= to; y--) {
+            Location loc = trySpot(world, snapshot, x, z, localX, localZ, y);
+            if (loc != null && hasGroundBelow(snapshot, localX, localZ, y - 1)) return loc;
         }
         return null;
     }
 
-    private Location scanRangeSnapshot(World world, ChunkSnapshot snapshot, int x, int z,
-                                       int localX, int localZ, int fromY, int toY) {
+    private Location scanRange(World world, ChunkSnapshot snapshot, int x, int z,
+                               int localX, int localZ, int fromY, int toY) {
         for (int y = fromY; y >= toY; y--) {
-            Material below = snapshot.getBlockType(localX, y - 1, localZ);
-            if (!below.isSolid() || blacklistedBlocks.contains(below)
-                    || liquidBlocks.contains(below)) continue;
-
-            if (!isSafe(snapshot.getBlockType(localX, y, localZ))) continue;
-            if (!isSafe(snapshot.getBlockType(localX, y + 1, localZ))) continue;
-
-            Material above = snapshot.getBlockType(localX, y + 2, localZ);
-            if (liquidBlocks.contains(above) || unsafePassthrough.contains(above)) continue;
-
-            return new Location(world, x + 0.5, y, z + 0.5);
+            Location loc = trySpot(world, snapshot, x, z, localX, localZ, y);
+            if (loc != null) return loc;
         }
         return null;
+    }
+
+    private Location trySpot(World world, ChunkSnapshot snapshot, int x, int z,
+                             int localX, int localZ, int y) {
+        Material ground = snapshot.getBlockType(localX, y, localZ);
+        if (!ground.isSolid() || liquidBlocks.contains(ground) || blacklistedBlocks.contains(ground)) {
+            return null;
+        }
+
+        Material feet = snapshot.getBlockType(localX, y + 1, localZ);
+        if (!isSafe(feet) || blacklistedBlocks.contains(feet)) return null;
+
+        Material head = snapshot.getBlockType(localX, y + 2, localZ);
+        if (!isSafe(head) || blacklistedBlocks.contains(head)) return null;
+
+        Material above = snapshot.getBlockType(localX, y + 3, localZ);
+        if (liquidBlocks.contains(above) || unsafePassthrough.contains(above)) return null;
+
+        return new Location(world, x + 0.5, y + 1.0, z + 0.5);
     }
 
     private boolean hasGroundBelow(ChunkSnapshot snapshot, int localX, int localZ, int startY) {

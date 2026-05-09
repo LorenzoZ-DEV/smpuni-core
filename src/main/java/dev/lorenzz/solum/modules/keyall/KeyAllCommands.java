@@ -37,6 +37,14 @@ public class KeyAllCommands extends BaseCommand {
         lastKeyAllAmount = amount;
     }
 
+    public static long getRemainingSeconds() {
+        if (intervalMinutes <= 0) return 0;
+        long intervalMs = intervalMinutes * 60L * 1000L;
+        long elapsed = (lastKeyAllTime == 0) ? 0 : (System.currentTimeMillis() - lastKeyAllTime);
+        long remaining = intervalMs - elapsed;
+        return remaining <= 0 ? 0 : remaining / 1000L;
+    }
+
     public static String getTimeUntilNextKeyAll() {
         if (intervalMinutes <= 0) return "N/A";
         long intervalMs = intervalMinutes * 60L * 1000L;
