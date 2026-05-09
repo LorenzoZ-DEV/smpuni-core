@@ -4,6 +4,7 @@ import dev.lorenzz.solum.Solum;
 import dev.lorenzz.solum.utils.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -69,6 +70,7 @@ public class KitPreviewGUI implements InventoryHolder, Listener {
 
     public void open() {
         player.openInventory(inventory);
+        player.playSound(player.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.7f, 1.0f);
     }
 
     @Override
@@ -84,8 +86,8 @@ public class KitPreviewGUI implements InventoryHolder, Listener {
         event.setCancelled(true);
 
         if (event.getRawSlot() == backSlot) {
-            Bukkit.getScheduler().runTask(Solum.getInstance(), () ->
-                    new KitGUI(clicker).open());
+            clicker.playSound(clicker.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.0f);
+                    new KitGUI(clicker).open();
         }
     }
 

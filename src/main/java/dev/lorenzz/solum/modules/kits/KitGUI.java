@@ -4,6 +4,7 @@ import dev.lorenzz.solum.Solum;
 import dev.lorenzz.solum.utils.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -149,6 +150,7 @@ public class KitGUI implements InventoryHolder, Listener {
 
     public void open() {
         player.openInventory(inventory);
+        player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.6f, 1.2f);
     }
 
     @Override
@@ -168,12 +170,13 @@ public class KitGUI implements InventoryHolder, Listener {
         if (kit == null) return;
 
         if (event.isRightClick()) {
-            Bukkit.getScheduler().runTask(Solum.getInstance(), () ->
-                    new KitPreviewGUI(clicker, kit).open());
+            clicker.playSound(clicker.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 0.7f, 1.0f);
+                    new KitPreviewGUI(clicker, kit).open();
             return;
         }
 
         if (event.isLeftClick()) {
+            clicker.playSound(clicker.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.2f);
             KitCommand.claimKit(clicker, kit, KitPlayerDataManager.getInstance());
             rebuild();
         }
