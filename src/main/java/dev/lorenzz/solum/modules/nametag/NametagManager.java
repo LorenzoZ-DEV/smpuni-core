@@ -32,18 +32,16 @@ public class NametagManager {
                     .useUnusualXRepeatedCharacterHexFormat()
                     .build();
 
-    // ── Hardcoded settings (inspired by UnlimitedNametags) ─────────────────
-    /** Extra distance above the player's full height (1.8 standing). 0.30 ≈ half-block above head. */
-    private static final double EXTRA_ABOVE_HEAD = 0.30;
+    private static final double STATS_OFFSET_ABOVE_HEAD = 0.5;
+    private static final double LINE_HEIGHT = 0.28;
     private static final long UPDATE_INTERVAL_TICKS = 20L;
     private static final boolean HIDE_FROM_OWNER = true;
-    /** Transparent background = no black box behind the text (UnlimitedNametags style). */
     private static final Color BACKGROUND_COLOR = Color.fromARGB(0, 0, 0, 0);
     private static final boolean TEXT_SHADOW = true;
     private static final boolean SEE_THROUGH_BLOCKS = false;
-    private static final String FORMAT =
+    private static final String NICKNAME_FORMAT = "%luckperms_prefix%%player_name%";
+    private static final String STATS_FORMAT =
             "&e\uD83E\uDE99 %solum_shards% &7|| &c\u2764 %player_health_rounded%%solum_team_tag_sep%";
-    // ───────────────────────────────────────────────────────────────────────
 
     private final Solum plugin;
     private final NamespacedKey markerKey;
@@ -61,8 +59,8 @@ public class NametagManager {
         for (Player p : Bukkit.getOnlinePlayers()) attach(p);
         updateTask = Bukkit.getScheduler().runTaskTimer(plugin, this::updateAll,
                 UPDATE_INTERVAL_TICKS, UPDATE_INTERVAL_TICKS);
-        plugin.getLogger().info("[Solum] NametagManager started (hardcoded, extra="
-                + EXTRA_ABOVE_HEAD + ").");
+        plugin.getLogger().info("[Solum] NametagManager started (statsOffset="
+                + STATS_OFFSET_ABOVE_HEAD + ", lineHeight=" + LINE_HEIGHT + ").");
     }
 
     public void stop() {
@@ -81,10 +79,7 @@ public class NametagManager {
     }
 
     private double computeAnchorY(Player p) {
-        // player.getHeight() handles all poses automatically:
-        //   standing 1.8, sneaking 1.5, swimming/crawling 0.6, elytra 0.6.
-        // The line follows the player's body in every state without manual checks.
-        return p.getHeight() + EXTRA_ABOVE_HEAD;
+        return p.getHeight() + STATS_OFFSET_ABOVE_HEAD + LINE_HEIGHT;
     }
 
     public void attach(Player player) {
@@ -176,13 +171,20 @@ public class NametagManager {
     }
 
     private Component buildComponent(Player p) {
-        String s = FORMAT;
-        s = s.replace("%player%", p.getName())
-             .replace("%player_name%", p.getName());
+        String nickname = NICKNAME_FORMAT;
+        String stats = STATS_FORMAT;
+        nickname = nickname.replace("%player%", p.getName())
+                           .replace("%player_name%", p.getName());
+        stats = stats.replace("%player%", p.getName())
+                     .replace("%player_name%", p.getName());
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            try { s = PlaceholderAPI.setPlaceholders(p, s); } catch (Throwable ignored) {}
+            try {
+                nickname = PlaceholderAPI.setPlaceholders(p, nickname);
+                stats = PlaceholderAPI.setPlaceholders(p, stats);
+            } catch (Throwable ignored) {}
         }
-        return LEGACY.deserialize(Messages.color(s));
+        String combined = Messages.color(nickname) + "\n" + Messages.color(stats);
+        return LEGACY.deserialize(combined);
     }
 
     private void cleanupOrphans() {
@@ -195,12 +197,6 @@ public class NametagManager {
         }
     }
 
-    /**
-     * Public hook used by listeners (damage, health change, gamemode, etc.) to
-     * refresh a player's nametag text immediately instead of waiting for the
-     * periodic update tick. Also re-applies the body-relative anchor so the line
-     * stays glued through pose changes.
-     */
     public void refresh(Player player) {
         if (player == null) return;
         UUID id = displays.get(player.getUniqueId());
@@ -208,7 +204,6 @@ public class NametagManager {
         Entity e = Bukkit.getEntity(id);
         if (!(e instanceof TextDisplay td) || td.isDead()) return;
 
-        // Re-apply transformation in case the player's height changed (sneak/swim/etc.)
         float anchor = (float) computeAnchorY(player);
         Transformation tr = td.getTransformation();
         Vector3f cur = tr.getTranslation();
