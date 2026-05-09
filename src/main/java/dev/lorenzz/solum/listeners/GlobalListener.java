@@ -66,17 +66,15 @@ public class GlobalListener implements Listener {
                 &r
                 &r
                 &r
-                &#0053ff&lSMPUNI &7- &#d0cfd3S&#c9d7dae&#c3dfe1a&#bce6e9s&#b6eef0o&#aff6f7n ➀
-                &r&7(/store - /crates - /duels - /afkzone - /changelog - /rtp - /billfords - /skilltree - /sell - /shop - /buy)
+                &#0053ff&lSMPUNI &7- &#d0cfd3S&#c9d7dae&#c3dfe1a&#bce6e9s&#b6eef0o&#aff6f7n ➁
                 &r
                 &#d8e4e4Hello! 
                 &#d8e4e4The second season of the SMPUNI is launched at &#89b4ca 10 May 2026! 
-                &#d8e4e4After the beta testing phase, the world will be reset and all progress will be wiped.
-                &#d8e4e4Thank you for being part of the testing phase, we fixxed any bugs!
+                &#d8e4e4After a Big rework of the server and some stuffs. of Rebranding introducing new Features.
                 &#d8e4e4All players banned has been unbanned. for give another chance.
      
                 
-                &#d8e4e4- If you are intrested the changelogs of the server checkout our command &#89b4ca/changelog
+                &#d8e4e4- If you are intrested the changelogs and features of the server checkout our command &#89b4ca/changelog
                 &r
                 """));  // 2 second delay
     }

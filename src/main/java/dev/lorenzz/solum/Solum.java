@@ -53,6 +53,7 @@ import dev.lorenzz.solum.modules.changelog.ChangelogModule;
 import dev.lorenzz.solum.modules.chatgames.ChatGameModule;
 import dev.lorenzz.solum.modules.doublejump.DoubleJumpModule;
 import dev.lorenzz.solum.modules.easter.EasterModule;
+import dev.lorenzz.solum.modules.nametag.NametagModule;
 import dev.lorenzz.solum.placeholders.SolumExpansion;
 import dev.lorenzz.solum.utils.Config;
 import dev.lorenzz.solum.utils.Messages;
@@ -149,7 +150,7 @@ public final class Solum extends JavaPlugin {
                 BackModule::new, CombatModule::new, WarpModule::new, DuelModule::new,
                 ChangelogModule::new, ChatGameModule::new, EasterModule::new,
                 ScoreboardModule::new, AuctionHouseModule::new, TablistModule::new,
-                JoinQuitModule::new, DoubleJumpModule::new
+                JoinQuitModule::new, DoubleJumpModule::new, NametagModule::new
         );
         factories.forEach(f -> moduleManager.registerModule(f.apply(this)));
     }

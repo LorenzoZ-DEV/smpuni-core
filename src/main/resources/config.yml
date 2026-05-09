@@ -50,6 +50,19 @@ modules:
   tablist: true
   join-quit: true
   double-jump: true
+  nametag: true
+
+# ---- Nametag (text below the player's vanilla name) ----
+nametag:
+  # Vertical offset above the player's feet (vanilla name is around 2.0 — keep below it).
+  y-offset: 1.7
+  # Refresh interval for the dynamic placeholders (1s = 20 ticks).
+  update-interval-ticks: 20
+  # Hide the floating text from the player it belongs to.
+  hide-from-owner: true
+  # Format. Supported placeholders include any PlaceholderAPI placeholder.
+  # %solum_team_tag_sep% returns " | <axe> <team>" or empty if the player isn't in a team.
+  format: '&e🪙 %solum_shards% &7|| &c❤ %player_health_rounded%%solum_team_tag_sep%'
 
 # ---- Join / Quit Messages ----
 join-quit:

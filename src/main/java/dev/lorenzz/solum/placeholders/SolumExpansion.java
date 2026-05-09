@@ -146,6 +146,23 @@ public class SolumExpansion extends PlaceholderExpansion {
                 if (tm == null) return "false";
                 return String.valueOf(tm.hasTeam(player.getUniqueId()));
             }
+            case "team_tag" -> {
+                // Returns empty when player is not in a team (so the axe icon never shows for teamless players),
+                // otherwise the axe-icon + team name. Used by the nametag module.
+                TeamsManager tm = TeamsManager.getInstance();
+                if (tm == null) return "";
+                TeamsManager.Team team = tm.getPlayerTeam(player.getUniqueId());
+                if (team == null) return "";
+                return "&c\uD83E\uDE93 &f" + team.getName();
+            }
+            case "team_tag_sep" -> {
+                // Same as team_tag but prefixed with a separator " &7| ". Empty when no team.
+                TeamsManager tm = TeamsManager.getInstance();
+                if (tm == null) return "";
+                TeamsManager.Team team = tm.getPlayerTeam(player.getUniqueId());
+                if (team == null) return "";
+                return " &7| &c\uD83E\uDE93 &f" + team.getName();
+            }
             case "homes" -> {
                 HomeManager hm = HomeManager.getInstance();
                 if (hm == null) return "0";
