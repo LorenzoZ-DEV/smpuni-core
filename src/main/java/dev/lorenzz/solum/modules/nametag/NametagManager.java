@@ -14,11 +14,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Transformation;
 import org.joml.Vector3f;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,9 +30,8 @@ public class NametagManager {
                     .useUnusualXRepeatedCharacterHexFormat()
                     .build();
 
-    private static final double STATS_OFFSET_ABOVE_HEAD = 0.5;
-    private static final double LINE_HEIGHT = 0.28;
-    private static final long UPDATE_INTERVAL_TICKS = 20L;
+    private static final double STATS_OFFSET_ABOVE_HEAD = 0.1;
+    private static final double LINE_HEIGHT = 0.25;
     private static final boolean HIDE_FROM_OWNER = true;
     private static final Color BACKGROUND_COLOR = Color.fromARGB(0, 0, 0, 0);
     private static final boolean TEXT_SHADOW = true;
@@ -43,11 +40,11 @@ public class NametagManager {
     private static final String STATS_FORMAT =
             "&e\uD83E\uDE99 %solum_shards% &7|| &c\u2764 %player_health_rounded%%solum_team_tag_sep%";
 
+    private static volatile NametagManager INSTANCE;
+
     private final Solum plugin;
     private final NamespacedKey markerKey;
     private final Map<UUID, UUID> displays = new ConcurrentHashMap<>();
-
-    private BukkitTask updateTask;
 
     public NametagManager(Solum plugin) {
         this.plugin = plugin;
@@ -57,14 +54,11 @@ public class NametagManager {
     public void start() {
         cleanupOrphans();
         for (Player p : Bukkit.getOnlinePlayers()) attach(p);
-        updateTask = Bukkit.getScheduler().runTaskTimer(plugin, this::updateAll,
-                UPDATE_INTERVAL_TICKS, UPDATE_INTERVAL_TICKS);
-        plugin.getLogger().info("[Solum] NametagManager started (statsOffset="
-                + STATS_OFFSET_ABOVE_HEAD + ", lineHeight=" + LINE_HEIGHT + ").");
+        INSTANCE = this;
     }
 
     public void stop() {
-        if (updateTask != null) { updateTask.cancel(); updateTask = null; }
+        if (INSTANCE == this) INSTANCE = null;
         for (UUID id : displays.values()) {
             Entity e = Bukkit.getEntity(id);
             if (e != null) e.remove();
@@ -78,8 +72,13 @@ public class NametagManager {
         start();
     }
 
+    public static void requestRefresh(Player player) {
+        NametagManager m = INSTANCE;
+        if (m != null && player != null) m.refresh(player);
+    }
+
     private double computeAnchorY(Player p) {
-        return p.getHeight() + STATS_OFFSET_ABOVE_HEAD + LINE_HEIGHT;
+        return STATS_OFFSET_ABOVE_HEAD + LINE_HEIGHT;
     }
 
     public void attach(Player player) {
@@ -114,8 +113,6 @@ public class NametagManager {
         boolean mounted = false;
         try { mounted = player.addPassenger(td); } catch (Throwable ignored) {}
         if (!mounted) {
-            plugin.getLogger().warning("[Solum] Failed to mount nametag display on "
-                    + player.getName());
             td.remove();
             return;
         }
@@ -138,37 +135,6 @@ public class NametagManager {
         }
     }
 
-    private void updateAll() {
-        Iterator<Map.Entry<UUID, UUID>> it = displays.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<UUID, UUID> entry = it.next();
-            Player p = Bukkit.getPlayer(entry.getKey());
-            if (p == null || !p.isOnline() || p.isDead()) {
-                Entity e = Bukkit.getEntity(entry.getValue());
-                if (e != null) e.remove();
-                it.remove();
-                continue;
-            }
-            Entity e = Bukkit.getEntity(entry.getValue());
-            if (!(e instanceof TextDisplay td) || td.isDead()) {
-                it.remove();
-                attach(p);
-                continue;
-            }
-            if (td.getVehicle() == null || !td.getVehicle().equals(p)) {
-                td.remove();
-                it.remove();
-                attach(p);
-                continue;
-            }
-            td.text(buildComponent(p));
-        }
-
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (p.isDead()) continue;
-            if (!displays.containsKey(p.getUniqueId())) attach(p);
-        }
-    }
 
     private Component buildComponent(Player p) {
         String nickname = NICKNAME_FORMAT;
@@ -198,11 +164,17 @@ public class NametagManager {
     }
 
     public void refresh(Player player) {
-        if (player == null) return;
+        if (player == null || !player.isOnline() || player.isDead()) return;
         UUID id = displays.get(player.getUniqueId());
-        if (id == null) return;
-        Entity e = Bukkit.getEntity(id);
-        if (!(e instanceof TextDisplay td) || td.isDead()) return;
+        Entity e = (id == null) ? null : Bukkit.getEntity(id);
+        if (!(e instanceof TextDisplay td) || td.isDead()
+                || td.getVehicle() == null || !td.getVehicle().equals(player)) {
+
+            if (id != null) displays.remove(player.getUniqueId());
+            if (e != null) e.remove();
+            attach(player);
+            return;
+        }
 
         float anchor = (float) computeAnchorY(player);
         Transformation tr = td.getTransformation();

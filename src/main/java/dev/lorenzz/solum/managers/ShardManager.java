@@ -1,7 +1,9 @@
 package dev.lorenzz.solum.managers;
 
 import dev.lorenzz.solum.Solum;
+import dev.lorenzz.solum.modules.nametag.NametagManager;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,6 +80,11 @@ public class ShardManager {
     public void setShards(UUID uuid, int amount) {
         shards.put(uuid, amount);
         saveAll();
+
+        Player p = plugin.getServer().getPlayer(uuid);
+        if (p != null && p.isOnline()) {
+            NametagManager.requestRefresh(p);
+        }
     }
 
     public void addShards(UUID uuid, int amount) {

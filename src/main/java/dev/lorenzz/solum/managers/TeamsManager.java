@@ -1,6 +1,7 @@
 package dev.lorenzz.solum.managers;
 
 import dev.lorenzz.solum.Solum;
+import dev.lorenzz.solum.modules.nametag.NametagManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
@@ -93,8 +94,7 @@ public class TeamsManager {
                     playerTeams.put(memberId, name.toLowerCase());
                 }
             }
-            // Always make sure the leader is registered in the cache, even if
-            // the members section is missing or partial in the data file.
+
             playerTeams.put(leader, name.toLowerCase());
             teams.put(name.toLowerCase(), team);
         }
@@ -124,16 +124,19 @@ public class TeamsManager {
         teams.put(name.toLowerCase(), team);
         playerTeams.put(leader, name.toLowerCase());
         saveAll();
+        refreshNametag(leader);
         return team;
     }
 
     public boolean disbandTeam(String name) {
         Team team = teams.remove(name.toLowerCase());
         if (team == null) return false;
-        for (UUID member : team.getMembers().keySet()) {
+        java.util.Set<UUID> affected = new java.util.HashSet<>(team.getMembers().keySet());
+        for (UUID member : affected) {
             playerTeams.remove(member);
         }
         saveAll();
+        for (UUID u : affected) refreshNametag(u);
         return true;
     }
 
@@ -151,6 +154,7 @@ public class TeamsManager {
         team.getMembers().put(player, Role.MEMBER);
         playerTeams.put(player, teamName.toLowerCase());
         saveAll();
+        refreshNametag(player);
         return true;
     }
 
@@ -161,7 +165,15 @@ public class TeamsManager {
         team.getMembers().remove(player);
         playerTeams.remove(player);
         saveAll();
+        refreshNametag(player);
         return true;
+    }
+
+    private void refreshNametag(UUID uuid) {
+        org.bukkit.entity.Player p = plugin.getServer().getPlayer(uuid);
+        if (p != null && p.isOnline()) {
+            NametagManager.requestRefresh(p);
+        }
     }
 
     public boolean setRole(String teamName, UUID player, Role role) {

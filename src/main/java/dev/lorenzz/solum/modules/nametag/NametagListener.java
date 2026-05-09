@@ -13,6 +13,7 @@ import org.bukkit.event.entity.EntityToggleSwimEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 
 public class NametagListener implements Listener {
@@ -44,11 +45,17 @@ public class NametagListener implements Listener {
         manager.attach(event.getPlayer());
     }
 
-    /** Refresh on damage so the heart/health value updates instantly (UnlimitedNametags style). */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onWorldChange(PlayerChangedWorldEvent event) {
+        Bukkit.getScheduler().runTask(Solum.getInstance(), () -> {
+            manager.detach(event.getPlayer());
+            manager.attach(event.getPlayer());
+        });
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDamage(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof Player p)) return;
-        // Health is decremented AFTER the event → schedule next tick.
         Bukkit.getScheduler().runTask(Solum.getInstance(), () -> manager.refresh(p));
     }
 
@@ -58,7 +65,6 @@ public class NametagListener implements Listener {
         Bukkit.getScheduler().runTask(Solum.getInstance(), () -> manager.refresh(p));
     }
 
-    /** Re-apply anchor when the player's bounding box changes (height-based offset). */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onSneak(PlayerToggleSneakEvent event) {
         Bukkit.getScheduler().runTask(Solum.getInstance(),
