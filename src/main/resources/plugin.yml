@@ -69,6 +69,12 @@ permissions:
   solum.giveadaptive:
     description: Give the Adaptive Tool
     default: op
+  solum.chat.placeholders:
+    description: Allow the player to use PlaceholderAPI placeholders inside chat messages
+    default: false
+  solum.chat.color:
+    description: Allow the player to use color codes in chat messages
+    default: false
   solum.settings:
     description: Open settings menu
     default: true

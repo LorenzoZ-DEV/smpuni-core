@@ -549,6 +549,9 @@ adaptive-tool:
     morphed: '&5⚡ &#d1e0e0Tool morphed into &#a78bfa{form}&#d1e0e0.'
     destroyed: '&5⚡ &#d1e0e0Your adaptive tool has &cshattered&#d1e0e0!'
 
+chat-format:
+  format: '{prefix}&f{player}{suffix} &7» &f{message}'
+
 # ---- Stats Wipe ----
 statswipe:
   log-file: statswipe-log.txt

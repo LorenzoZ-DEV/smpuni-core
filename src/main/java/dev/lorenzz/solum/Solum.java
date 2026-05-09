@@ -9,6 +9,7 @@ import dev.lorenzz.solum.modules.adaptive.AdaptiveToolModule;
 import dev.lorenzz.solum.modules.afk.AFKModule;
 import dev.lorenzz.solum.modules.billford.BillfordModule;
 import dev.lorenzz.solum.modules.bounty.BountyModule;
+import dev.lorenzz.solum.modules.chat.ChatFormatModule;
 import dev.lorenzz.solum.modules.clearlag.ClearLagModule;
 import dev.lorenzz.solum.modules.economy.EconomyModule;
 import dev.lorenzz.solum.modules.enderchest.EnderChestModule;
@@ -152,7 +153,8 @@ public final class Solum extends JavaPlugin {
                 ChangelogModule::new, ChatGameModule::new, EasterModule::new,
                 ScoreboardModule::new, AuctionHouseModule::new, TablistModule::new,
                 JoinQuitModule::new, DoubleJumpModule::new, NametagModule::new,
-                AdaptiveToolModule::new
+                AdaptiveToolModule::new,
+                ChatFormatModule::new
         );
         factories.forEach(f -> moduleManager.registerModule(f.apply(this)));
     }
