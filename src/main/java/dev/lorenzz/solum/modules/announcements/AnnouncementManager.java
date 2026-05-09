@@ -7,16 +7,12 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
-/**
- * Manages automatic broadcast announcements loaded from announcements.yml.
- */
 public class AnnouncementManager {
 
     private static AnnouncementManager INSTANCE;
@@ -28,11 +24,9 @@ public class AnnouncementManager {
     private BukkitTask broadcastTask;
 
     private int intervalSeconds;
-    private String mode; // SEQUENTIAL or RANDOM
+    private String mode;
 
-    // Category ID -> AnnouncementCategory
     private final Map<String, AnnouncementCategory> categories = new LinkedHashMap<>();
-    // Flattened list of all enabled announcements (prefix + message)
     private final List<PreparedAnnouncement> pool = new ArrayList<>();
     private int sequentialIndex = 0;
 
@@ -52,7 +46,6 @@ public class AnnouncementManager {
     }
 
     public void reload() {
-        // Stop existing task
         stopTask();
 
         categories.clear();
@@ -94,7 +87,6 @@ public class AnnouncementManager {
 
         logger.info("[Solum] Loaded " + categories.size() + " announcement categories (" + pool.size() + " messages).");
 
-        // Start task
         startTask();
     }
 
@@ -103,19 +95,11 @@ public class AnnouncementManager {
         INSTANCE = null;
     }
 
-    // ── Task Management ──
-
     private void startTask() {
         if (pool.isEmpty() || intervalSeconds <= 0) return;
 
         long intervalTicks = intervalSeconds * 20L;
-
-        broadcastTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                broadcastNext();
-            }
-        }.runTaskTimer(plugin, intervalTicks, intervalTicks);
+        broadcastTask = Bukkit.getScheduler().runTaskTimer(plugin, this::broadcastNext, intervalTicks, intervalTicks);
     }
 
     private void stopTask() {
@@ -140,7 +124,6 @@ public class AnnouncementManager {
         String fullMessage = announcement.prefix() + announcement.message();
         Component component = Messages.colorComponent(fullMessage);
 
-        // Separator line
         Component separator = Messages.colorComponent("&8&m                                                    ");
 
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -151,11 +134,6 @@ public class AnnouncementManager {
         }
     }
 
-    // ── Toggle Categories ──
-
-    /**
-     * Toggle a category on/off at runtime. Also persists to config file.
-     */
     public boolean toggleCategory(String categoryId) {
         AnnouncementCategory cat = categories.get(categoryId.toLowerCase());
         if (cat == null) return false;
@@ -163,32 +141,21 @@ public class AnnouncementManager {
         boolean newState = !cat.isEnabled();
         cat.setEnabled(newState);
 
-        // Save to config
         announcementsConfig.set("categories." + categoryId.toLowerCase() + ".enabled", newState);
-        announcementsConfig.saveFile();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> announcementsConfig.saveFile());
 
-        // Rebuild pool
         rebuildPool();
         return newState;
     }
 
-    /**
-     * Check if a category exists.
-     */
     public boolean categoryExists(String categoryId) {
         return categories.containsKey(categoryId.toLowerCase());
     }
 
-    /**
-     * Get a category by id.
-     */
     public AnnouncementCategory getCategory(String categoryId) {
         return categories.get(categoryId.toLowerCase());
     }
 
-    /**
-     * Get all categories.
-     */
     public Collection<AnnouncementCategory> getCategories() {
         return Collections.unmodifiableCollection(categories.values());
     }
@@ -204,8 +171,6 @@ public class AnnouncementManager {
             }
         }
     }
-
-    // ── Data classes ──
 
     public record PreparedAnnouncement(String categoryId, String prefix, String message) {}
 

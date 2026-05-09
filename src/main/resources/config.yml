@@ -51,6 +51,7 @@ modules:
   join-quit: true
   double-jump: true
   nametag: true
+  adaptive-tool: true
 
 
 # ---- Join / Quit Messages ----
@@ -491,6 +492,63 @@ tools:
       attributes:
         GENERIC_ATTACK_SPEED: 1.5
 
+# ---- Adaptive Tool ----
+# A single tool that morphs to the optimal form (sword/pickaxe/axe/shovel/hoe)
+# based on the targeted block, using vanilla Bukkit Tags. Spawns Ender Dragon
+# particles whenever it changes form, and breaks after a max number of uses.
+adaptive-tool:
+  max-uses: 1500
+  default-form: pickaxe
+  name: '&5&lAdaptive Tool'
+  lore:
+    - '&#d1e0e0Morphs into the perfect tool'
+    - '&#d1e0e0for the block you target.'
+    - ''
+    - '&#d1e0e0Uses left: &#a78bfa{uses}&7/&#a78bfa{max}'
+    - ''
+  forms:
+    sword:
+      material: NETHERITE_SWORD
+      enchantments:
+        SHARPNESS: 5
+        UNBREAKING: 3
+        SWEEPING: 3
+    pickaxe:
+      material: NETHERITE_PICKAXE
+      enchantments:
+        EFFICIENCY: 5
+        FORTUNE: 3
+        UNBREAKING: 3
+    axe:
+      material: NETHERITE_AXE
+      enchantments:
+        EFFICIENCY: 5
+        UNBREAKING: 3
+    shovel:
+      material: NETHERITE_SHOVEL
+      enchantments:
+        EFFICIENCY: 5
+        UNBREAKING: 3
+    hoe:
+      material: NETHERITE_HOE
+      enchantments:
+        EFFICIENCY: 5
+        UNBREAKING: 3
+  particles:
+    type: DRAGON_BREATH
+    count: 30
+    offset-x: 0.5
+    offset-y: 1.0
+    offset-z: 0.5
+    speed: 0.05
+  sound:
+    type: ENTITY_ENDER_DRAGON_FLAP
+    volume: 0.6
+    pitch: 1.5
+  messages:
+    morphed: '&5⚡ &#d1e0e0Tool morphed into &#a78bfa{form}&#d1e0e0.'
+    destroyed: '&5⚡ &#d1e0e0Your adaptive tool has &cshattered&#d1e0e0!'
+
 # ---- Stats Wipe ----
 statswipe:
   log-file: statswipe-log.txt
@@ -501,7 +559,8 @@ statswipe:
 
 # ---- Lunar Client ----
 lunar:
-  server-name: My SMP
+  server-name: SMPUNI
+  server-ip: play.smpuni.xyz
   discord-app-id: ''
 
 # ---- Settings ----

@@ -17,10 +17,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-/**
- * Manages playtime rewards. Tracks ACTIVE playtime (excludes AFK time)
- * and awards milestone rewards.
- */
 public class PlaytimeRewardsManager {
 
     private static PlaytimeRewardsManager INSTANCE;
@@ -28,13 +24,9 @@ public class PlaytimeRewardsManager {
     private final Solum plugin;
     private final Logger logger;
 
-    // Milestone definitions from config
     private final List<Milestone> milestones = new ArrayList<>();
-    // uuid -> set of milestone minutes already claimed
     private final Map<UUID, Set<Integer>> claimedMilestones = new HashMap<>();
-    // uuid -> active playtime in seconds (excludes AFK time)
     private final Map<UUID, Long> activePlaytime = new ConcurrentHashMap<>();
-    // uuid -> timestamp when active tracking started
     private final Map<UUID, Long> trackingStart = new ConcurrentHashMap<>();
 
     private BukkitTask tickTask;
@@ -44,10 +36,10 @@ public class PlaytimeRewardsManager {
     public record Milestone(
             int minutes,
             String displayName,
-            String icon, // Material name
+            String icon,
             int moneyReward,
             int shardsReward,
-            List<String> commands // Commands to execute (use %player%)
+            List<String> commands
     ) implements Comparable<Milestone> {
         @Override
         public int compareTo(Milestone o) {
@@ -129,7 +121,6 @@ public class PlaytimeRewardsManager {
     public void save() {
         if (dataConfig == null) return;
 
-        // First flush active tracking
         for (UUID uuid : trackingStart.keySet()) {
             flushTracking(uuid);
         }
@@ -150,11 +141,6 @@ public class PlaytimeRewardsManager {
         }
     }
 
-    /**
-     * Starts a repeating task that checks every 30 seconds.
-     * - Increments active playtime for non-AFK players
-     * - Checks for unclaimed milestones and notifies
-     */
     private void startTrackingTask() {
         tickTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             AFKManager afk = AFKManager.getInstance();
@@ -162,32 +148,27 @@ public class PlaytimeRewardsManager {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 UUID uuid = player.getUniqueId();
 
-                // If AFK, DON'T accumulate active playtime
                 boolean isAfk = afk != null && afk.isAFK(uuid);
 
                 if (isAfk) {
-                    // Pause tracking — flush what we have
                     if (trackingStart.containsKey(uuid)) {
                         flushTracking(uuid);
                         trackingStart.remove(uuid);
                     }
                 } else {
-                    // Start tracking if not already
                     trackingStart.putIfAbsent(uuid, System.currentTimeMillis());
                 }
 
-                // Check for available milestones and notify
                 long totalMinutes = getActivePlaytimeMinutes(uuid);
                 for (Milestone ms : milestones) {
                     if (totalMinutes >= ms.minutes() && !hasClaimed(uuid, ms.minutes())) {
-                        // Notify player that a reward is available
                         dev.lorenzz.solum.utils.Messages.send(player,
                                 "&#FFD700⚡ &#E0E0E0You have an unclaimed playtime reward! Use &#55FF55/rewards &#E0E0E0to claim it.");
-                        break; // Only notify once per tick
+                        break;
                     }
                 }
             }
-        }, 20L * 30, 20L * 30); // Every 30 seconds
+        }, 20L * 30, 20L * 30);
     }
 
     private void flushTracking(UUID uuid) {
@@ -206,15 +187,12 @@ public class PlaytimeRewardsManager {
     public void playerQuit(UUID uuid) {
         flushTracking(uuid);
         trackingStart.remove(uuid);
-        save();
+
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, this::save);
     }
 
-    /**
-     * Returns total active playtime in minutes for the player.
-     */
     public long getActivePlaytimeMinutes(UUID uuid) {
         long total = activePlaytime.getOrDefault(uuid, 0L);
-        // Add current session time if tracking
         Long start = trackingStart.get(uuid);
         if (start != null) {
             total += (System.currentTimeMillis() - start) / 1000;
@@ -244,25 +222,18 @@ public class PlaytimeRewardsManager {
         return claimed != null && claimed.contains(milestoneMinutes);
     }
 
-    /**
-     * Claims a milestone reward for a player. Returns true on success.
-     */
     public boolean claimMilestone(Player player, int milestoneMinutes) {
         UUID uuid = player.getUniqueId();
 
-        // Find milestone
         Milestone milestone = milestones.stream()
                 .filter(m -> m.minutes() == milestoneMinutes)
                 .findFirst().orElse(null);
         if (milestone == null) return false;
 
-        // Check playtime
         if (getActivePlaytimeMinutes(uuid) < milestone.minutes()) return false;
 
-        // Check not already claimed
         if (hasClaimed(uuid, milestoneMinutes)) return false;
 
-        // Grant rewards
         if (milestone.moneyReward() > 0) {
             EconomyManager eco = EconomyManager.getInstance();
             if (eco != null) eco.addBalance(uuid, milestone.moneyReward());
@@ -276,7 +247,6 @@ public class PlaytimeRewardsManager {
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), resolved);
         }
 
-        // Mark as claimed
         claimedMilestones.computeIfAbsent(uuid, k -> new HashSet<>()).add(milestoneMinutes);
         save();
         return true;

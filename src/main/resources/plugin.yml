@@ -66,6 +66,9 @@ permissions:
   solum.giveamethyst:
     description: Give amethyst tools
     default: op
+  solum.giveadaptive:
+    description: Give the Adaptive Tool
+    default: op
   solum.settings:
     description: Open settings menu
     default: true

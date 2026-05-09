@@ -146,8 +146,11 @@ public class AFKManager {
             }
         }, 20L, 20L); // Every second
 
-        // Hourly backup task for AFK zones
-        backupTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        // Hourly backup task for AFK zones — runs async since it does file I/O.
+        // The afkZonesConfig is only mutated from the main thread (set/remove zone),
+        // so reading it for a save here is safe enough; ConcurrentModification is unlikely
+        // because we don't iterate it during save.
+        backupTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
             if (!afkZones.isEmpty()) {
                 saveAFKZonesFile();
                 createBackup();
@@ -336,7 +339,7 @@ public class AFKManager {
         afkZones.removeIf(z -> z.name().equalsIgnoreCase(name));
         afkZones.add(zone);
 
-        // Save to dedicated file
+        // Save to dedicated file (async — disk I/O off the main thread)
         String path = "zones." + name;
         afkZonesConfig.set(path + ".world", worldName);
         afkZonesConfig.set(path + ".min-x", minX);
@@ -345,8 +348,10 @@ public class AFKManager {
         afkZonesConfig.set(path + ".max-x", maxX);
         afkZonesConfig.set(path + ".max-y", maxY);
         afkZonesConfig.set(path + ".max-z", maxZ);
-        saveAFKZonesFile();
-        createBackup();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            saveAFKZonesFile();
+            createBackup();
+        });
     }
 
     /**
@@ -356,8 +361,10 @@ public class AFKManager {
         boolean removed = afkZones.removeIf(z -> z.name().equalsIgnoreCase(name));
         if (removed) {
             afkZonesConfig.set("zones." + name, null);
-            saveAFKZonesFile();
-            createBackup();
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                saveAFKZonesFile();
+                createBackup();
+            });
         }
         return removed;
     }

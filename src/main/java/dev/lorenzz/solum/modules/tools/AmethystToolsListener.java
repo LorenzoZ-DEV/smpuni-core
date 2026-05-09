@@ -2,6 +2,7 @@ package dev.lorenzz.solum.modules.tools;
 
 import dev.lorenzz.solum.Solum;
 import dev.lorenzz.solum.utils.Messages;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -47,15 +48,13 @@ public class AmethystToolsListener implements Listener {
 
         meta.displayName(Messages.colorComponent(name));
 
-        // Set lore with uses
         List<String> loreConfig = section.getStringList("lore");
-        List<net.kyori.adventure.text.Component> lore = loreConfig.stream()
+        List<Component> lore = loreConfig.stream()
                 .map(line -> line.replace("%uses%", String.valueOf(maxUses)))
                 .map(Messages::colorComponent)
                 .collect(Collectors.toList());
         meta.lore(lore);
 
-        // Set enchantments
         ConfigurationSection enchants = section.getConfigurationSection("enchantments");
         if (enchants != null) {
             for (String enchName : enchants.getKeys(false)) {
@@ -66,7 +65,6 @@ public class AmethystToolsListener implements Listener {
             }
         }
 
-        // Set NBT tags
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(AMETHYST_KEY, PersistentDataType.STRING, toolId);
         pdc.set(USES_KEY, PersistentDataType.INTEGER, maxUses);
@@ -91,7 +89,6 @@ public class AmethystToolsListener implements Listener {
         uses--;
 
         if (uses <= 0) {
-            // Self-destruct
             player.getInventory().remove(item);
             Messages.send(player, "&d&lYour amethyst tool has been destroyed!");
             return;
@@ -99,12 +96,11 @@ public class AmethystToolsListener implements Listener {
 
         pdc.set(USES_KEY, PersistentDataType.INTEGER, uses);
 
-        // Update lore
         String toolId = pdc.get(AMETHYST_KEY, PersistentDataType.STRING);
         ConfigurationSection section = plugin.getConfigFile().getConfigurationSection("tools.tools-list." + toolId);
         if (section != null) {
             int finalUses = uses;
-            List<net.kyori.adventure.text.Component> lore = section.getStringList("lore").stream()
+            List<Component> lore = section.getStringList("lore").stream()
                     .map(line -> line.replace("%uses%", String.valueOf(finalUses)))
                     .map(Messages::colorComponent)
                     .collect(Collectors.toList());

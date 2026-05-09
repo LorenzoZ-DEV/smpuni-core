@@ -5,6 +5,7 @@ import dev.lorenzz.solum.commands.SolumCommand;
 import dev.lorenzz.solum.listeners.GlobalListener;
 import dev.lorenzz.solum.managers.DatabaseManager;
 import dev.lorenzz.solum.managers.Module;
+import dev.lorenzz.solum.modules.adaptive.AdaptiveToolModule;
 import dev.lorenzz.solum.modules.afk.AFKModule;
 import dev.lorenzz.solum.modules.billford.BillfordModule;
 import dev.lorenzz.solum.modules.bounty.BountyModule;
@@ -150,7 +151,8 @@ public final class Solum extends JavaPlugin {
                 BackModule::new, CombatModule::new, WarpModule::new, DuelModule::new,
                 ChangelogModule::new, ChatGameModule::new, EasterModule::new,
                 ScoreboardModule::new, AuctionHouseModule::new, TablistModule::new,
-                JoinQuitModule::new, DoubleJumpModule::new, NametagModule::new
+                JoinQuitModule::new, DoubleJumpModule::new, NametagModule::new,
+                AdaptiveToolModule::new
         );
         factories.forEach(f -> moduleManager.registerModule(f.apply(this)));
     }
