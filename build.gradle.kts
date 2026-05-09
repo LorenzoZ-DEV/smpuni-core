@@ -73,6 +73,7 @@ dependencies {
     implementation("com.github.cryptomorin:XSeries:13.1.0")
     implementation("org.xerial:sqlite-jdbc:3.44.1.0")
     implementation("fr.mrmicky:fastboard:2.1.5")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
 }
 
 tasks {
@@ -85,6 +86,7 @@ tasks {
         relocate("co.aikar.commands", "dev.lorenzz.hiru.libs.acf")
         relocate("co.aikar.locales", "dev.lorenzz.hiru.libs.locales")
         relocate("fr.mrmicky.fastboard", "dev.lorenzz.solum.libs.fastboard")
+        relocate("com.github.benmanes.caffeine", "dev.lorenzz.solum.libs.caffeine")
     }
     build {
         dependsOn(shadowJar)

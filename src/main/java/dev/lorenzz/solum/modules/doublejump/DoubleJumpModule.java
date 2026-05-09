@@ -15,6 +15,7 @@ public class DoubleJumpModule extends AbstractModule {
     public void onEnable() {
         listener = new DoubleJumpListener();
         registerListener(listener);
+        org.bukkit.Bukkit.getOnlinePlayers().forEach(listener::bootstrap);
         logger.info("[Solum] DoubleJumpModule loaded.");
     }
 

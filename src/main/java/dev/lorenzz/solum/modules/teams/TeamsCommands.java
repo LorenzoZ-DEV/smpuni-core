@@ -72,7 +72,6 @@ public class TeamsCommands extends BaseCommand {
             Messages.send(player, "&#FF4444Only the leader can disband the team!");
             return;
         }
-        // Notify members
         for (UUID member : team.getMembers().keySet()) {
             Player p = Bukkit.getPlayer(member);
             if (p != null) Messages.send(p, "&#FF4444Team &#FFD700" + team.getName() + " &#FF4444has been disbanded.");
@@ -90,8 +89,22 @@ public class TeamsCommands extends BaseCommand {
             Messages.send(player, "&#FF4444You don't have permission to invite!");
             return;
         }
-        if (team.isMember(target.getUniqueId())) {
-            Messages.send(player, "&#FF4444That player is already in your team!");
+        if (target.getUniqueId().equals(player.getUniqueId())) {
+            Messages.send(player, "&#FF4444You can't invite yourself!");
+            return;
+        }
+        Team targetTeam = tm.getPlayerTeam(target.getUniqueId());
+        if (targetTeam != null) {
+            if (targetTeam.getName().equalsIgnoreCase(team.getName())) {
+                Messages.send(player, "&#FF4444That player is already in your team!");
+            } else {
+                Messages.send(player, "&#FF4444" + target.getName() +
+                        " &#FF4444is already in another team (&#FFD700" + targetTeam.getName() + "&#FF4444).");
+            }
+            return;
+        }
+        if (pendingInvites.containsKey(target.getUniqueId())) {
+            Messages.send(player, "&#FF4444That player already has a pending invite!");
             return;
         }
         pendingInvites.put(target.getUniqueId(), player.getUniqueId());
@@ -99,7 +112,6 @@ public class TeamsCommands extends BaseCommand {
         Messages.send(target, "&#FFD700" + player.getName() + " &#E0E0E0invited you to team &#FFD700" +
                 team.getName() + "&#E0E0E0! Use &#55FF55/team accept &#E0E0E0or &#FF4444/team deny");
 
-        // Expire after 60s
         Bukkit.getScheduler().runTaskLater(plugin, () -> pendingInvites.remove(target.getUniqueId()), 60 * 20L);
     }
 
@@ -205,15 +217,9 @@ public class TeamsCommands extends BaseCommand {
         }
     }
 
-    /**
-     * Resolves a name to a UUID. Tries online players first, then any team-member
-     * UUID whose cached name matches (covers offline cleanups), then falls back
-     * to OfflinePlayer (which on online-mode servers hits Mojang).
-     */
     private UUID resolveUuid(String name) {
         Player online = Bukkit.getPlayerExact(name);
         if (online != null) return online.getUniqueId();
-        // Scan every known team member: their UUID may have a cached name.
         for (Team t : TeamsManager.getInstance().getAllTeams()) {
             for (UUID member : t.getMembers().keySet()) {
                 String cached = Bukkit.getOfflinePlayer(member).getName();
@@ -278,13 +284,11 @@ public class TeamsCommands extends BaseCommand {
     private void openTeamGUI(Player viewer, Team team) {
         GUI.Builder builder = GUI.builder("&#333333&lTeam: " + team.getName(), 4).border(Material.BLUE_STAINED_GLASS_PANE);
 
-        // Team info item
         String ffStatus = team.isFriendlyFire() ? "&#55FF55Enabled" : "&#FF4444Disabled";
         builder.item(4, Material.SHIELD, "&#FFD700&l" + team.getName(),
                 List.of("&#8C8C8CMembers: &#E0E0E0" + team.getMembers().size(),
                         "&#8C8C8CFriendly Fire: " + ffStatus));
 
-        // Members
         int slot = 19;
         for (Map.Entry<UUID, Role> entry : team.getMembers().entrySet()) {
             if (slot >= 34) break;

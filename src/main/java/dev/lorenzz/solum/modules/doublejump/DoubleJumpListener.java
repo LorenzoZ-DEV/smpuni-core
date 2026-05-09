@@ -60,6 +60,15 @@ public final class DoubleJumpListener implements Listener {
         enableFlightNextTick(player);
     }
 
+    /**
+     * Public bootstrap entrypoint used when the module is enabled while players
+     * are already on the server (e.g. /reload). Without this, those players
+     * would never be added to {@code active} since they don't trigger PlayerJoinEvent.
+     */
+    public void bootstrap(Player player) {
+        activate(player);
+    }
+
     private void enableFlightNextTick(Player player) {
         Solum.getInstance().getServer().getScheduler().runTask(Solum.getInstance(), () -> {
             if (!player.isOnline()) return;
