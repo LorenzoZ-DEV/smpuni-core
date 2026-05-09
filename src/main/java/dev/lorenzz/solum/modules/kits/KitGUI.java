@@ -17,22 +17,30 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class KitGUI implements InventoryHolder, Listener {
 
     public static final String COOLDOWN_BYPASS_PERMISSION = "solum.kits.cooldown.bypass";
 
+    private static final int INNER_COLS = 7;
+    private static final int MIN_INNER_ROWS = 3;
+    private static final int MAX_INNER_ROWS = 4;
+
     private final Player player;
     private final Inventory inventory;
-    private final List<Kit> indexed = new ArrayList<>();
+    private final Map<Integer, Kit> slotToKit = new HashMap<>();
 
     public KitGUI(Player player) {
         this.player = player;
 
         Collection<Kit> kits = KitManager.getInstance().getKits();
-        int rows = Math.max(1, Math.min(6, (int) Math.ceil(kits.size() / 9.0)));
-        int size = rows * 9;
+        int rowsNeeded = Math.max(1, (int) Math.ceil(kits.size() / (double) INNER_COLS));
+        int innerRows = Math.max(MIN_INNER_ROWS, Math.min(MAX_INNER_ROWS, rowsNeeded));
+        int size = (innerRows + 2) * 9;
 
         String title = Messages.color(Solum.getInstance().getConfigFile()
                 .getString("kits.gui.title"));
@@ -43,17 +51,58 @@ public class KitGUI implements InventoryHolder, Listener {
     }
 
     private void rebuild() {
-        indexed.clear();
+        slotToKit.clear();
         inventory.clear();
 
-        KitPlayerDataManager data = KitPlayerDataManager.getInstance();
-        int slot = 0;
-        for (Kit kit : KitManager.getInstance().getKits()) {
-            if (slot >= inventory.getSize()) break;
-            indexed.add(kit);
-            inventory.setItem(slot, buildIcon(kit, data));
-            slot++;
+        int size = inventory.getSize();
+        int rows = size / 9;
+
+        ItemStack filler = createFiller();
+        for (int i = 0; i < size; i++) {
+            int row = i / 9;
+            int col = i % 9;
+            if (row == 0 || row == rows - 1 || col == 0 || col == 8) {
+                inventory.setItem(i, filler);
+            }
         }
+
+        KitPlayerDataManager data = KitPlayerDataManager.getInstance();
+        List<Kit> kits = new ArrayList<>(KitManager.getInstance().getKits());
+
+        int innerRows = rows - 2;
+        int maxKits = innerRows * INNER_COLS;
+        int count = Math.min(kits.size(), maxKits);
+        if (count == 0) return;
+
+        int rowsUsed = Math.max(1, (int) Math.ceil(count / (double) INNER_COLS));
+        int startRow = 1 + (innerRows - rowsUsed) / 2;
+
+        int base = count / rowsUsed;
+        int extra = count % rowsUsed;
+
+        int placed = 0;
+        for (int r = 0; r < rowsUsed; r++) {
+            int inThisRow = base + (r < extra ? 1 : 0);
+            int leftPad = (INNER_COLS - inThisRow) / 2;
+            int actualRow = startRow + r;
+            for (int c = 0; c < inThisRow; c++) {
+                int slot = actualRow * 9 + 1 + leftPad + c;
+                Kit kit = kits.get(placed++);
+                slotToKit.put(slot, kit);
+                inventory.setItem(slot, buildIcon(kit, data));
+            }
+        }
+    }
+
+    private ItemStack createFiller() {
+        ItemStack glass = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta meta = glass.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(" ");
+            meta.setLore(Collections.emptyList());
+            glass.setItemMeta(meta);
+        }
+        return glass;
     }
 
     private ItemStack buildIcon(Kit kit, KitPlayerDataManager data) {
@@ -115,9 +164,7 @@ public class KitGUI implements InventoryHolder, Listener {
         event.setCancelled(true);
 
         int slot = event.getRawSlot();
-        if (slot < 0 || slot >= indexed.size()) return;
-
-        Kit kit = indexed.get(slot);
+        Kit kit = slotToKit.get(slot);
         if (kit == null) return;
 
         if (event.isRightClick()) {

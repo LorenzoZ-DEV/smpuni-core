@@ -14,9 +14,6 @@ import org.bukkit.Color;
 import java.util.*;
 import java.util.logging.Logger;
 
-/**
- * Manages kit definitions loaded from kits.yml.
- */
 public class KitManager {
 
     private static KitManager INSTANCE;
@@ -92,7 +89,6 @@ public class KitManager {
         kitsConfig.set(path + ".icon", kit.icon().name());
         kitsConfig.set(path + ".lore", kit.lore());
 
-        // Serialize items
         ConfigurationSection itemsSec = kitsConfig.createSection(path + ".items");
         for (int i = 0; i < kit.items().size(); i++) {
             ItemStack stack = kit.items().get(i);
@@ -122,8 +118,6 @@ public class KitManager {
         saveKit(kit);
     }
 
-    // ── Serialization ──
-
     private void serializeItem(ConfigurationSection sec, ItemStack stack) {
         sec.set("material", stack.getType().name());
         sec.set("amount", stack.getAmount());
@@ -138,7 +132,6 @@ public class KitManager {
             sec.set("lore", meta.getLore());
         }
 
-        // Enchantments
         if (!meta.getEnchants().isEmpty()) {
             ConfigurationSection enchSec = sec.createSection("enchantments");
             for (Map.Entry<Enchantment, Integer> e : meta.getEnchants().entrySet()) {
@@ -146,7 +139,6 @@ public class KitManager {
             }
         }
 
-        // Enchanted book
         if (meta instanceof EnchantmentStorageMeta bookMeta) {
             if (!bookMeta.getStoredEnchants().isEmpty()) {
                 ConfigurationSection storedSec = sec.createSection("stored-enchantments");
@@ -156,7 +148,6 @@ public class KitManager {
             }
         }
 
-        // Leather armor color
         if (meta instanceof LeatherArmorMeta leatherMeta) {
             Color color = leatherMeta.getColor();
             sec.set("leather-color", String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue()));
@@ -186,7 +177,6 @@ public class KitManager {
             meta.setLore(lore);
         }
 
-        // Enchantments
         ConfigurationSection enchSec = sec.getConfigurationSection("enchantments");
         if (enchSec != null) {
             for (String key : enchSec.getKeys(false)) {
@@ -197,7 +187,6 @@ public class KitManager {
             }
         }
 
-        // Stored enchantments (Enchanted Book)
         if (meta instanceof EnchantmentStorageMeta bookMeta) {
             ConfigurationSection storedSec = sec.getConfigurationSection("stored-enchantments");
             if (storedSec != null) {
@@ -210,7 +199,6 @@ public class KitManager {
             }
         }
 
-        // Leather armor color
         if (meta instanceof LeatherArmorMeta leatherMeta && sec.contains("leather-color")) {
             String hex = sec.getString("leather-color", "#A06540").replace("#", "");
             try {
@@ -224,7 +212,6 @@ public class KitManager {
     }
 
     private void createDefaults() {
-        // Starter kit
         String base = "kits.starter";
         kitsConfig.set(base + ".display-name", "&#55FF55&lStarter Kit");
         kitsConfig.set(base + ".cooldown", 300);
@@ -238,32 +225,25 @@ public class KitManager {
                 "&#55FF55&l➥ Click to claim"
         ));
 
-        // Iron Sword
         kitsConfig.set(base + ".items.sword.material", "IRON_SWORD");
         kitsConfig.set(base + ".items.sword.amount", 1);
         kitsConfig.set(base + ".items.sword.name", "&#AAAAAA&lStarter Sword");
 
-        // 64 Bread
         kitsConfig.set(base + ".items.food.material", "BREAD");
         kitsConfig.set(base + ".items.food.amount", 64);
 
-        // Iron Helmet
         kitsConfig.set(base + ".items.helmet.material", "IRON_HELMET");
         kitsConfig.set(base + ".items.helmet.amount", 1);
 
-        // Iron Chestplate
         kitsConfig.set(base + ".items.chestplate.material", "IRON_CHESTPLATE");
         kitsConfig.set(base + ".items.chestplate.amount", 1);
 
-        // Iron Leggings
         kitsConfig.set(base + ".items.leggings.material", "IRON_LEGGINGS");
         kitsConfig.set(base + ".items.leggings.amount", 1);
 
-        // Iron Boots
         kitsConfig.set(base + ".items.boots.material", "IRON_BOOTS");
         kitsConfig.set(base + ".items.boots.amount", 1);
 
-        // Enchanted Book (Sharpness I)
         kitsConfig.set(base + ".items.book.material", "ENCHANTED_BOOK");
         kitsConfig.set(base + ".items.book.amount", 1);
         kitsConfig.set(base + ".items.book.stored-enchantments.sharpness", 1);

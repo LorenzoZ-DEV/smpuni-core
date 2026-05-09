@@ -9,9 +9,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
-/**
- * Admin GUI for /kitadmin — shows all kits with management options.
- */
 public class KitAdminGUI {
 
     private final Player player;
@@ -46,13 +43,11 @@ public class KitAdminGUI {
             final String kitId = kit.id();
 
             builder.item(slot, icon, p -> {
-                // Left click = preview kit contents in a new GUI
                 openKitPreview(p, kitId);
             });
             slot++;
         }
 
-        // "Create new kit" button at bottom center
         int bottomCenter = (rows - 1) * 9 + 4;
         ItemStack createBtn = new ItemStack(Material.EMERALD);
         ItemMeta createMeta = createBtn.getItemMeta();
@@ -66,7 +61,6 @@ public class KitAdminGUI {
         }
         builder.item(bottomCenter, createBtn);
 
-        // "Reload kits" button
         int reloadSlot = (rows - 1) * 9 + 6;
         ItemStack reloadBtn = new ItemStack(Material.REDSTONE);
         ItemMeta reloadMeta = reloadBtn.getItemMeta();

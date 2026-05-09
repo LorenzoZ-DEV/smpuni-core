@@ -6,9 +6,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-/**
- * Handles first-join auto-kit granting (starter kit).
- */
 public class KitListener implements Listener {
 
     private final Solum plugin;
@@ -21,7 +18,6 @@ public class KitListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        // Only process if kits module is enabled
         KitManager kitManager = KitManager.getInstance();
         KitPlayerDataManager playerData = KitPlayerDataManager.getInstance();
         if (kitManager == null || playerData == null) return;
@@ -29,23 +25,19 @@ public class KitListener implements Listener {
         boolean autoGiveStarter = plugin.getConfigFile().getBoolean("kits.auto-give-starter-on-first-join", true);
         if (!autoGiveStarter) return;
 
-        // Only give the starter kit on the very FIRST join ever
         if (player.hasPlayedBefore()) return;
 
         String starterKitId = plugin.getConfigFile().getString("kits.starter-kit-id", "starter");
         Kit starterKit = kitManager.getKit(starterKitId);
         if (starterKit == null) return;
 
-        // Delay 5 ticks to ensure player is fully loaded
         org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (!player.isOnline()) return;
 
-            // Check permission
             if (!starterKit.permission().isEmpty() && !player.hasPermission(starterKit.permission())) {
                 return;
             }
 
-            // Give the items
             for (org.bukkit.inventory.ItemStack item : starterKit.items()) {
                 java.util.Map<Integer, org.bukkit.inventory.ItemStack> overflow =
                         player.getInventory().addItem(item.clone());
@@ -54,7 +46,6 @@ public class KitListener implements Listener {
                 }
             }
 
-            // Record the claim so the cooldown starts
             playerData.recordClaim(player.getUniqueId(), starterKit);
 
             String msg = plugin.getConfigFile().getString("kits.messages.auto-starter",
