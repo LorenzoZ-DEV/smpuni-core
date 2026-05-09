@@ -168,3 +168,6 @@ permissions:
   solum.doublejump:
     description: Use double jump at spawn
     default: true
+  solum.doublejump.bypass:
+    description: Bypass the double-jump handler so real flight (e.g. /fly) works normally
+    default: op

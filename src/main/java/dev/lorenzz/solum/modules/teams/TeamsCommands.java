@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Flags;
 import co.aikar.commands.annotation.Subcommand;
 import dev.lorenzz.solum.Solum;
 import dev.lorenzz.solum.managers.TeamsManager;
@@ -81,7 +82,7 @@ public class TeamsCommands extends BaseCommand {
 
     @Subcommand("invite")
     @Description("Invite a player")
-    public void invite(Player player, Player target) {
+    public void invite(Player player, @Flags("other") Player target) {
         TeamsManager tm = TeamsManager.getInstance();
         Team team = tm.getPlayerTeam(player.getUniqueId());
         if (team == null) { Messages.send(player, "&#FF4444You are not in a team!"); return; }
@@ -171,7 +172,7 @@ public class TeamsCommands extends BaseCommand {
 
     @Subcommand("kick")
     @Description("Kick a player")
-    public void kick(Player player, Player target) {
+    public void kick(Player player, @Flags("other") Player target) {
         TeamsManager tm = TeamsManager.getInstance();
         Team team = tm.getPlayerTeam(player.getUniqueId());
         if (team == null) { Messages.send(player, "&#FF4444You are not in a team!"); return; }

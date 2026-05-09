@@ -1,7 +1,9 @@
 package dev.lorenzz.solum.modules.doublejump;
 
 import dev.lorenzz.solum.Solum;
+import dev.lorenzz.solum.managers.SpawnManager;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -12,6 +14,8 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.util.Vector;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +26,8 @@ public final class DoubleJumpListener implements Listener {
     private final Set<UUID> active = ConcurrentHashMap.newKeySet();
 
     private volatile boolean enabled = true;
-    private volatile String spawnWorld = "spawnnew";
+    private volatile Set<String> spawnWorlds = Collections.emptySet();
+    private volatile boolean wildcardWorld = false;
     private volatile double power = 1.0;
     private volatile double hMul = 2.5;
     private volatile double vMul = 1.0;
@@ -35,15 +40,51 @@ public final class DoubleJumpListener implements Listener {
     public void refreshConfig() {
         var cfg = Solum.getInstance().getConfigFile();
         enabled = cfg.getBoolean("double-jump.enabled", true);
-        spawnWorld = cfg.getString("double-jump.spawn-world", "spawnnew");
+
+        Set<String> worlds = new HashSet<>();
+        java.util.List<String> list = cfg.getStringList("double-jump.spawn-worlds");
+        if (list != null && !list.isEmpty()) {
+            list.forEach(s -> { if (s != null && !s.isBlank()) worlds.add(s.trim().toLowerCase()); });
+        }
+        String single = cfg.getString("double-jump.spawn-world", "spawnnew");
+        if (single != null && !single.isBlank()) {
+            for (String s : single.split(",")) {
+                String t = s.trim().toLowerCase();
+                if (!t.isEmpty()) worlds.add(t);
+            }
+        }
+        wildcardWorld = worlds.contains("*") || worlds.contains("any") || worlds.contains("all");
+        spawnWorlds = wildcardWorld ? Collections.emptySet() : worlds;
+
         power = cfg.getDouble("double-jump.power", 1.0);
         hMul = cfg.getDouble("double-jump.horizontal-multiplier", 2.5);
         vMul = cfg.getDouble("double-jump.vertical-multiplier", 1.0);
         cooldownMs = cfg.getLong("double-jump.cooldown-ms", 1500);
+
+        Solum.getInstance().getLogger().info("[Solum] DoubleJump config: enabled=" + enabled
+                + ", worlds=" + (wildcardWorld ? "*" : spawnWorlds)
+                + ", power=" + power + ", hMul=" + hMul + ", vMul=" + vMul + ", cd=" + cooldownMs + "ms");
     }
 
     private boolean isInSpawnWorld(Player player) {
-        return player.getWorld().getName().equalsIgnoreCase(spawnWorld);
+        if (wildcardWorld) return true;
+        String current = player.getWorld().getName().toLowerCase();
+        if (spawnWorlds.contains(current)) return true;
+
+        try {
+            SpawnManager sm = SpawnManager.getInstance();
+            if (sm != null) {
+                Location def = sm.getDefaultSpawn();
+                if (def != null && def.getWorld() != null
+                        && def.getWorld().getName().equalsIgnoreCase(player.getWorld().getName())) {
+                    boolean anyConfiguredLoaded = spawnWorlds.stream()
+                            .anyMatch(w -> org.bukkit.Bukkit.getWorld(w) != null);
+                    if (!anyConfiguredLoaded) return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 
     private boolean canUse(Player player) {
@@ -60,11 +101,6 @@ public final class DoubleJumpListener implements Listener {
         enableFlightNextTick(player);
     }
 
-    /**
-     * Public bootstrap entrypoint used when the module is enabled while players
-     * are already on the server (e.g. /reload). Without this, those players
-     * would never be added to {@code active} since they don't trigger PlayerJoinEvent.
-     */
     public void bootstrap(Player player) {
         activate(player);
     }
@@ -115,16 +151,15 @@ public final class DoubleJumpListener implements Listener {
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
         Player p = event.getPlayer();
-        String respawnWorld = event.getRespawnLocation().getWorld() != null
-                ? event.getRespawnLocation().getWorld().getName() : null;
-        if (respawnWorld == null) return;
-        if (!respawnWorld.equalsIgnoreCase(spawnWorld)) return;
         if (!enabled) return;
-        GameMode gm = p.getGameMode();
-        if (gm == GameMode.CREATIVE || gm == GameMode.SPECTATOR) return;
-        if (!p.hasPermission("solum.doublejump")) return;
-        active.add(p.getUniqueId());
-        enableFlightNextTick(p);
+        if (event.getRespawnLocation().getWorld() == null) return;
+        Solum.getInstance().getServer().getScheduler().runTask(Solum.getInstance(), () -> {
+            if (!p.isOnline()) return;
+            if (canUse(p)) {
+                active.add(p.getUniqueId());
+                enableFlightNextTick(p);
+            }
+        });
     }
 
     @EventHandler
@@ -137,6 +172,11 @@ public final class DoubleJumpListener implements Listener {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
         if (!active.contains(uuid)) return;
+
+        if (player.hasPermission("solum.doublejump.bypass")) return;
+
+        if (!event.isFlying()) return;
+        if (player.isOnGround()) return;
 
         event.setCancelled(true);
 
