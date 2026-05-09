@@ -169,6 +169,10 @@ public class TablistManager {
             }
         }
 
+        try {
+            team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+        } catch (Throwable ignored) {}
+
         String section = resolveGroupSection(player);
         String tabPrefix = applyPlaceholders(player,
                 config.getString(section + ".tabprefix", ""));
