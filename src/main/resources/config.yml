@@ -52,25 +52,6 @@ modules:
   double-jump: true
   nametag: true
 
-# ---- Nametag (TAB-style: TextDisplay below the vanilla nameplate) ----
-nametag:
-  # Distance ABOVE the player's eye height where the TextDisplay is anchored.
-  # NOTE: vanilla DisplayRenderer translates text by +0.5Y from the entity origin,
-  # so text_top ≈ entity_y + 0.5. The vanilla nameplate base is ≈ eyeHeight + 0.43.
-  # Therefore, to make text_top coincide with nameplate base:
-  #   entity_y = eyeHeight - 0.07  →  extra-above-eyes = -0.07
-  # Tune live in-game via: /solum nametag offset <value>
-  extra-above-eyes: -0.07
-  # Refresh interval for dynamic placeholders (1s = 20 ticks).
-  update-interval-ticks: 20
-  # Client-side teleport interpolation (Paper 1.20.2+). 3 ticks = smooth, no jitter.
-  # Set to 0 to disable interpolation (snappy but jittery during fast movement).
-  teleport-duration: 3
-  # Hide the floating text from the owning player.
-  hide-from-owner: true
-  # Format. Any PlaceholderAPI placeholder is supported.
-  # %solum_team_tag_sep% returns " | 🪓 <team>" or empty string if no team.
-  format: '&e🪙 %solum_shards% &7|| &c❤ %player_health_rounded%%solum_team_tag_sep%'
 
 # ---- Join / Quit Messages ----
 join-quit:

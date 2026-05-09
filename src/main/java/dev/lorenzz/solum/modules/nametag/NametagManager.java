@@ -6,6 +6,7 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Display;
@@ -31,8 +32,18 @@ public class NametagManager {
                     .useUnusualXRepeatedCharacterHexFormat()
                     .build();
 
-    private static final String DEFAULT_FORMAT =
+    // ── Hardcoded settings (inspired by UnlimitedNametags) ─────────────────
+    /** Extra distance above the player's full height (1.8 standing). 0.30 ≈ half-block above head. */
+    private static final double EXTRA_ABOVE_HEAD = 0.30;
+    private static final long UPDATE_INTERVAL_TICKS = 20L;
+    private static final boolean HIDE_FROM_OWNER = true;
+    /** Transparent background = no black box behind the text (UnlimitedNametags style). */
+    private static final Color BACKGROUND_COLOR = Color.fromARGB(0, 0, 0, 0);
+    private static final boolean TEXT_SHADOW = true;
+    private static final boolean SEE_THROUGH_BLOCKS = false;
+    private static final String FORMAT =
             "&e\uD83E\uDE99 %solum_shards% &7|| &c\u2764 %player_health_rounded%%solum_team_tag_sep%";
+    // ───────────────────────────────────────────────────────────────────────
 
     private final Solum plugin;
     private final NamespacedKey markerKey;
@@ -40,34 +51,22 @@ public class NametagManager {
 
     private BukkitTask updateTask;
 
-    private double extraAboveEyes = -0.07;
-    private long updateIntervalTicks = 20L;
-    @SuppressWarnings("unused")
-    private int teleportDuration = 3;
-    private String format = DEFAULT_FORMAT;
-    private boolean hideFromOwner = true;
-
     public NametagManager(Solum plugin) {
         this.plugin = plugin;
         this.markerKey = new NamespacedKey(plugin, "nametag_display");
     }
 
     public void start() {
-        loadConfig();
         cleanupOrphans();
-
         for (Player p : Bukkit.getOnlinePlayers()) attach(p);
-
         updateTask = Bukkit.getScheduler().runTaskTimer(plugin, this::updateAll,
-                updateIntervalTicks, updateIntervalTicks);
-
-        plugin.getLogger().info("[Solum] NametagManager started (extra-above-eyes="
-                + extraAboveEyes + ", mode=passenger).");
+                UPDATE_INTERVAL_TICKS, UPDATE_INTERVAL_TICKS);
+        plugin.getLogger().info("[Solum] NametagManager started (hardcoded, extra="
+                + EXTRA_ABOVE_HEAD + ").");
     }
 
     public void stop() {
         if (updateTask != null) { updateTask.cancel(); updateTask = null; }
-
         for (UUID id : displays.values()) {
             Entity e = Bukkit.getEntity(id);
             if (e != null) e.remove();
@@ -81,49 +80,11 @@ public class NametagManager {
         start();
     }
 
-    private void loadConfig() {
-        org.bukkit.configuration.ConfigurationSection cfg = plugin.getConfigFile();
-        if (cfg.isSet("nametag.extra-above-eyes")) {
-            this.extraAboveEyes = cfg.getDouble("nametag.extra-above-eyes", -0.07);
-        } else if (cfg.isSet("nametag.y-offset")) {
-            this.extraAboveEyes = cfg.getDouble("nametag.y-offset", 1.60) - 1.62;
-        } else {
-            this.extraAboveEyes = -0.07;
-        }
-        this.updateIntervalTicks = Math.max(1L, cfg.getLong("nametag.update-interval-ticks", 20L));
-        this.teleportDuration = Math.max(0, cfg.getInt("nametag.teleport-duration", 3));
-        this.format = cfg.getString("nametag.format", DEFAULT_FORMAT);
-        this.hideFromOwner = cfg.getBoolean("nametag.hide-from-owner", true);
-    }
-
-    public void setExtraAboveEyes(double value) {
-        this.extraAboveEyes = value;
-        plugin.getConfig().set("nametag.extra-above-eyes", value);
-        plugin.saveConfig();
-    }
-
-    public double getExtraAboveEyes() { return extraAboveEyes; }
-
-    public void setHideFromOwner(boolean hide) {
-        this.hideFromOwner = hide;
-        plugin.getConfig().set("nametag.hide-from-owner", hide);
-        plugin.saveConfig();
-        for (Map.Entry<UUID, UUID> entry : displays.entrySet()) {
-            Player p = Bukkit.getPlayer(entry.getKey());
-            if (p == null) continue;
-            Entity e = Bukkit.getEntity(entry.getValue());
-            if (!(e instanceof TextDisplay td)) continue;
-            try {
-                if (hide) p.hideEntity(plugin, td);
-                else p.showEntity(plugin, td);
-            } catch (Throwable ignored) {}
-        }
-    }
-
-    public boolean isHideFromOwner() { return hideFromOwner; }
-
     private double computeAnchorY(Player p) {
-        return p.getEyeHeight() + extraAboveEyes;
+        // player.getHeight() handles all poses automatically:
+        //   standing 1.8, sneaking 1.5, swimming/crawling 0.6, elytra 0.6.
+        // The line follows the player's body in every state without manual checks.
+        return p.getHeight() + EXTRA_ABOVE_HEAD;
     }
 
     public void attach(Player player) {
@@ -136,8 +97,10 @@ public class NametagManager {
 
         TextDisplay td = player.getWorld().spawn(loc, TextDisplay.class, t -> {
             t.setBillboard(Display.Billboard.CENTER);
-            t.setSeeThrough(false);
-            t.setShadowed(false);
+            t.setSeeThrough(SEE_THROUGH_BLOCKS);
+            t.setShadowed(TEXT_SHADOW);
+            t.setDefaultBackground(false);
+            t.setBackgroundColor(BACKGROUND_COLOR);
             t.setPersistent(false);
             t.setViewRange(1.0f);
             Transformation tr = t.getTransformation();
@@ -162,7 +125,7 @@ public class NametagManager {
             return;
         }
 
-        if (hideFromOwner) {
+        if (HIDE_FROM_OWNER) {
             try { player.hideEntity(plugin, td); } catch (Throwable ignored) {}
         }
 
@@ -213,7 +176,7 @@ public class NametagManager {
     }
 
     private Component buildComponent(Player p) {
-        String s = format == null ? "" : format;
+        String s = FORMAT;
         s = s.replace("%player%", p.getName())
              .replace("%player_name%", p.getName());
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
@@ -230,5 +193,31 @@ public class NametagManager {
                 }
             }
         }
+    }
+
+    /**
+     * Public hook used by listeners (damage, health change, gamemode, etc.) to
+     * refresh a player's nametag text immediately instead of waiting for the
+     * periodic update tick. Also re-applies the body-relative anchor so the line
+     * stays glued through pose changes.
+     */
+    public void refresh(Player player) {
+        if (player == null) return;
+        UUID id = displays.get(player.getUniqueId());
+        if (id == null) return;
+        Entity e = Bukkit.getEntity(id);
+        if (!(e instanceof TextDisplay td) || td.isDead()) return;
+
+        // Re-apply transformation in case the player's height changed (sneak/swim/etc.)
+        float anchor = (float) computeAnchorY(player);
+        Transformation tr = td.getTransformation();
+        Vector3f cur = tr.getTranslation();
+        if (Math.abs(cur.y - anchor) > 0.001f) {
+            td.setTransformation(new Transformation(
+                    new Vector3f(0f, anchor, 0f),
+                    tr.getLeftRotation(), tr.getScale(), tr.getRightRotation()
+            ));
+        }
+        td.text(buildComponent(player));
     }
 }
