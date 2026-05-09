@@ -1,6 +1,6 @@
-name: Hiru-Stuffs
+name: Solum
 version: '${version}'
-main: dev.lorenzz.hirustuffs.Hiru
+main: dev.lorenzz.solum.Solum
 api-version: '1.20'
 authors: [Lorenzzzzzz]
 website: "https://lorenzzzz.xyz"
@@ -9,147 +9,162 @@ softdepend: [PlaceholderAPI, LuckPerms]
 description: SMP Core Plugin
 
 permissions:
-  hiru.admin:
+  solum.admin:
     description: Full admin access
     default: op
-  hiru.media:
+  solum.auctionhouse.use:
+    description: Use the Auction House
+    default: true
+  solum.auctionhouse.sell:
+    description: List items on the Auction House
+    default: true
+  solum.auctionhouse.unlimited:
+    description: Bypass max listings limit
+    default: op
+  solum.auctionhouse.admin:
+    description: Cancel any AH listing
+    default: op
+  solum.media:
     description: Media rank access
     default: false
-  hiru.tpa:
+  solum.tpa:
     description: TPA access
     default: true
-  hiru.clearlag:
+  solum.clearlag:
     description: Clearlag access
     default: op
-  hiru.vip:
+  solum.vip:
     description: VIP access
     default: false
-  hiru.balance:
+  solum.balance:
     description: Balance check
     default: true
-  hiru.pay:
+  solum.pay:
     description: Pay players
     default: true
-  hiru.shards:
+  solum.shards:
     description: Check shards
     default: true
-  hiru.spawn:
+  solum.spawn:
     description: Teleport to spawn
     default: true
-  hiru.profile:
+  solum.profile:
     description: View profiles
     default: true
-  hiru.rtp:
+  solum.rtp:
     description: Random teleport
     default: true
-  hiru.afk:
+  solum.afk:
     description: Toggle AFK
     default: true
-  hiru.rules:
+  solum.rules:
     description: View rules
     default: true
-  hiru.info:
+  solum.info:
     description: View info
     default: true
-  hiru.giveamethyst:
+  solum.giveamethyst:
     description: Give amethyst tools
     default: op
-  hiru.settings:
+  solum.settings:
     description: Open settings menu
     default: true
-  hiru.home:
+  solum.home:
     description: Use home system
     default: true
-  hiru.bounty:
+  solum.bounty:
     description: Use bounty system
     default: true
-  hiru.leaderboard:
+  solum.leaderboard:
     description: View leaderboards
     default: true
-  hiru.sell:
+  solum.sell:
     description: Sell items
     default: true
-  hiru.shop:
+  solum.shop:
     description: Use shop
     default: true
-  hiru.billford:
+  solum.billford:
     description: Use Billford trader
     default: true
-  hiru.homes.vip:
+  solum.homes.vip:
     description: VIP home limit
     default: false
-  hiru.homes.mvp:
+  solum.homes.mvp:
     description: MVP home limit
     default: false
-  hiru.homes.admin:
+  solum.homes.admin:
     description: Admin home limit
     default: op
-  hiru.kit:
+  solum.kit:
     description: Use kit system
     default: true
-  hiru.kit.starter:
+  solum.kit.starter:
     description: Claim the starter kit
     default: true
-  hiru.announce:
+  solum.announce:
     description: Manage announcements
     default: op
-  hiru.ad:
+  solum.ad:
     description: Use /ad command
     default: true
-  hiru.ad.bypass:
+  solum.ad.bypass:
     description: Bypass ad cooldown
     default: op
-  hiru.broadcast:
+  solum.broadcast:
     description: Send broadcast messages
     default: op
-  hiru.report:
+  solum.report:
     description: Report a player
     default: true
-  hiru.report.receive:
+  solum.report.receive:
     description: Receive report notifications
     default: op
-  hiru.report.bypass:
+  solum.report.bypass:
     description: Bypass report cooldown
     default: op
-  hiru.request:
+  solum.request:
     description: Send a request to staff
     default: true
-  hiru.request.receive:
+  solum.request.receive:
     description: Receive request notifications
     default: op
-  hiru.request.bypass:
+  solum.request.bypass:
     description: Bypass request cooldown
     default: op
-  hiru.clearchat:
+  solum.clearchat:
     description: Clear the server chat
     default: op
-  hiru.skills:
+  solum.skills:
     description: Access skill tree
     default: true
-  hiru.skills.reset:
+  solum.skills.reset:
     description: Reset skill tree
     default: true
-  hiru.rewards:
+  solum.rewards:
     description: View playtime rewards
     default: true
-  hiru.back:
+  solum.back:
     description: Use /back command
     default: true
-  hiru.back.bypasscooldown:
+  solum.back.bypasscooldown:
     description: Bypass /back cooldown
     default: op
-  hiru.combat.bypass:
+  solum.combat.bypass:
     description: Bypass combat tag restrictions
     default: op
-  hiru.tpahere:
+  solum.tpahere:
     description: TPAHere access
     default: true
-  hiru.warp:
+  solum.warp:
     description: Use warps
     default: true
-  hiru.warp.bypassdelay:
+  solum.warp.bypassdelay:
     description: Bypass warp teleport delay
     default: op
-  hiru.duel:
+  solum.duel:
     description: Use duel system
+    default: true
+  solum.doublejump:
+    description: Use double jump at spawn
     default: true

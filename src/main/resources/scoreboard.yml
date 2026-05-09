@@ -1,0 +1,20 @@
+scoreboard:
+  enabled: true
+  title: "&#0053ff&lSMPUNI &#363a3a| &#cfd4e3Season ➀"
+  update-interval: 20
+  lines:
+    - "&8  %date_time%"
+    - ""
+    - "&#0053ff&l{name}"
+    - "&#0053ff▎ &fRank: &r%luckperms_primary_group_name%"
+    - "&#0053ff▎ &fMoney: &#33cf30%solum_money%"
+    - "&#0053ff▎ &fKills: &#e12d5a%solum_kills%"
+    - "&#0053ff▎ &fShards: &#4d38b2%solum_shards%"
+    - "&#0053ff▎ &fPlaytime: &#dcb804%solum_playtime%"
+    - ""
+    - "&#0053ff&lServer"
+    - "&#0053ff▎ &fOnline: &b%onlinePlayers%"
+    - "&#0053ff▎ &fKeyall: &e%solum_keyall%"
+    - ""
+    - "&7uninet.minehut.gg"
+

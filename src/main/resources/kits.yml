@@ -11,7 +11,7 @@ kits:
     display-name: "&#55FF55&lStarter Kit"
     cooldown: 300
     one-time: false
-    permission: "hiru.kit.starter"
+    permission: "solum.kit.starter"
     icon: CHEST
     lore:
       - "&7A basic kit for new players."

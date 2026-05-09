@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.lorenzz"
-version = "1.0.3"
+version = "2.0.0"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
@@ -35,10 +35,13 @@ repositories {
     }
     maven("https://libraries.minecraft.net")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://repo.aikar.co/content/groups/aikar/")
     maven {
         name = "lunarclient"
         url = uri("https://repo.lunarclient.dev")
     }
+    // Refine Development public repo (TablistAPI, SkinAPI)
+    maven("https://maven.refinedev.xyz/public-repo")
 }
 
 dependencies {
@@ -49,15 +52,14 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.36")
     annotationProcessor("org.projectlombok:lombok:1.18.36")
 
-    // Custom CommandAPI
-    implementation("dev.lorenzz:commandapi-common:2.0.2")
-    implementation("dev.lorenzz:commandapi-bukkit:2.0.2")
+    // Aikar's Command Framework (ACF)
+    implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
 
     // Hooks (compileOnly)
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("me.clip:placeholderapi:2.11.7")
     compileOnly("net.luckperms:api:5.4")
-    compileOnly("com.lunarclient:apollo-api:1.2.1")
+    compileOnly("com.lunarclient:apollo-api:1.2.6")
     implementation("dev.lorenzz.libs:discord-api-spigot:1.0.0-SNAPSHOT")
     implementation("dev.lorenzz.libs:discord-api-common:1.0.0-SNAPSHOT")
 
@@ -70,6 +72,7 @@ dependencies {
     implementation("net.kyori:adventure-platform-bukkit:4.3.3")
     implementation("com.github.cryptomorin:XSeries:13.1.0")
     implementation("org.xerial:sqlite-jdbc:3.44.1.0")
+    implementation("fr.mrmicky:fastboard:2.1.5")
 }
 
 tasks {
@@ -79,6 +82,9 @@ tasks {
         relocate("net.j4c0b3y", "dev.lorenzz.hiru.libs.menuapi")
         relocate("com.cryptomorin.xseries", "dev.lorenzz.hiru.libs.xseries")
         relocate("dev.lorenzz.libs.discord", "dev.lorenzz.hiru.libs.discord")
+        relocate("co.aikar.commands", "dev.lorenzz.hiru.libs.acf")
+        relocate("co.aikar.locales", "dev.lorenzz.hiru.libs.locales")
+        relocate("fr.mrmicky.fastboard", "dev.lorenzz.solum.libs.fastboard")
     }
     build {
         dependsOn(shadowJar)

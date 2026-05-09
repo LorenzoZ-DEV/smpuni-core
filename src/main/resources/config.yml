@@ -45,13 +45,33 @@ modules:
   duel: true
   changelog: true
   easter: true
+  scoreboard: true
+  auctionhouse: true
+  tablist: true
+  join-quit: true
+  double-jump: true
+
+# ---- Join / Quit Messages ----
+join-quit:
+  # Shown when a returning player joins. Placeholders: {rank} {player} {prefix} {suffix} {displayname}
+  join: '&8[&a+&8] &7{rank} &f{player} &7has joined the server'
+  # Shown when a player leaves.
+  quit: '&8[&c-&8] &7{rank} &f{player} &7has left the server'
+  # Shown the FIRST time a player joins (replaces vanilla join broadcast).
+  first-join: '&6&l✦ &e{player} &fJoined for the first time! &6&lWELCOME TO SMPUNI!'
+  # Optional extra lines broadcast to everyone on first join (leave empty to disable).
+  first-join-broadcast:
+    - '&r'
+    - '&#FFD700&l   ★ &fA new adventurer joined &#0053ff&lSMPUNI&f! ★'
+    - '&#d8e4e4   Welcome &e{player} &#d8e4e4to the server!'
+    - '&r'
 
 
 # ---- Database ----
 database:
   type: YAML # YAML or SQLITE
   sqlite:
-    file: hiru.db
+    file: solum.db
 
 # ---- Messages ----
 messages:
@@ -141,7 +161,7 @@ easter:
   rewards:
     first-command: 'lp user %player% parent addtemp vip 7d'
     second-command: 'crates give %player% lava 5'
-    third-command: 'lp user %player% permission settemp hiru.kit.vip true '
+    third-command: 'lp user %player% permission settemp solum.kit.vip true '
   # Intervallo reminder broadcast in minuti (0 = disattivato)
   reminder-interval-minutes: 10
 # ---- Economy ----
@@ -249,7 +269,7 @@ afk:
   kick-enabled: true
   kick-after-minutes: 30
   kick-message: '&#d1e0e0You have been kicked for inactivity!'
-  exempt-permission: hiru.afk.exempt
+  exempt-permission: solum.afk.exempt
   # AFK Zone reward settings - gives shards to players standing in AFK zones
   zone-reward-interval-seconds: 60
   zone-reward-shards: 1
@@ -298,6 +318,20 @@ rtp:
       min-y: 50
       max-y: 100
       enabled: false
+  # When a player walks into a portal in one of the "hub" worlds below, the
+  # vanilla portal travel is cancelled and the player is randomly teleported
+  # into the configured target world instead. Useful for spawn/lobby setups.
+  portal-redirect:
+    enabled: true
+    from-worlds:
+      - spawnnew
+      - spawnnew_nether
+      - spawnnew_the_end
+    # rtp bucket key (world / world_nether / world_the_end) used when going
+    # through a nether portal in one of the hub worlds.
+    nether-target: world
+    # Same, but for end portals / end gateways.
+    end-target: world_the_end
   messages:
     teleporting: '&#d1e0e0Teleporting in &#1a55a2{seconds} &#d1e0e0seconds... Don''t move!'
     teleported: '&#d1e0e0Teleported to &#1a55a2X: {x} Z: {z} &#d1e0e0in world &#1a55a2{world}&#d1e0e0!'
@@ -946,6 +980,15 @@ combat:
     combat-log-broadcast: '&#1a55a2⚠ &#1a55a2%player% &#d1e0e0logged out while in
       combat with &#1a55a2%attacker%&#d1e0e0!'
     actionbar: '&#1a55a2⚔ COMBAT &#d1e0e0» %bar% &#1a55a2%seconds%s'
+# ---- Double Jump ----
+double-jump:
+  enabled: true
+  spawn-world: spawnnew
+  power: 1.0
+  horizontal-multiplier: 2.5
+  vertical-multiplier: 1.0
+  cooldown-ms: 1500
+
 # ---- Warp System ----
 warp:
   teleport-delay-seconds: 3
@@ -989,4 +1032,26 @@ duel:
     pos1-set: '&#d1e0e0Arena position 1 set!'
     pos2-set: '&#d1e0e0Arena position 2 set!'
     center-set: '&#d1e0e0Arena center set!'
-    diespawn-set: '&#d1e0e0Duel end/death spawn set!'
+    diespawn-set: '&#d1e0e0Duel end/death spawn set!'# ---- AuctionHouse ----
+auctionhouse:
+  duration-seconds: 86400      # 24h
+  max-listings-per-player: 5
+  min-price: 1.0
+  max-price: 1000000000.0
+  tax-percent: 0.0             # percentage taken from seller payout
+  gui:
+    title: '&8Auction House &7(%page%/%pages%)'
+    claim-title: '&8Claim Queue &7(%page%/%pages%)'
+  messages:
+    no-item: '&cYou must hold an item to sell.'
+    invalid-price: '&cPrice must be between &e%min% &cand &e%max%&c.'
+    too-many-listings: '&cYou have reached the maximum number of listings.'
+    listed: '&aListed for &e%price%&a!'
+    bought: '&aPurchased &b%item% &afor &e%price%&a!'
+    sold: '&aYour listing was bought by &b%buyer% &afor &e%price%&a!'
+    not-found: '&cThat listing is no longer available.'
+    own-listing: '&cYou cannot buy your own listing.'
+    no-funds: "&cYou don't have enough money."
+    inventory-full: '&cYour inventory is full!'
+    cancelled: '&aListing cancelled. Item moved to your claim queue.'
+    cancel-failed: '&cCould not cancel that listing.'

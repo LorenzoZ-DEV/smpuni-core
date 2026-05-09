@@ -1,1 +1,1 @@
-rootProject.name = "hiru-stuffs"
+rootProject.name = "Solum"

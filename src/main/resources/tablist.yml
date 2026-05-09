@@ -1,0 +1,76 @@
+# Tablist module — header/footer + per-group prefix/suffix
+enabled: true
+update-interval: 20      # ticks (20 = 1s)
+default-design: default
+
+# How to order players in the tab list. Valid values:
+#   GROUPS            -> follow the order in 'sort-groups' (top first)
+#   GROUPS_THEN_NAME  -> like GROUPS, then alphabetical for ties
+#   WEIGHT            -> use each group's 'weight' (lower = higher in list)
+#   WEIGHT_THEN_NAME  -> WEIGHT with alphabetical tiebreak  (default)
+#   NAME              -> alphabetical only
+#   NONE              -> disable Solum sorting (server insertion order)
+sort-type: GROUPS_THEN_NAME
+
+# Used when sort-type is GROUPS / GROUPS_THEN_NAME.
+# Top of the list goes FIRST in tab. Group names must match LuckPerms
+# primary-group names (case-insensitive). Unknown groups are placed last.
+sort-groups:
+  - owner
+  - manager
+  - sradmin
+  - admin
+  - jr-admin
+  - sr-mod
+  - mod
+  - jr-mod
+  - helper
+  - admin
+  - media
+  - youtuber
+  - mini-yt
+  - highroller
+  - mvp
+  - vip
+  - default
+
+designs:
+  default:
+    header:
+      - ''
+      - '&#94CFFF&lS&#8ECCFF&lM&#88CAFF&lP&#81C7FF&lU&#7BC5FF&lN&#75C2FF&lI'
+      - '&#4498DB%server_online% &fᴘʟᴀʏᴇʀѕ'
+      - ''
+    footer:
+      - ''
+      - '&#4498DBѕᴛᴏʀᴇ.ѕᴍᴘᴜɴɪ.xʏᴢ.'
+
+# Group settings. Add a section matching the LuckPerms primary group name to
+# override _DEFAULT_. Lower 'weight' = higher in the tab list ordering.
+groups:
+  _DEFAULT_:
+    weight: 1000
+    tabprefix: '%luckperms_prefix%'
+    tagprefix: '%luckperms_prefix%'
+    customtabname: '%player_name%'
+    tabsuffix: '%luckperms_suffix%'
+    tagsuffix: '%luckperms_suffix%'
+
+  # Example overrides (delete or edit):
+  # admin:
+  #   weight: 1
+  #   tabprefix: '&c[Admin] '
+  #   tagprefix: '&c[Admin] '
+  #   customtabname: '&c%player_name%'
+  #   tabsuffix: ''
+  #   tagsuffix: ''
+
+  # Example overrides (delete or edit):
+  # admin:
+  #   weight: 1
+  #   tabprefix: '&c[Admin] '
+  #   tagprefix: '&c[Admin] '
+  #   customtabname: '&c%player_name%'
+  #   tabsuffix: ''
+  #   tagsuffix: ''
+
