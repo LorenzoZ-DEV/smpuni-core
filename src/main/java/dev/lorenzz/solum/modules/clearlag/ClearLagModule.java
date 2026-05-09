@@ -81,8 +81,7 @@ public class ClearLagModule extends AbstractModule {
                 if (entity instanceof Player) continue;
                 if (whitelist.contains(entity.getType().name())) continue;
 
-                boolean remove = false;
-                if (removeItems && entity instanceof Item) remove = true;
+                boolean remove = removeItems && entity instanceof Item;
                 if (removeMonsters && entity instanceof Monster) remove = true;
                 if (removeAnimals && entity instanceof Animals) remove = true;
                 if (removeXP && entity instanceof ExperienceOrb) remove = true;

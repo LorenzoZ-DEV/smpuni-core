@@ -7,10 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Admin GUI for /kitadmin — shows all kits with management options.
@@ -46,7 +43,7 @@ public class KitAdminGUI {
             }
 
             ItemStack icon = buildAdminKitIcon(kit);
-            final String kitId = kit.getId();
+            final String kitId = kit.id();
 
             builder.item(slot, icon, p -> {
                 // Left click = preview kit contents in a new GUI
@@ -75,7 +72,7 @@ public class KitAdminGUI {
         ItemMeta reloadMeta = reloadBtn.getItemMeta();
         if (reloadMeta != null) {
             reloadMeta.setDisplayName(Messages.color("&#FFD700&l↻ Reload Kits"));
-            reloadMeta.setLore(Arrays.asList(
+            reloadMeta.setLore(Collections.singletonList(
                     Messages.color("&7Click to reload all kits from file.")
             ));
             reloadBtn.setItemMeta(reloadMeta);
@@ -91,21 +88,21 @@ public class KitAdminGUI {
     }
 
     private ItemStack buildAdminKitIcon(Kit kit) {
-        ItemStack icon = new ItemStack(kit.getIcon());
+        ItemStack icon = new ItemStack(kit.icon());
         ItemMeta meta = icon.getItemMeta();
         if (meta == null) return icon;
 
-        meta.setDisplayName(Messages.color(kit.getDisplayName()));
+        meta.setDisplayName(Messages.color(kit.displayName()));
 
         List<String> lore = new ArrayList<>();
-        lore.add(Messages.color("&7ID: &f" + kit.getId()));
-        lore.add(Messages.color("&7Permission: &f" + (kit.getPermission().isEmpty() ? "none" : kit.getPermission())));
-        lore.add(Messages.color("&7Cooldown: &f" + (kit.getCooldown() <= 0 ? "none" : kit.getCooldown() + "s")));
-        lore.add(Messages.color("&7One-time: &f" + (kit.isOneTime() ? "yes" : "no")));
-        lore.add(Messages.color("&7Items: &f" + kit.getItems().size()));
+        lore.add(Messages.color("&7ID: &f" + kit.id()));
+        lore.add(Messages.color("&7Permission: &f" + (kit.permission().isEmpty() ? "none" : kit.permission())));
+        lore.add(Messages.color("&7Cooldown: &f" + (kit.cooldown() <= 0 ? "none" : kit.cooldown() + "s")));
+        lore.add(Messages.color("&7One-time: &f" + (kit.oneTime() ? "yes" : "no")));
+        lore.add(Messages.color("&7Items: &f" + kit.items().size()));
         lore.add("");
         lore.add(Messages.color("&#72FF97&lClick &7to preview contents"));
-        lore.add(Messages.color("&#FF8B76&l/kitadmin delete " + kit.getId()));
+        lore.add(Messages.color("&#FF8B76&l/kitadmin delete " + kit.id()));
 
         meta.setLore(lore);
         icon.setItemMeta(meta);
@@ -119,10 +116,10 @@ public class KitAdminGUI {
         Kit kit = kitManager.getKit(kitId);
         if (kit == null) return;
 
-        List<ItemStack> items = kit.getItems();
+        List<ItemStack> items = kit.items();
         int rows = Math.min(6, Math.max(1, (int) Math.ceil(items.size() / 9.0)));
 
-        GUI.Builder builder = GUI.builder(Messages.color("&8Preview: " + kit.getDisplayName()), rows);
+        GUI.Builder builder = GUI.builder(Messages.color("&8Preview: " + kit.displayName()), rows);
 
         for (int i = 0; i < items.size() && i < rows * 9; i++) {
             builder.item(i, items.get(i).clone());

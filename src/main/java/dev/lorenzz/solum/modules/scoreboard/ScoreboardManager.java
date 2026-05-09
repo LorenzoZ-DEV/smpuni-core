@@ -11,9 +11,6 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
-/**
- * Manages per-player FastBoard scoreboards. Loads layout from scoreboard.yml.
- */
 public class ScoreboardManager {
 
 
@@ -36,7 +33,6 @@ public class ScoreboardManager {
             plugin.getLogger().info("[Solum] Scoreboard disabled in scoreboard.yml.");
             return;
         }
-        // Create boards for already-online players (e.g. /reload)
         for (Player player : Bukkit.getOnlinePlayers()) {
             createBoard(player);
         }
@@ -87,7 +83,6 @@ public class ScoreboardManager {
         for (String line : rawLines) {
             lines.add(Messages.color(applyPlaceholders(player, line)));
         }
-        // FastBoard supports up to 15 lines
         if (lines.size() > 15) lines = lines.subList(0, 15);
         board.updateLines(lines);
     }
@@ -99,7 +94,6 @@ public class ScoreboardManager {
             try {
                 s = PlaceholderAPI.setPlaceholders(player, s);
             } catch (Throwable ignored) {
-                // Defensive: never fail the tick on placeholder errors
             }
         }
         return s;

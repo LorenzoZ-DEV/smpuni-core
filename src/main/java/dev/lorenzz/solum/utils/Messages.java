@@ -59,15 +59,15 @@ public final class Messages {
     }
 
     public static void send(CommandSender sender, String message) {
-        ((Audience) sender).sendMessage(LEGACY.deserialize(color(prefix + message)));
+        sender.sendMessage(LEGACY.deserialize(color(prefix + message)));
     }
 
     public static void sendRaw(CommandSender sender, String message) {
-        ((Audience) sender).sendMessage(LEGACY.deserialize(color(message)));
+        sender.sendMessage(LEGACY.deserialize(color(message)));
     }
 
     public static void sendNoPrefix(CommandSender sender, String message) {
-        ((Audience) sender).sendMessage(LEGACY.deserialize(color(message)));
+        sender.sendMessage(LEGACY.deserialize(color(message)));
     }
 
     public static String get(String path) {

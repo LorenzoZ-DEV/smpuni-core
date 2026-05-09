@@ -18,7 +18,7 @@ public class ClearLagCommand extends BaseCommand {
     public void clearlag(CommandSender sender) {
         Solum plugin = Solum.getInstance();
         int countdown = plugin.getConfigFile().getInt("clearlag.countdown-seconds", 30);
-        ClearLagModule module = (ClearLagModule) plugin.getModuleManager().getModule("clearlag");
+        ClearLagModule module = plugin.getModuleManager().getModule("clearlag");
         if (module != null) {
             module.startCountdown(countdown);
         } else {

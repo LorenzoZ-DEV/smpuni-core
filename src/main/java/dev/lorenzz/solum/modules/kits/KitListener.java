@@ -41,12 +41,12 @@ public class KitListener implements Listener {
             if (!player.isOnline()) return;
 
             // Check permission
-            if (!starterKit.getPermission().isEmpty() && !player.hasPermission(starterKit.getPermission())) {
+            if (!starterKit.permission().isEmpty() && !player.hasPermission(starterKit.permission())) {
                 return;
             }
 
             // Give the items
-            for (org.bukkit.inventory.ItemStack item : starterKit.getItems()) {
+            for (org.bukkit.inventory.ItemStack item : starterKit.items()) {
                 java.util.Map<Integer, org.bukkit.inventory.ItemStack> overflow =
                         player.getInventory().addItem(item.clone());
                 for (org.bukkit.inventory.ItemStack drop : overflow.values()) {

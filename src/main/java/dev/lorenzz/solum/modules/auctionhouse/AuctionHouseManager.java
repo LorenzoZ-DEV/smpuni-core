@@ -61,7 +61,7 @@ public class AuctionHouseManager {
         // Storage
         storage.load();
         for (AuctionListing l : storage.loadAllListings()) {
-            listings.put(l.getId(), l);
+            listings.put(l.id(), l);
         }
         claimQueue.putAll(storage.loadAllExpired());
 
@@ -92,14 +92,14 @@ public class AuctionHouseManager {
 
     public List<AuctionListing> getActiveListingsSorted() {
         List<AuctionListing> list = new ArrayList<>(listings.values());
-        list.sort(Comparator.comparingLong(AuctionListing::getCreatedAt).reversed());
+        list.sort(Comparator.comparingLong(AuctionListing::createdAt).reversed());
         return list;
     }
 
     public List<AuctionListing> getListingsBySeller(UUID seller) {
         List<AuctionListing> out = new ArrayList<>();
         for (AuctionListing l : listings.values()) {
-            if (l.getSeller().equals(seller)) out.add(l);
+            if (l.seller().equals(seller)) out.add(l);
         }
         return out;
     }
@@ -129,7 +129,7 @@ public class AuctionHouseManager {
         AuctionListing listing = new AuctionListing(
                 UUID.randomUUID(), seller.getUniqueId(), seller.getName(),
                 copy, price, now, now + defaultDurationMs);
-        listings.put(listing.getId(), listing);
+        listings.put(listing.id(), listing);
         storage.putListing(listing);
         storage.saveAsync();
         return ListResult.OK;
@@ -143,27 +143,27 @@ public class AuctionHouseManager {
         if (economy == null) return BuyResult.NO_ECONOMY;
         AuctionListing listing = listings.get(listingId);
         if (listing == null || listing.isExpired()) return BuyResult.NOT_FOUND;
-        if (listing.getSeller().equals(buyer.getUniqueId())) return BuyResult.OWN_LISTING;
+        if (listing.seller().equals(buyer.getUniqueId())) return BuyResult.OWN_LISTING;
 
-        if (economy.getBalance(buyer) < listing.getPrice()) return BuyResult.NO_FUNDS;
+        if (economy.getBalance(buyer) < listing.price()) return BuyResult.NO_FUNDS;
         // Check inventory space
         if (buyer.getInventory().firstEmpty() == -1) return BuyResult.INVENTORY_FULL;
 
-        EconomyResponse w = economy.withdrawPlayer(buyer, listing.getPrice());
+        EconomyResponse w = economy.withdrawPlayer(buyer, listing.price());
         if (!w.transactionSuccess()) return BuyResult.NO_FUNDS;
 
         // Pay seller (after tax)
-        double net = listing.getPrice() * (1.0 - Math.max(0.0, Math.min(1.0, taxPercent / 100.0)));
-        OfflinePlayer sellerOff = Bukkit.getOfflinePlayer(listing.getSeller());
+        double net = listing.price() * (1.0 - Math.max(0.0, Math.min(1.0, taxPercent / 100.0)));
+        OfflinePlayer sellerOff = Bukkit.getOfflinePlayer(listing.seller());
         economy.depositPlayer(sellerOff, net);
 
         // Remove listing & give item
         listings.remove(listingId);
         storage.removeListing(listingId);
-        buyer.getInventory().addItem(listing.getItem().clone());
+        buyer.getInventory().addItem(listing.item().clone());
 
         // Notify seller if online
-        Player sellerOnline = Bukkit.getPlayer(listing.getSeller());
+        Player sellerOnline = Bukkit.getPlayer(listing.seller());
         if (sellerOnline != null) {
             Messages.send(sellerOnline,
                     plugin.getConfigFile().getString("auctionhouse.messages.sold",
@@ -181,10 +181,10 @@ public class AuctionHouseManager {
     public boolean cancel(Player seller, UUID listingId) {
         AuctionListing listing = listings.get(listingId);
         if (listing == null) return false;
-        if (!listing.getSeller().equals(seller.getUniqueId()) && !seller.hasPermission("solum.auctionhouse.admin")) return false;
+        if (!listing.seller().equals(seller.getUniqueId()) && !seller.hasPermission("solum.auctionhouse.admin")) return false;
         listings.remove(listingId);
         storage.removeListing(listingId);
-        addToClaimQueue(listing.getSeller(), listing.getItem());
+        addToClaimQueue(listing.seller(), listing.item());
         storage.saveAsync();
         return true;
     }
@@ -195,13 +195,13 @@ public class AuctionHouseManager {
         long now = System.currentTimeMillis();
         List<AuctionListing> dead = new ArrayList<>();
         for (AuctionListing l : listings.values()) {
-            if (l.getExpiresAt() <= now) dead.add(l);
+            if (l.expiresAt() <= now) dead.add(l);
         }
         if (dead.isEmpty()) return;
         for (AuctionListing l : dead) {
-            listings.remove(l.getId());
-            storage.removeListing(l.getId());
-            addToClaimQueue(l.getSeller(), l.getItem());
+            listings.remove(l.id());
+            storage.removeListing(l.id());
+            addToClaimQueue(l.seller(), l.item());
         }
         storage.saveAsync();
     }

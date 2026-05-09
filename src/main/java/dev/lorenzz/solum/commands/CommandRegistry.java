@@ -9,12 +9,10 @@ import dev.lorenzz.solum.Solum;
  * calling {@code plugin.getCommandManager().register(new XCommand())} unchanged after
  * the migration from the legacy custom command API.
  */
-public class CommandRegistry {
+public record CommandRegistry(PaperCommandManager manager) {
 
-    private final PaperCommandManager manager;
-
-    public CommandRegistry(Solum plugin) {
-        this.manager = new PaperCommandManager(plugin);
+    public CommandRegistry(Solum manager) {
+        this.manager = new PaperCommandManager(manager);
         // Allow brigadier-based completions on Paper 1.20+.
         try {
             this.manager.enableUnstableAPI("help");
@@ -31,10 +29,6 @@ public class CommandRegistry {
      */
     public void register(BaseCommand command) {
         manager.registerCommand(command);
-    }
-
-    public PaperCommandManager getManager() {
-        return manager;
     }
 
     public void unregisterAll() {

@@ -123,16 +123,16 @@ public class KitPlayerDataManager {
      * Returns remaining cooldown in seconds, or 0 if ready.
      */
     public long getRemainingCooldown(UUID uuid, Kit kit) {
-        if (kit.getCooldown() <= 0) return 0;
+        if (kit.cooldown() <= 0) return 0;
 
         Map<String, Long> map = lastClaim.get(uuid);
         if (map == null) return 0;
 
-        Long last = map.get(kit.getId().toLowerCase());
+        Long last = map.get(kit.id().toLowerCase());
         if (last == null) return 0;
 
         long elapsed = (System.currentTimeMillis() - last) / 1000L;
-        long remaining = kit.getCooldown() - elapsed;
+        long remaining = kit.cooldown() - elapsed;
         return Math.max(0, remaining);
     }
 
@@ -150,12 +150,12 @@ public class KitPlayerDataManager {
     public void recordClaim(UUID uuid, Kit kit) {
         // Cooldown timestamp
         lastClaim.computeIfAbsent(uuid, k -> new HashMap<>())
-                .put(kit.getId().toLowerCase(), System.currentTimeMillis());
+                .put(kit.id().toLowerCase(), System.currentTimeMillis());
 
         // One-time
-        if (kit.isOneTime()) {
+        if (kit.oneTime()) {
             oneTimeClaimed.computeIfAbsent(uuid, k -> new HashSet<>())
-                    .add(kit.getId().toLowerCase());
+                    .add(kit.id().toLowerCase());
         }
 
         // Auto-save

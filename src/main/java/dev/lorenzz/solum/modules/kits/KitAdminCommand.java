@@ -105,8 +105,8 @@ public class KitAdminCommand extends BaseCommand {
             return;
         }
 
-        Kit updated = new Kit(oldKit.getId(), oldKit.getDisplayName(), seconds,
-                oldKit.isOneTime(), oldKit.getPermission(), oldKit.getIcon(), oldKit.getLore(), oldKit.getItems());
+        Kit updated = new Kit(oldKit.id(), oldKit.displayName(), seconds,
+                oldKit.oneTime(), oldKit.permission(), oldKit.icon(), oldKit.lore(), oldKit.items());
         kitManager.registerKit(updated);
         Messages.send(player, "&#55FF55Cooldown for &f" + kitName + " &#55FF55set to &f" + seconds + "s&#55FF55.");
     }
@@ -129,8 +129,8 @@ public class KitAdminCommand extends BaseCommand {
             return;
         }
 
-        Kit updated = new Kit(oldKit.getId(), oldKit.getDisplayName(), oldKit.getCooldown(),
-                oldKit.isOneTime(), oldKit.getPermission(), mat, oldKit.getLore(), oldKit.getItems());
+        Kit updated = new Kit(oldKit.id(), oldKit.displayName(), oldKit.cooldown(),
+                oldKit.oneTime(), oldKit.permission(), mat, oldKit.lore(), oldKit.items());
         kitManager.registerKit(updated);
         Messages.send(player, "&#55FF55Icon for &f" + kitName + " &#55FF55set to &f" + mat.name() + "&#55FF55.");
     }
@@ -146,10 +146,10 @@ public class KitAdminCommand extends BaseCommand {
 
         Messages.sendRaw(player, "&#FFD700&l⚡ Kit List:");
         for (Kit kit : kitManager.getKits()) {
-            String status = kit.isOneTime() ? "&#FF8B76[one-time]" : "&#72FF97[" + kit.getCooldown() + "s]";
-            Messages.sendRaw(player, " &8▸ " + Messages.color(kit.getDisplayName()) +
-                    " &7(" + kit.getId() + ") " + Messages.color(status) +
-                    " &7- " + kit.getItems().size() + " items");
+            String status = kit.oneTime() ? "&#FF8B76[one-time]" : "&#72FF97[" + kit.cooldown() + "s]";
+            Messages.sendRaw(player, " &8▸ " + Messages.color(kit.displayName()) +
+                    " &7(" + kit.id() + ") " + Messages.color(status) +
+                    " &7- " + kit.items().size() + " items");
         }
     }
 

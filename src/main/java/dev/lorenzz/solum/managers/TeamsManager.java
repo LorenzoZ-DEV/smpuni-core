@@ -28,7 +28,7 @@ public class TeamsManager {
 
     public static class Team {
         private final String name;
-        private UUID leader;
+        private final UUID leader;
         private final Map<UUID, Role> members = new LinkedHashMap<>();
         private boolean friendlyFire = false;
         private Location home;

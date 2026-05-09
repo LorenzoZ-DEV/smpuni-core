@@ -138,7 +138,7 @@ public class DoubleJumpListener implements Listener {
         double vMul = cfgVMul * cfgPower;
         Vector dir = loc.getDirection();
         double vx = dir.getX() * hMul;
-        double vy = 1.0 * vMul;
+        double vy = vMul;
         double vz = dir.getZ() * hMul;
 
         player.setVelocity(new Vector(vx, vy, vz));

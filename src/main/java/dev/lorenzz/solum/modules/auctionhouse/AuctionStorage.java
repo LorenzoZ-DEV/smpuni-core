@@ -91,13 +91,13 @@ public class AuctionStorage {
     }
 
     public synchronized void putListing(AuctionListing listing) {
-        String base = "listings." + listing.getId();
-        yaml.set(base + ".seller", listing.getSeller().toString());
-        yaml.set(base + ".seller-name", listing.getSellerName());
-        yaml.set(base + ".item", ItemSerialization.serialize(listing.getItem()));
-        yaml.set(base + ".price", listing.getPrice());
-        yaml.set(base + ".created", listing.getCreatedAt());
-        yaml.set(base + ".expires", listing.getExpiresAt());
+        String base = "listings." + listing.id();
+        yaml.set(base + ".seller", listing.seller().toString());
+        yaml.set(base + ".seller-name", listing.sellerName());
+        yaml.set(base + ".item", ItemSerialization.serialize(listing.item()));
+        yaml.set(base + ".price", listing.price());
+        yaml.set(base + ".created", listing.createdAt());
+        yaml.set(base + ".expires", listing.expiresAt());
     }
 
     public synchronized void removeListing(UUID id) {

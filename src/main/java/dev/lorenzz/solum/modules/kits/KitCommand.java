@@ -32,8 +32,7 @@ public class KitCommand extends BaseCommand {
 
         Kit kit = kitManager.getKit(kitName);
         if (kit == null) {
-            Messages.send(player, plugin.getConfigFile().getString("kits.messages.not-found",
-                    "&#FF4444Kit &f%kit% &#FF4444not found!").replace("%kit%", kitName));
+            Messages.send(player, plugin.getConfigFile().getString("kits.messages.not-found"));
             return;
         }
 
@@ -43,27 +42,27 @@ public class KitCommand extends BaseCommand {
     public static void claimKit(Player player, Kit kit, KitPlayerDataManager playerData) {
         Solum plugin = Solum.getInstance();
 
-        if (!kit.getPermission().isEmpty() && !player.hasPermission(kit.getPermission())) {
-            Messages.send(player, plugin.getConfigFile().getString("kits.messages.no-permission",
-                    "&#FF4444You don't have permission to claim this kit!"));
+        if (!kit.permission().isEmpty() && !player.hasPermission(kit.permission())) {
+            Messages.send(player, plugin.getConfigFile().getString("kits.messages.no-permission"));
             return;
         }
 
-        if (kit.isOneTime() && playerData.hasClaimedOneTime(player.getUniqueId(), kit.getId())) {
-            Messages.send(player, plugin.getConfigFile().getString("kits.messages.already-claimed",
-                    "&#FF4444You have already claimed this one-time kit!"));
+        if (kit.oneTime() && playerData.hasClaimedOneTime(player.getUniqueId(), kit.id())) {
+            Messages.send(player, plugin.getConfigFile().getString("kits.messages.already-claimed"));
             return;
         }
 
-        long remaining = playerData.getRemainingCooldown(player.getUniqueId(), kit);
-        if (remaining > 0) {
-            Messages.send(player, plugin.getConfigFile().getString("kits.messages.cooldown",
-                            "&#FF4444Kit on cooldown! &f%time% &#FF4444remaining.")
-                    .replace("%time%", KitPlayerDataManager.formatCooldown(remaining)));
-            return;
+        boolean bypass = player.hasPermission(KitGUI.COOLDOWN_BYPASS_PERMISSION);
+        if (!bypass) {
+            long remaining = playerData.getRemainingCooldown(player.getUniqueId(), kit);
+            if (remaining > 0) {
+                Messages.send(player, plugin.getConfigFile().getString("kits.messages.cooldown")
+                        .replace("%time%", KitPlayerDataManager.formatCooldown(remaining)));
+                return;
+            }
         }
 
-        for (org.bukkit.inventory.ItemStack item : kit.getItems()) {
+        for (org.bukkit.inventory.ItemStack item : kit.items()) {
             java.util.Map<Integer, org.bukkit.inventory.ItemStack> overflow =
                     player.getInventory().addItem(item.clone());
             for (org.bukkit.inventory.ItemStack drop : overflow.values()) {
@@ -75,7 +74,7 @@ public class KitCommand extends BaseCommand {
 
         String msg = plugin.getConfigFile().getString("kits.messages.claimed",
                         "&#55FF55You claimed the %kit% &#55FF55kit!")
-                .replace("%kit%", Messages.color(kit.getDisplayName()));
+                .replace("%kit%", Messages.color(kit.displayName()));
         Messages.send(player, msg);
     }
 }

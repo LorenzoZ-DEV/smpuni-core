@@ -49,9 +49,9 @@ public class AuctionHouseGUI {
             ItemStack display = buildListingDisplay(l, viewer);
             final int currentPage = safePage;
             b.item(slot, display, p -> {
-                boolean ownsIt = l.getSeller().equals(p.getUniqueId());
+                boolean ownsIt = l.seller().equals(p.getUniqueId());
                 if (ownsIt) {
-                    if (manager.cancel(p, l.getId())) {
+                    if (manager.cancel(p, l.id())) {
                         Messages.send(p, plugin.getConfigFile().getString("auctionhouse.messages.cancelled",
                                 "&aListing cancelled. Item moved to your claim queue."));
                     } else {
@@ -91,12 +91,12 @@ public class AuctionHouseGUI {
     }
 
     private void handleBuy(Player buyer, AuctionListing listing) {
-        AuctionHouseManager.BuyResult r = manager.buy(buyer, listing.getId());
+        AuctionHouseManager.BuyResult r = manager.buy(buyer, listing.id());
         switch (r) {
             case OK -> Messages.send(buyer, plugin.getConfigFile().getString("auctionhouse.messages.bought",
                             "&aPurchased &b%item% &afor &e%price%&a!")
-                    .replace("%item%", itemName(listing.getItem()))
-                    .replace("%price%", Messages.formatNumber(listing.getPrice())));
+                    .replace("%item%", itemName(listing.item()))
+                    .replace("%price%", Messages.formatNumber(listing.price())));
             case NOT_FOUND -> Messages.send(buyer, plugin.getConfigFile().getString("auctionhouse.messages.not-found",
                     "&cThat listing is no longer available."));
             case OWN_LISTING -> Messages.send(buyer, plugin.getConfigFile().getString("auctionhouse.messages.own-listing",
@@ -161,17 +161,17 @@ public class AuctionHouseGUI {
     }
 
     private ItemStack buildListingDisplay(AuctionListing listing, Player viewer) {
-        ItemStack display = listing.getItem().clone();
+        ItemStack display = listing.item().clone();
         ItemMeta meta = display.getItemMeta();
         if (meta == null) return display;
         List<String> lore = new ArrayList<>();
         if (meta.hasLore() && meta.getLore() != null) lore.addAll(meta.getLore());
         if (!lore.isEmpty()) lore.add(Messages.color("&8&m                              "));
-        lore.add(Messages.color("&7Seller: &f" + listing.getSellerName()));
-        lore.add(Messages.color("&7Price: &e" + Messages.formatNumber(listing.getPrice())));
+        lore.add(Messages.color("&7Seller: &f" + listing.sellerName()));
+        lore.add(Messages.color("&7Price: &e" + Messages.formatNumber(listing.price())));
         lore.add(Messages.color("&7Expires in: &b" + formatRemaining(listing.getMillisRemaining())));
         lore.add("");
-        if (listing.getSeller().equals(viewer.getUniqueId())) {
+        if (listing.seller().equals(viewer.getUniqueId())) {
             lore.add(Messages.color("&cClick to cancel"));
         } else {
             lore.add(Messages.color("&aClick to buy"));

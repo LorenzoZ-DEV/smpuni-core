@@ -84,18 +84,18 @@ public class KitManager {
     }
 
     public void saveKit(Kit kit) {
-        String path = "kits." + kit.getId();
-        kitsConfig.set(path + ".display-name", kit.getDisplayName());
-        kitsConfig.set(path + ".cooldown", kit.getCooldown());
-        kitsConfig.set(path + ".one-time", kit.isOneTime());
-        kitsConfig.set(path + ".permission", kit.getPermission());
-        kitsConfig.set(path + ".icon", kit.getIcon().name());
-        kitsConfig.set(path + ".lore", kit.getLore());
+        String path = "kits." + kit.id();
+        kitsConfig.set(path + ".display-name", kit.displayName());
+        kitsConfig.set(path + ".cooldown", kit.cooldown());
+        kitsConfig.set(path + ".one-time", kit.oneTime());
+        kitsConfig.set(path + ".permission", kit.permission());
+        kitsConfig.set(path + ".icon", kit.icon().name());
+        kitsConfig.set(path + ".lore", kit.lore());
 
         // Serialize items
         ConfigurationSection itemsSec = kitsConfig.createSection(path + ".items");
-        for (int i = 0; i < kit.getItems().size(); i++) {
-            ItemStack stack = kit.getItems().get(i);
+        for (int i = 0; i < kit.items().size(); i++) {
+            ItemStack stack = kit.items().get(i);
             String itemPath = "item" + i;
             serializeItem(itemsSec.createSection(itemPath), stack);
         }
@@ -118,7 +118,7 @@ public class KitManager {
     }
 
     public void registerKit(Kit kit) {
-        kits.put(kit.getId().toLowerCase(), kit);
+        kits.put(kit.id().toLowerCase(), kit);
         saveKit(kit);
     }
 
