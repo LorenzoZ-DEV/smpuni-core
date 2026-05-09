@@ -665,7 +665,7 @@ public class DuelManager {
             if (opponentState != null) {
                 Player opponent = Bukkit.getPlayer(state.getOpponent());
                 if (opponent != null && opponent.isOnline()) {
-                    opponent.teleport(opponentState.getPreviousLocation());
+                    opponent.teleportAsync(opponentState.getPreviousLocation());
                     opponent.getInventory().clear();
                     opponent.getInventory().setContents(opponentState.getPreviousInventory());
                     opponent.getInventory().setArmorContents(opponentState.getPreviousArmor());

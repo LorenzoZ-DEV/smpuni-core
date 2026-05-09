@@ -31,6 +31,10 @@ public class KeyAllCommands extends BaseCommand {
 
     public static void setIntervalMinutes(int minutes) { intervalMinutes = minutes; }
 
+    public static void setLastKeyAllTime(long timestampMs) {
+        lastKeyAllTime = timestampMs;
+    }
+
     public static void updateLastKeyAll(String type, int amount) {
         lastKeyAllTime = System.currentTimeMillis();
         lastKeyAllType = type;
@@ -39,17 +43,17 @@ public class KeyAllCommands extends BaseCommand {
 
     public static long getRemainingSeconds() {
         if (intervalMinutes <= 0) return 0;
+        if (lastKeyAllTime == 0) return 0;
         long intervalMs = intervalMinutes * 60L * 1000L;
-        long elapsed = (lastKeyAllTime == 0) ? 0 : (System.currentTimeMillis() - lastKeyAllTime);
-        long remaining = intervalMs - elapsed;
+        long remaining = (lastKeyAllTime + intervalMs) - System.currentTimeMillis();
         return remaining <= 0 ? 0 : remaining / 1000L;
     }
 
     public static String getTimeUntilNextKeyAll() {
         if (intervalMinutes <= 0) return "N/A";
+        if (lastKeyAllTime == 0) return "N/A";
         long intervalMs = intervalMinutes * 60L * 1000L;
-        long elapsed = (lastKeyAllTime == 0) ? 0 : (System.currentTimeMillis() - lastKeyAllTime);
-        long remaining = intervalMs - elapsed;
+        long remaining = (lastKeyAllTime + intervalMs) - System.currentTimeMillis();
         if (remaining <= 0) return "Soon!";
 
         long totalSeconds = remaining / 1000;

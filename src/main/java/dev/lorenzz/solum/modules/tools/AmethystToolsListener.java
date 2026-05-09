@@ -3,6 +3,7 @@ package dev.lorenzz.solum.modules.tools;
 import dev.lorenzz.solum.Solum;
 import dev.lorenzz.solum.utils.Messages;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -103,11 +104,18 @@ public class AmethystToolsListener implements Listener {
             List<Component> lore = section.getStringList("lore").stream()
                     .map(line -> line.replace("%uses%", String.valueOf(finalUses)))
                     .map(Messages::colorComponent)
+                    .map(this::stripDefaults)
                     .collect(Collectors.toList());
             meta.lore(lore);
         }
 
         item.setItemMeta(meta);
+    }
+
+    private Component stripDefaults(Component component) {
+        return component
+                .decoration(TextDecoration.ITALIC, false)
+                .decoration(TextDecoration.BOLD, false);
     }
 
     @EventHandler

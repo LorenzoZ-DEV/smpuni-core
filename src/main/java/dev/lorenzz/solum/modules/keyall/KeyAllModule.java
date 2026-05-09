@@ -39,14 +39,22 @@ public class KeyAllModule extends AbstractModule {
         long now = System.currentTimeMillis();
 
         if (lastExecution > 0) {
-            KeyAllCommands.updateLastKeyAll(
 
+            KeyAllCommands.setLastKeyAllTime(lastExecution);
+            KeyAllCommands.updateLastKeyAll(
                     config.getString("keyall.auto-type", "basic_key"),
                     config.getInt("keyall.auto-amount", 1));
+
+            KeyAllCommands.setLastKeyAllTime(lastExecution);
 
             nextExecutionAt = lastExecution + intervalMs;
             if (nextExecutionAt <= now) nextExecutionAt = now + 1000L;
         } else {
+
+            KeyAllCommands.setLastKeyAllTime(now);
+
+            config.set("keyall.last-execution", now);
+            config.saveFile();
             nextExecutionAt = now + intervalMs;
         }
 
