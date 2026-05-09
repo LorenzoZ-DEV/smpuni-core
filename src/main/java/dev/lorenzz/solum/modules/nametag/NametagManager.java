@@ -14,6 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Transformation;
+import org.joml.Vector3f;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -44,7 +46,6 @@ public class NametagManager {
     private final Map<UUID, UUID> displays = new ConcurrentHashMap<>(); // player -> display
 
     private BukkitTask updateTask;
-    private BukkitTask followTask;
 
     private double yOffset = 1.7;
     private long updateIntervalTicks = 20L;
@@ -64,7 +65,6 @@ public class NametagManager {
 
         updateTask = Bukkit.getScheduler().runTaskTimer(plugin, this::updateAll,
                 updateIntervalTicks, updateIntervalTicks);
-        followTask = Bukkit.getScheduler().runTaskTimer(plugin, this::followAll, 1L, 1L);
 
         plugin.getLogger().info("[Solum] NametagManager started (offset=" + yOffset
                 + ", update-interval=" + updateIntervalTicks + " ticks).");
@@ -72,7 +72,6 @@ public class NametagManager {
 
     public void stop() {
         if (updateTask != null) { updateTask.cancel(); updateTask = null; }
-        if (followTask != null) { followTask.cancel(); followTask = null; }
 
         for (UUID id : displays.values()) {
             Entity e = Bukkit.getEntity(id);
@@ -99,17 +98,32 @@ public class NametagManager {
         if (player == null || !player.isOnline()) return;
         if (displays.containsKey(player.getUniqueId())) return;
 
-        Location loc = player.getLocation().clone().add(0, yOffset, 0);
+        // Spawn at the player's location — the visual offset is achieved via the
+        // display's translation, NOT by teleporting it every tick. Once mounted as
+        // a passenger of the player, it follows perfectly with zero jitter.
+        Location loc = player.getLocation();
         TextDisplay td = player.getWorld().spawn(loc, TextDisplay.class, t -> {
             t.setBillboard(Display.Billboard.CENTER);
             t.setSeeThrough(false);
             t.setShadowed(false);
             t.setPersistent(false);
-            t.setViewRange(0.6f); // tighter than default
+            t.setViewRange(1.0f);
+            Transformation tr = t.getTransformation();
+            t.setTransformation(new Transformation(
+                    new Vector3f(0f, (float) yOffset, 0f),
+                    tr.getLeftRotation(),
+                    tr.getScale(),
+                    tr.getRightRotation()
+            ));
+            t.setInterpolationDuration(0);
+            t.setTeleportDuration(0);
             t.getPersistentDataContainer().set(markerKey, PersistentDataType.STRING,
                     player.getUniqueId().toString());
             t.text(buildComponent(player));
         });
+
+        // Mount on the player so the entity is perfectly synced client-side.
+        try { player.addPassenger(td); } catch (Throwable ignored) {}
 
         if (hideFromOwner) {
             try { player.hideEntity(plugin, td); } catch (Throwable ignored) {}
@@ -143,33 +157,15 @@ public class NametagManager {
                 attach(p);
                 continue;
             }
+            // Re-mount if dismounted somehow (vehicle change, dimension teleport, etc.).
+            if (td.getVehicle() == null) {
+                try { p.addPassenger(td); } catch (Throwable ignored) {}
+            }
             td.text(buildComponent(p));
         }
 
-        // Attach for any online players that don't have a display yet
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (!displays.containsKey(p.getUniqueId())) attach(p);
-        }
-    }
-
-    private void followAll() {
-        for (Map.Entry<UUID, UUID> entry : displays.entrySet()) {
-            Player p = Bukkit.getPlayer(entry.getKey());
-            if (p == null || !p.isOnline()) continue;
-            Entity e = Bukkit.getEntity(entry.getValue());
-            if (!(e instanceof TextDisplay td) || td.isDead()) continue;
-
-            Location target = p.getLocation();
-            // Use a fresh location to avoid mutating player's reference
-            Location dest = new Location(target.getWorld(),
-                    target.getX(), target.getY() + yOffset, target.getZ(),
-                    target.getYaw(), 0f);
-
-            if (td.getWorld() != dest.getWorld()) {
-                td.teleport(dest);
-            } else {
-                td.teleport(dest);
-            }
         }
     }
 
@@ -194,4 +190,3 @@ public class NametagManager {
         }
     }
 }
-
