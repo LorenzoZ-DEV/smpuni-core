@@ -1,22 +1,30 @@
 package dev.lorenzz.solum.modules.nametag;
 
-import dev.lorenzz.solum.Solum;
 import dev.lorenzz.solum.utils.Messages;
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Transformation;
 import org.joml.Vector3f;
 
+import java.io.File;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,166 +33,387 @@ public class NametagManager {
 
     private static final LegacyComponentSerializer LEGACY =
             LegacyComponentSerializer.builder()
-                    .character('\u00A7')
+                    .character('§')
                     .hexColors()
                     .useUnusualXRepeatedCharacterHexFormat()
                     .build();
 
-    private static final double STATS_OFFSET_ABOVE_HEAD = 0.1;
-    private static final double LINE_HEIGHT = 0.25;
-    private static final boolean HIDE_FROM_OWNER = true;
     private static final Color BACKGROUND_COLOR = Color.fromARGB(0, 0, 0, 0);
     private static final boolean TEXT_SHADOW = true;
     private static final boolean SEE_THROUGH_BLOCKS = false;
-    private static final String NICKNAME_FORMAT = "%luckperms_prefix%%player_name%";
-    private static final String STATS_FORMAT =
-            "&e\uD83E\uDE99 %solum_shards% &7|| &c\u2764 %player_health_rounded%%solum_team_tag_sep%";
 
-    private static volatile NametagManager INSTANCE;
+    private static final String HIDE_TEAM = "mnu_hidetag";
 
-    private final Solum plugin;
+    private final Plugin plugin;
     private final NamespacedKey markerKey;
-    private final Map<UUID, UUID> displays = new ConcurrentHashMap<>();
+    private final Map<UUID, DisplayEntry> displays = new ConcurrentHashMap<>();
 
-    public NametagManager(Solum plugin) {
+    private static final class DisplayEntry {
+        final TextDisplay entity;
+        double lastX = Double.NaN;
+        double lastY = Double.NaN;
+        double lastZ = Double.NaN;
+
+        DisplayEntry(TextDisplay entity) {
+            this.entity = entity;
+        }
+    }
+
+    private FileConfiguration config;
+    private boolean enabled = true;
+    private boolean hideVanillaNametag = false;
+    private boolean hideFromOwner = true;
+    private float viewRange = 2.0f;
+    private float offsetY = 0.35f;
+    private int textRefreshTicks = 20;
+    private List<String> lines = List.of("&f%player_name%");
+
+    private BukkitTask refreshTask;
+    private BukkitTask followTask;
+
+    public NametagManager(Plugin plugin) {
         this.plugin = plugin;
         this.markerKey = new NamespacedKey(plugin, "nametag_display");
+        reloadConfig();
+    }
+
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
+    public void reloadConfig() {
+        File file = new File(plugin.getDataFolder(), "nametag.yml");
+        if (!file.exists()) {
+            plugin.saveResource("nametag.yml", false);
+        }
+        this.config = YamlConfiguration.loadConfiguration(file);
+        try (InputStreamReader def = new InputStreamReader(
+                plugin.getResource("nametag.yml"), StandardCharsets.UTF_8)) {
+            this.config.setDefaults(YamlConfiguration.loadConfiguration(def));
+        } catch (Exception ignored) {
+        }
+        this.enabled = config.getBoolean("enabled");
+        this.hideVanillaNametag = config.getBoolean("hide-vanilla-nametag");
+        this.hideFromOwner = config.getBoolean("hide-from-owner");
+        this.viewRange = (float) config.getDouble("view-range");
+        this.offsetY = (float) config.getDouble("offset-y");
+        this.textRefreshTicks = Math.max(1, config.getInt("text-refresh-ticks", 20));
+        List<String> raw = config.getStringList("lines");
+        this.lines = raw.isEmpty() ? List.of("&f%player_name%") : raw;
     }
 
     public void start() {
         cleanupOrphans();
+        if (!enabled) return;
+        ensureHideTeam();
         for (Player p : Bukkit.getOnlinePlayers()) attach(p);
-        INSTANCE = this;
+        startTextRefreshTask();
+        startFollowTask();
     }
 
     public void stop() {
-        if (INSTANCE == this) INSTANCE = null;
-        for (UUID id : displays.values()) {
-            Entity e = Bukkit.getEntity(id);
-            if (e != null) e.remove();
+        stopTextRefreshTask();
+        stopFollowTask();
+        for (DisplayEntry entry : displays.values()) {
+            TextDisplay td = entry.entity;
+            if (td != null && !td.isDead()) td.remove();
         }
         displays.clear();
+        removeHideTeam();
         cleanupOrphans();
     }
 
     public void reload() {
         stop();
+        reloadConfig();
         start();
     }
 
-    public static void requestRefresh(Player player) {
-        NametagManager m = INSTANCE;
-        if (m != null && player != null) m.refresh(player);
+    private Team ensureHideTeam() {
+        if (!hideVanillaNametag) return null;
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Team team = sb.getTeam(HIDE_TEAM);
+        if (team == null) {
+            try {
+                team = sb.registerNewTeam(HIDE_TEAM);
+            } catch (IllegalArgumentException ex) {
+                team = sb.getTeam(HIDE_TEAM);
+            }
+        }
+        if (team != null) {
+            try {
+                team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
+            } catch (Throwable ignored) {
+            }
+        }
+        return team;
     }
 
-    private double computeAnchorY(Player p) {
-        return STATS_OFFSET_ABOVE_HEAD + LINE_HEIGHT;
+    private void removeHideTeam() {
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Team team = sb.getTeam(HIDE_TEAM);
+        if (team != null) {
+            try {
+                team.unregister();
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    private void addToHideTeam(Player player) {
+        if (!hideVanillaNametag) return;
+        Team team = ensureHideTeam();
+        if (team == null) return;
+        if (!team.hasEntry(player.getName())) {
+            try {
+                team.addEntry(player.getName());
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     public void attach(Player player) {
-        if (player == null || !player.isOnline()) return;
-        if (player.isDead()) return;
-        if (displays.containsKey(player.getUniqueId())) return;
+        if (!enabled) return;
+        if (player == null || !player.isOnline() || player.isDead()) return;
 
-        Location loc = player.getLocation();
-        final float anchor = (float) computeAnchorY(player);
+        removeExistingTagsOn(player);
+        addToHideTeam(player);
 
-        TextDisplay td = player.getWorld().spawn(loc, TextDisplay.class, t -> {
+        Location spawn = headAnchor(player);
+
+        TextDisplay td = player.getWorld().spawn(spawn, TextDisplay.class, t -> {
             t.setBillboard(Display.Billboard.CENTER);
             t.setSeeThrough(SEE_THROUGH_BLOCKS);
             t.setShadowed(TEXT_SHADOW);
             t.setDefaultBackground(false);
             t.setBackgroundColor(BACKGROUND_COLOR);
             t.setPersistent(false);
-            t.setViewRange(1.0f);
+            t.setViewRange(viewRange);
+            t.setInterpolationDuration(0);
+            try {
+                t.setTeleportDuration(3);
+            } catch (Throwable ignored) {
+            }
+
             Transformation tr = t.getTransformation();
             t.setTransformation(new Transformation(
-                    new Vector3f(0f, anchor, 0f),
+                    new Vector3f(0f, 0f, 0f),
                     tr.getLeftRotation(),
                     tr.getScale(),
                     tr.getRightRotation()
             ));
-            t.setInterpolationDuration(0);
             t.getPersistentDataContainer().set(markerKey, PersistentDataType.STRING,
                     player.getUniqueId().toString());
             t.text(buildComponent(player));
         });
 
-        boolean mounted = false;
-        try { mounted = player.addPassenger(td); } catch (Throwable ignored) {}
-        if (!mounted) {
-            td.remove();
-            return;
+        if (hideFromOwner) {
+            try {
+                player.hideEntity(plugin, td);
+            } catch (Throwable ignored) {
+            }
         }
 
-        if (HIDE_FROM_OWNER) {
-            try { player.hideEntity(plugin, td); } catch (Throwable ignored) {}
-        }
+        DisplayEntry entry = new DisplayEntry(td);
+        Location loc = player.getLocation();
+        entry.lastX = loc.getX();
+        entry.lastY = loc.getY();
+        entry.lastZ = loc.getZ();
+        displays.put(player.getUniqueId(), entry);
+    }
 
-        displays.put(player.getUniqueId(), td.getUniqueId());
+    private Location headAnchor(Player player) {
+        Location loc = player.getLocation();
+        loc.setY(loc.getY() + 1.8 + offsetY);
+        loc.setPitch(0f);
+        loc.setYaw(0f);
+        return loc;
     }
 
     public void detach(Player player) {
         if (player == null) return;
-        UUID id = displays.remove(player.getUniqueId());
-        if (id == null) return;
-        Entity e = Bukkit.getEntity(id);
-        if (e != null) {
-            try { e.leaveVehicle(); } catch (Throwable ignored) {}
-            e.remove();
+        DisplayEntry entry = displays.remove(player.getUniqueId());
+        if (entry != null && entry.entity != null && !entry.entity.isDead()) {
+            entry.entity.remove();
+        }
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        Team team = sb.getTeam(HIDE_TEAM);
+        if (team != null && team.hasEntry(player.getName())) {
+            try {
+                team.removeEntry(player.getName());
+            } catch (Throwable ignored) {
+            }
         }
     }
 
+    public void refresh(Player player) {
+        if (!enabled) return;
+        if (player == null || !player.isOnline() || player.isDead()) return;
+        DisplayEntry entry = displays.get(player.getUniqueId());
+        TextDisplay td = entry == null ? null : entry.entity;
+        if (td == null || td.isDead()) {
+            if (entry != null) displays.remove(player.getUniqueId());
+            attach(player);
+            return;
+        }
+        td.text(buildComponent(player));
+    }
+
+    public void updatePosition(Player player) {
+        if (!enabled) return;
+        if (player == null || !player.isOnline() || player.isDead()) return;
+        DisplayEntry entry = displays.get(player.getUniqueId());
+        if (entry == null) {
+            attach(player);
+            return;
+        }
+        TextDisplay td = entry.entity;
+        if (td == null || td.isDead() || !td.getWorld().equals(player.getWorld())) {
+            if (td != null && !td.isDead()) td.remove();
+            displays.remove(player.getUniqueId());
+            attach(player);
+            return;
+        }
+        try {
+            td.teleport(headAnchor(player));
+            Location loc = player.getLocation();
+            entry.lastX = loc.getX();
+            entry.lastY = loc.getY();
+            entry.lastZ = loc.getZ();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void startTextRefreshTask() {
+        stopTextRefreshTask();
+        long period = Math.max(1, textRefreshTicks);
+        refreshTask = Bukkit.getScheduler().runTaskTimer(plugin, this::refreshAllText, period, period);
+    }
+
+    private void stopTextRefreshTask() {
+        if (refreshTask != null) {
+            try { refreshTask.cancel(); } catch (Throwable ignored) {}
+            refreshTask = null;
+        }
+    }
+
+    private void startFollowTask() {
+        stopFollowTask();
+        followTask = Bukkit.getScheduler().runTaskTimer(plugin, this::followAll, 1L, 1L);
+    }
+
+    private void stopFollowTask() {
+        if (followTask != null) {
+            try { followTask.cancel(); } catch (Throwable ignored) {}
+            followTask = null;
+        }
+    }
+
+    private void followAll() {
+        if (displays.isEmpty()) return;
+        var it = displays.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<UUID, DisplayEntry> mapEntry = it.next();
+            Player player = Bukkit.getPlayer(mapEntry.getKey());
+            if (player == null || !player.isOnline()) continue;
+            if (player.isDead()) continue;
+
+            DisplayEntry entry = mapEntry.getValue();
+            TextDisplay td = entry.entity;
+            if (td == null || td.isDead()) {
+                it.remove();
+                continue;
+            }
+            if (!td.getWorld().equals(player.getWorld())) {
+                td.remove();
+                it.remove();
+                attach(player);
+                continue;
+            }
+
+            Location loc = player.getLocation();
+            double x = loc.getX(), y = loc.getY(), z = loc.getZ();
+            if (x == entry.lastX && y == entry.lastY && z == entry.lastZ) {
+                continue;
+            }
+            entry.lastX = x;
+            entry.lastY = y;
+            entry.lastZ = z;
+
+            try {
+                td.teleport(headAnchor(player));
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    private void refreshAllText() {
+        if (displays.isEmpty()) return;
+        var it = displays.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<UUID, DisplayEntry> mapEntry = it.next();
+            Player player = Bukkit.getPlayer(mapEntry.getKey());
+            DisplayEntry entry = mapEntry.getValue();
+            TextDisplay td = entry.entity;
+            if (player == null || !player.isOnline()) {
+                if (td != null && !td.isDead()) td.remove();
+                it.remove();
+                continue;
+            }
+            if (player.isDead()) continue;
+            if (td == null || td.isDead()) {
+                it.remove();
+                continue;
+            }
+            td.text(buildComponent(player));
+        }
+    }
 
     private Component buildComponent(Player p) {
-        String nickname = NICKNAME_FORMAT;
-        String stats = STATS_FORMAT;
-        nickname = nickname.replace("%player%", p.getName())
-                           .replace("%player_name%", p.getName());
-        stats = stats.replace("%player%", p.getName())
-                     .replace("%player_name%", p.getName());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0) sb.append('\n');
+            sb.append(applyPlaceholders(p, lines.get(i)));
+        }
+        return LEGACY.deserialize(Messages.color(sb.toString()));
+    }
+
+    private String applyPlaceholders(Player p, String input) {
+        if (input == null || input.isEmpty()) return "";
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             try {
-                nickname = PlaceholderAPI.setPlaceholders(p, nickname);
-                stats = PlaceholderAPI.setPlaceholders(p, stats);
-            } catch (Throwable ignored) {}
+                return me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, input);
+            } catch (Throwable ignored) {
+            }
         }
-        String combined = Messages.color(nickname) + "\n" + Messages.color(stats);
-        return LEGACY.deserialize(combined);
+        return input;
     }
 
     private void cleanupOrphans() {
         for (org.bukkit.World w : Bukkit.getWorlds()) {
             for (Entity e : w.getEntitiesByClass(TextDisplay.class)) {
                 if (e.getPersistentDataContainer().has(markerKey, PersistentDataType.STRING)) {
+                    try { e.leaveVehicle(); } catch (Throwable ignored) {}
                     e.remove();
                 }
             }
         }
     }
 
-    public void refresh(Player player) {
-        if (player == null || !player.isOnline() || player.isDead()) return;
-        UUID id = displays.get(player.getUniqueId());
-        Entity e = (id == null) ? null : Bukkit.getEntity(id);
-        if (!(e instanceof TextDisplay td) || td.isDead()
-                || td.getVehicle() == null || !td.getVehicle().equals(player)) {
-
-            if (id != null) displays.remove(player.getUniqueId());
-            if (e != null) e.remove();
-            attach(player);
-            return;
+    private void removeExistingTagsOn(Player player) {
+        DisplayEntry prev = displays.remove(player.getUniqueId());
+        if (prev != null && prev.entity != null && !prev.entity.isDead()) {
+            prev.entity.remove();
         }
-
-        float anchor = (float) computeAnchorY(player);
-        Transformation tr = td.getTransformation();
-        Vector3f cur = tr.getTranslation();
-        if (Math.abs(cur.y - anchor) > 0.001f) {
-            td.setTransformation(new Transformation(
-                    new Vector3f(0f, anchor, 0f),
-                    tr.getLeftRotation(), tr.getScale(), tr.getRightRotation()
-            ));
-        }
-        td.text(buildComponent(player));
+        try {
+            for (Entity passenger : player.getPassengers()) {
+                if (passenger instanceof TextDisplay td
+                        && td.getPersistentDataContainer().has(markerKey, PersistentDataType.STRING)) {
+                    try { player.removePassenger(td); } catch (Throwable ignored) {}
+                    td.remove();
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 }
+

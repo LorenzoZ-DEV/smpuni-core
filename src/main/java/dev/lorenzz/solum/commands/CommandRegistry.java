@@ -12,7 +12,7 @@ import dev.lorenzz.solum.Solum;
 public record CommandRegistry(PaperCommandManager manager) {
 
     public CommandRegistry(Solum manager) {
-        this.manager = new PaperCommandManager(manager);
+        this(new PaperCommandManager(manager));
         // Allow brigadier-based completions on Paper 1.20+.
         try {
             this.manager.enableUnstableAPI("help");

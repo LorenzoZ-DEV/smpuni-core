@@ -25,12 +25,20 @@ repositories {
         name = "reposiliteRepositoryReleases"
         url = uri("https://repo.lorenzzzz.xyz/releases")
     }
-    maven {
-        name = "reposiliteRepositoryPrivate"
-        url = uri("https://repo.lorenzzzz.xyz/private")
-        credentials {
-            username = project.findProperty("lorenzRepoUser") as String? ?: System.getenv("REPO_USER")
-            password = project.findProperty("lorenzRepoPass") as String? ?: System.getenv("REPO_PASS")
+    run {
+        val repoUser = (project.findProperty("lorenzRepoUser") as String?) ?: System.getenv("REPO_USER")
+        val repoPass = (project.findProperty("lorenzRepoPass") as String?) ?: System.getenv("REPO_PASS")
+        if (!repoUser.isNullOrBlank() && !repoPass.isNullOrBlank()) {
+            maven {
+                name = "reposiliteRepositoryPrivate"
+                url = uri("https://repo.lorenzzzz.xyz/private")
+                credentials {
+                    username = repoUser
+                    password = repoPass
+                }
+            }
+        } else {
+            logger.warn("[Solum] Skipping private repo: lorenzRepoUser/lorenzRepoPass not set (or REPO_USER/REPO_PASS env vars).")
         }
     }
     maven("https://libraries.minecraft.net")

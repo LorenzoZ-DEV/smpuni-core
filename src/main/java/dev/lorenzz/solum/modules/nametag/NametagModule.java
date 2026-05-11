@@ -5,19 +5,19 @@ import dev.lorenzz.solum.managers.AbstractModule;
 
 public class NametagModule extends AbstractModule {
 
-    private NametagManager manager;
+    private xyz.lorenzz.minenationsutils.nametags.NametagManager manager;
 
     public NametagModule(Solum plugin) {
         super(plugin, "nametag");
     }
 
-    public NametagManager getManager() {
+    public xyz.lorenzz.minenationsutils.nametags.NametagManager getManager() {
         return manager;
     }
 
     @Override
     public void onEnable() {
-        manager = new NametagManager(plugin);
+        manager = new xyz.lorenzz.minenationsutils.nametags.NametagManager(plugin);
         manager.start();
         registerListener(new NametagListener(manager));
         logger.info("[Solum] NametagModule loaded (TextDisplay below vanilla nametag).");
