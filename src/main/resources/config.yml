@@ -50,7 +50,6 @@ modules:
   tablist: true
   join-quit: true
   double-jump: true
-  nametag: true
   adaptive-tool: true
 
 

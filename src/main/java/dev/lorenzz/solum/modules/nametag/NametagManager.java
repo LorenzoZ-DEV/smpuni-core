@@ -1,6 +1,5 @@
 package dev.lorenzz.solum.modules.nametag;
 
-import dev.lorenzz.solum.utils.Messages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -20,6 +19,8 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Transformation;
 import org.joml.Vector3f;
+import dev.lorenzz.solum.utils.Placeholders;
+import dev.lorenzz.solum.utils.Text;
 
 import java.io.File;
 import java.io.InputStreamReader;
@@ -54,6 +55,8 @@ public class NametagManager {
         double lastY = Double.NaN;
         double lastZ = Double.NaN;
 
+        String lastText;
+
         DisplayEntry(TextDisplay entity) {
             this.entity = entity;
         }
@@ -66,15 +69,29 @@ public class NametagManager {
     private float viewRange = 2.0f;
     private float offsetY = 0.35f;
     private int textRefreshTicks = 20;
-    private List<String> lines = List.of("&f%player_name%");
+    private List<String> lines = List.of("%player_name%");
 
     private BukkitTask refreshTask;
-    private BukkitTask followTask;
+
+    private UUID[] refreshCursor = new UUID[0];
+    private int refreshCursorIdx = 0;
+
+    private static volatile NametagManager INSTANCE;
 
     public NametagManager(Plugin plugin) {
         this.plugin = plugin;
         this.markerKey = new NamespacedKey(plugin, "nametag_display");
         reloadConfig();
+        INSTANCE = this;
+    }
+
+    public static NametagManager getInstance() {
+        return INSTANCE;
+    }
+
+    public static void requestRefresh(Player player) {
+        NametagManager mgr = INSTANCE;
+        if (mgr != null) mgr.refresh(player);
     }
 
     public Plugin getPlugin() {
@@ -97,7 +114,7 @@ public class NametagManager {
         this.hideFromOwner = config.getBoolean("hide-from-owner");
         this.viewRange = (float) config.getDouble("view-range");
         this.offsetY = (float) config.getDouble("offset-y");
-        this.textRefreshTicks = Math.max(1, config.getInt("text-refresh-ticks", 20));
+        this.textRefreshTicks = Math.max(1, config.getInt("text-refresh-ticks"));
         List<String> raw = config.getStringList("lines");
         this.lines = raw.isEmpty() ? List.of("&f%player_name%") : raw;
     }
@@ -106,21 +123,28 @@ public class NametagManager {
         cleanupOrphans();
         if (!enabled) return;
         ensureHideTeam();
-        for (Player p : Bukkit.getOnlinePlayers()) attach(p);
+        Player[] online = Bukkit.getOnlinePlayers().toArray(new Player[0]);
+        for (int i = 0; i < online.length; i++) {
+            final Player p = online[i];
+            Bukkit.getScheduler().runTaskLater(plugin,
+                    () -> { if (p.isOnline()) attach(p); }, 1L + (i / 4));
+        }
         startTextRefreshTask();
-        startFollowTask();
     }
 
     public void stop() {
         stopTextRefreshTask();
-        stopFollowTask();
         for (DisplayEntry entry : displays.values()) {
             TextDisplay td = entry.entity;
-            if (td != null && !td.isDead()) td.remove();
+            if (td != null && !td.isDead()) {
+                try { td.leaveVehicle(); } catch (Throwable ignored) {}
+                td.remove();
+            }
         }
         displays.clear();
         removeHideTeam();
         cleanupOrphans();
+        if (INSTANCE == this) INSTANCE = null;
     }
 
     public void reload() {
@@ -222,14 +246,6 @@ public class NametagManager {
         displays.put(player.getUniqueId(), entry);
     }
 
-    private Location headAnchor(Player player) {
-        Location loc = player.getLocation();
-        loc.setY(loc.getY() + 1.8 + offsetY);
-        loc.setPitch(0f);
-        loc.setYaw(0f);
-        return loc;
-    }
-
     public void detach(Player player) {
         if (player == null) return;
         DisplayEntry entry = displays.remove(player.getUniqueId());
@@ -246,6 +262,40 @@ public class NametagManager {
         }
     }
 
+    public void followPlayer(Player player) {
+        if (!enabled) return;
+        if (player == null || !player.isOnline() || player.isDead()) return;
+        DisplayEntry entry = displays.get(player.getUniqueId());
+        if (entry == null) return;
+        TextDisplay td = entry.entity;
+        if (td == null || td.isDead()) {
+            displays.remove(player.getUniqueId());
+            return;
+        }
+        if (!td.getWorld().equals(player.getWorld())) {
+            td.remove();
+            displays.remove(player.getUniqueId());
+            attach(player);
+            return;
+        }
+        double x = player.getX();
+        double y = player.getY();
+        double z = player.getZ();
+        if (x == entry.lastX && y == entry.lastY && z == entry.lastZ) return;
+        entry.lastX = x;
+        entry.lastY = y;
+        entry.lastZ = z;
+        try {
+            td.teleportAsync(headAnchor(player));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @Deprecated
+    public void dismountPassenger(Player player) {
+        detach(player);
+    }
+
     public void refresh(Player player) {
         if (!enabled) return;
         if (player == null || !player.isOnline() || player.isDead()) return;
@@ -259,35 +309,23 @@ public class NametagManager {
         td.text(buildComponent(player));
     }
 
+    @Deprecated
     public void updatePosition(Player player) {
-        if (!enabled) return;
-        if (player == null || !player.isOnline() || player.isDead()) return;
-        DisplayEntry entry = displays.get(player.getUniqueId());
-        if (entry == null) {
-            attach(player);
-            return;
-        }
-        TextDisplay td = entry.entity;
-        if (td == null || td.isDead() || !td.getWorld().equals(player.getWorld())) {
-            if (td != null && !td.isDead()) td.remove();
-            displays.remove(player.getUniqueId());
-            attach(player);
-            return;
-        }
-        try {
-            td.teleport(headAnchor(player));
-            Location loc = player.getLocation();
-            entry.lastX = loc.getX();
-            entry.lastY = loc.getY();
-            entry.lastZ = loc.getZ();
-        } catch (Throwable ignored) {
-        }
+        followPlayer(player);
+    }
+
+    private Location headAnchor(Player player) {
+        Location loc = player.getLocation();
+        loc.setY(loc.getY() + 1.8 + offsetY);
+        loc.setPitch(0f);
+        loc.setYaw(0f);
+        return loc;
     }
 
     private void startTextRefreshTask() {
         stopTextRefreshTask();
-        long period = Math.max(1, textRefreshTicks);
-        refreshTask = Bukkit.getScheduler().runTaskTimer(plugin, this::refreshAllText, period, period);
+        refreshTask = Bukkit.getScheduler().runTaskTimer(
+                plugin, this::refreshTextChunk, 1L, 1L);
     }
 
     private void stopTextRefreshTask() {
@@ -297,64 +335,14 @@ public class NametagManager {
         }
     }
 
-    private void startFollowTask() {
-        stopFollowTask();
-        followTask = Bukkit.getScheduler().runTaskTimer(plugin, this::followAll, 1L, 1L);
-    }
-
-    private void stopFollowTask() {
-        if (followTask != null) {
-            try { followTask.cancel(); } catch (Throwable ignored) {}
-            followTask = null;
-        }
-    }
-
-    private void followAll() {
-        if (displays.isEmpty()) return;
-        var it = displays.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<UUID, DisplayEntry> mapEntry = it.next();
-            Player player = Bukkit.getPlayer(mapEntry.getKey());
-            if (player == null || !player.isOnline()) continue;
-            if (player.isDead()) continue;
-
-            DisplayEntry entry = mapEntry.getValue();
-            TextDisplay td = entry.entity;
-            if (td == null || td.isDead()) {
-                it.remove();
-                continue;
-            }
-            if (!td.getWorld().equals(player.getWorld())) {
-                td.remove();
-                it.remove();
-                attach(player);
-                continue;
-            }
-
-            Location loc = player.getLocation();
-            double x = loc.getX(), y = loc.getY(), z = loc.getZ();
-            if (x == entry.lastX && y == entry.lastY && z == entry.lastZ) {
-                continue;
-            }
-            entry.lastX = x;
-            entry.lastY = y;
-            entry.lastZ = z;
-
-            try {
-                td.teleport(headAnchor(player));
-            } catch (Throwable ignored) {
-            }
-        }
-    }
-
     private void refreshAllText() {
         if (displays.isEmpty()) return;
         var it = displays.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<UUID, DisplayEntry> mapEntry = it.next();
-            Player player = Bukkit.getPlayer(mapEntry.getKey());
             DisplayEntry entry = mapEntry.getValue();
             TextDisplay td = entry.entity;
+            Player player = Bukkit.getPlayer(mapEntry.getKey());
             if (player == null || !player.isOnline()) {
                 if (td != null && !td.isDead()) td.remove();
                 it.remove();
@@ -365,8 +353,113 @@ public class NametagManager {
                 it.remove();
                 continue;
             }
-            td.text(buildComponent(player));
+            try {
+                String resolvedRaw = buildRaw(player);
+                if (resolvedRaw.equals(entry.lastText)) continue;
+                entry.lastText = resolvedRaw;
+                td.text(LEGACY.deserialize(Text.color(resolvedRaw)));
+            } catch (Throwable ignored) {
+            }
         }
+    }
+
+    private void refreshTextChunk() {
+        int total = displays.size();
+        if (total == 0) {
+            refreshCursorIdx = 0;
+            return;
+        }
+        if (refreshCursor.length != total || refreshCursorIdx >= refreshCursor.length) {
+            refreshCursor = displays.keySet().toArray(new UUID[0]);
+            refreshCursorIdx = 0;
+            if (refreshCursor.length == 0) return;
+        }
+        int period = Math.max(1, textRefreshTicks);
+        int perTick = Math.max(1, (total + period - 1) / period);
+        perTick = Math.min(perTick, 16);
+
+        int end = Math.min(refreshCursorIdx + perTick, refreshCursor.length);
+
+        final int sliceLen = end - refreshCursorIdx;
+        final UUID[] sliceUuids = new UUID[sliceLen];
+        final Player[] slicePlayers = new Player[sliceLen];
+        int kept = 0;
+        for (int i = refreshCursorIdx; i < end; i++) {
+            UUID uuid = refreshCursor[i];
+            DisplayEntry entry = displays.get(uuid);
+            if (entry == null) continue;
+            TextDisplay td = entry.entity;
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null || !player.isOnline()) {
+                if (td != null && !td.isDead()) td.remove();
+                displays.remove(uuid);
+                continue;
+            }
+            if (player.isDead()) continue;
+            if (td == null || td.isDead()) {
+                displays.remove(uuid);
+                continue;
+            }
+            sliceUuids[kept] = uuid;
+            slicePlayers[kept] = player;
+            kept++;
+        }
+        refreshCursorIdx = (end >= refreshCursor.length) ? 0 : end;
+        if (refreshCursorIdx == 0) {
+            refreshCursor = new UUID[0];
+        }
+        if (kept == 0) return;
+
+        final int sliceSize = kept;
+        final List<String> tplLines = this.lines;
+
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            final String[] resolved = new String[sliceSize];
+            for (int i = 0; i < sliceSize; i++) {
+                Player p = slicePlayers[i];
+                try {
+                    StringBuilder sb = new StringBuilder(64);
+                    for (int li = 0, n = tplLines.size(); li < n; li++) {
+                        if (li > 0) sb.append('\n');
+                        sb.append(applyPlaceholders(p, tplLines.get(li)));
+                    }
+                    resolved[i] = sb.toString();
+                } catch (Throwable ignored) {
+                    resolved[i] = null;
+                }
+            }
+            Bukkit.getScheduler().runTask(plugin, () -> applyResolvedText(sliceUuids, resolved, sliceSize));
+        });
+    }
+
+    private void applyResolvedText(UUID[] uuids, String[] resolved, int len) {
+        for (int i = 0; i < len; i++) {
+            String resolvedRaw = resolved[i];
+            if (resolvedRaw == null) continue;
+            UUID uuid = uuids[i];
+            DisplayEntry entry = displays.get(uuid);
+            if (entry == null) continue;
+            TextDisplay td = entry.entity;
+            if (td == null || td.isDead()) {
+                displays.remove(uuid);
+                continue;
+            }
+            if (resolvedRaw.equals(entry.lastText)) continue;
+            entry.lastText = resolvedRaw;
+            try {
+                td.text(LEGACY.deserialize(Text.color(resolvedRaw)));
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    private String buildRaw(Player p) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0, n = lines.size(); i < n; i++) {
+            if (i > 0) sb.append('\n');
+            sb.append(applyPlaceholders(p, lines.get(i)));
+        }
+        return sb.toString();
     }
 
     private Component buildComponent(Player p) {
@@ -375,18 +468,12 @@ public class NametagManager {
             if (i > 0) sb.append('\n');
             sb.append(applyPlaceholders(p, lines.get(i)));
         }
-        return LEGACY.deserialize(Messages.color(sb.toString()));
+        return LEGACY.deserialize(Text.color(sb.toString()));
     }
 
     private String applyPlaceholders(Player p, String input) {
         if (input == null || input.isEmpty()) return "";
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            try {
-                return me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(p, input);
-            } catch (Throwable ignored) {
-            }
-        }
-        return input;
+        return Placeholders.apply(p, input);
     }
 
     private void cleanupOrphans() {

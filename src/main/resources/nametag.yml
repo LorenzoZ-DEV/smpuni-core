@@ -1,0 +1,29 @@
+# Nametag module — TextDisplay above the player's head
+enabled: true
+
+# Hide the vanilla in-world nametag floating above the player's head.
+# Uses a scoreboard team with NAME_TAG_VISIBILITY=NEVER. Disable this if
+# you let another plugin (e.g. TAB) manage scoreboard teams.
+hide-vanilla-nametag: false
+
+# Hide the nametag from the owning player (so you don't see your own)
+hide-from-owner: true
+
+# How far away (in chunks-multiplier) the nametag is visible (default 1.0)
+view-range: 2.0
+
+# Vertical offset above the head
+offset-y: 0.35
+
+# How often (in ticks) the TEXT content is refreshed (placeholder evaluation).
+# Position is event-driven (PlayerMoveEvent) so it costs nothing while idle.
+# 20 = 1 update per second → essentially free.
+text-refresh-ticks: 20
+
+
+# Each line is a placeholder/legacy-coloured string. Supports & color codes,
+# &#RRGGBB hex codes and PlaceholderAPI if installed.
+# Built-in placeholders: %player%, %player_name%
+lines:
+  - '%luckperms_prefix%%player_name%'
+  - '&#FF6F41⚔ %statistic_player_kills% &8│ &#BFBFBF💀 %statistic_deaths%'

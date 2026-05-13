@@ -21,10 +21,6 @@ repositories {
     maven("https://repo.codemc.io/repository/nms/")
     maven("https://repo.j4c0b3y.net/public/")
     maven("https://jitpack.io")
-    maven {
-        name = "reposiliteRepositoryReleases"
-        url = uri("https://repo.lorenzzzz.xyz/releases")
-    }
     run {
         val repoUser = (project.findProperty("lorenzRepoUser") as String?) ?: System.getenv("REPO_USER")
         val repoPass = (project.findProperty("lorenzRepoPass") as String?) ?: System.getenv("REPO_PASS")
@@ -37,8 +33,6 @@ repositories {
                     password = repoPass
                 }
             }
-        } else {
-            logger.warn("[Solum] Skipping private repo: lorenzRepoUser/lorenzRepoPass not set (or REPO_USER/REPO_PASS env vars).")
         }
     }
     maven("https://libraries.minecraft.net")
@@ -68,8 +62,11 @@ dependencies {
     compileOnly("me.clip:placeholderapi:2.11.7")
     compileOnly("net.luckperms:api:5.4")
     compileOnly("com.lunarclient:apollo-api:1.2.6")
-    implementation("dev.lorenzz.libs:discord-api-spigot:1.0.0-SNAPSHOT")
-    implementation("dev.lorenzz.libs:discord-api-common:1.0.0-SNAPSHOT")
+    // Discord API libs — fornite come JAR locali in libs/ (repo remoto con cert TLS scaduto)
+    implementation(files("libs/discord-api-spigot-1.0.0-SNAPSHOT.jar"))
+    implementation(files("libs/discord-api-common-1.0.0-SNAPSHOT.jar"))
+    // Transitive of discord-api-common (gson è fornito da Paper a runtime)
+    compileOnly("com.google.code.gson:gson:2.11.0")
 
 
 

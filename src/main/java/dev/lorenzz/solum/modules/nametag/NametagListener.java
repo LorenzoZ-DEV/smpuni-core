@@ -1,5 +1,6 @@
 package dev.lorenzz.solum.modules.nametag;
 
+import dev.lorenzz.solum.utils.JoinStagger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -8,21 +9,26 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
 public class NametagListener implements Listener {
 
-    private final xyz.lorenzz.minenationsutils.nametags.NametagManager manager;
+    private final NametagManager manager;
+    private final JoinStagger stagger = new JoinStagger(10);
 
-    public NametagListener(xyz.lorenzz.minenationsutils.nametags.NametagManager manager) {
+    public NametagListener(NametagManager manager) {
         this.manager = manager;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onJoin(PlayerJoinEvent event) {
-        manager.attach(event.getPlayer());
+        final Player player = event.getPlayer();
+        Bukkit.getScheduler().runTaskLater(manager.getPlugin(), () -> {
+            if (player.isOnline() && !player.isDead()) manager.attach(player);
+        }, stagger.nextDelay());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -57,19 +63,25 @@ public class NametagListener implements Listener {
         });
     }
 
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onTeleportPre(PlayerTeleportEvent event) {
+        manager.dismountPassenger(event.getPlayer());
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTeleport(PlayerTeleportEvent event) {
-        Player player = event.getPlayer();
-        if (event.getTo() == null) return;
-        boolean crossWorld = !event.getFrom().getWorld().equals(event.getTo().getWorld());
+        final Player player = event.getPlayer();
         Bukkit.getScheduler().runTask(manager.getPlugin(), () -> {
             if (!player.isOnline() || player.isDead()) return;
-            if (crossWorld) {
-                manager.detach(player);
-                manager.attach(player);
-            } else {
-                manager.updatePosition(player);
-            }
+            manager.detach(player);
+            manager.attach(player);
         });
     }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onMove(PlayerMoveEvent event) {
+        if (!event.hasChangedPosition()) return;
+        manager.followPlayer(event.getPlayer());
+    }
 }
+
