@@ -35,7 +35,7 @@ public class ScoreboardModule extends AbstractModule {
     @Override
     public void onReload() {
         if (scoreboardManager != null) {
-            scoreboardManager.getConfig().reload();
+            scoreboardManager.reloadConfig();
             scoreboardManager.stop();
             scoreboardManager.start();
         }

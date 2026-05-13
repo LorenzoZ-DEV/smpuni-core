@@ -3,6 +3,12 @@ enabled: true
 update-interval: 20      # ticks (20 = 1s)
 default-design: default
 
+# Caches the resolved output of PlaceholderAPI per (player, raw template) for
+# this many milliseconds. Each refresh resolves 5+ templates per player; this
+# collapses redundant PAPI calls. Set to 0 to disable. Lower = more "live"
+# placeholders (%player_health%, %ping%) but more CPU.
+placeholder-cache-ttl-ms: 1500
+
 # How to order players in the tab list. Valid values:
 #   GROUPS            -> follow the order in 'sort-groups' (top first)
 #   GROUPS_THEN_NAME  -> like GROUPS, then alphabetical for ties
@@ -15,6 +21,7 @@ sort-type: GROUPS_THEN_NAME
 # Used when sort-type is GROUPS / GROUPS_THEN_NAME.
 # Top of the list goes FIRST in tab. Group names must match LuckPerms
 # primary-group names (case-insensitive). Unknown groups are placed last.
+
 sort-groups:
   - owner
   - manager

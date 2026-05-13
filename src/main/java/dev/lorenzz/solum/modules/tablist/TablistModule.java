@@ -39,7 +39,7 @@ public class TablistModule extends AbstractModule {
     @Override
     public void onReload() {
         if (tablistManager != null) {
-            tablistManager.getConfig().reload();
+            tablistManager.reloadConfig();
             tablistManager.stop();
             tablistManager.start();
         }
