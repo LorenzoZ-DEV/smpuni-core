@@ -1,0 +1,38 @@
+package dev.lorenzz.lxsmp.commands;
+
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.PaperCommandManager;
+import dev.lorenzz.lxsmp.LXSMP;
+
+/**
+ * Thin wrapper around Aikar's {@link PaperCommandManager} so module classes can keep
+ * calling {@code plugin.getCommandManager().register(new XCommand())} unchanged after
+ * the migration from the legacy custom command API.
+ */
+public record CommandRegistry(PaperCommandManager manager) {
+
+    public CommandRegistry(LXSMP manager) {
+        this(new PaperCommandManager(manager));
+        // Allow brigadier-based completions on Paper 1.20+.
+        try {
+            this.manager.enableUnstableAPI("help");
+            this.manager.enableUnstableAPI("brigadier");
+        } catch (Throwable ignored) {
+            // older paper builds may not expose brigadier; safe to ignore.
+        }
+    }
+
+    /**
+     * Registers an ACF command. Kept named {@code register} (instead of ACF's
+     * {@code registerCommand}) to preserve compatibility with the previous custom API
+     * usage already spread across all module classes.
+     */
+    public void register(BaseCommand command) {
+        manager.registerCommand(command);
+    }
+
+    public void unregisterAll() {
+        manager.unregisterCommands();
+    }
+}
+

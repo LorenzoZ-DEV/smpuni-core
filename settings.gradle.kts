@@ -1,1 +1,1 @@
-rootProject.name = "Solum"
+rootProject.name = "LuxurySMP"

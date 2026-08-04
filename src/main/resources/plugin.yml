@@ -1,6 +1,6 @@
 name: Solum
 version: '${version}'
-main: dev.lorenzz.solum.Solum
+main: dev.lorenzz.lxsmp.LXSMP
 api-version: '1.20'
 authors: [Lorenzzzzzz]
 website: "https://lorenzzzz.xyz"

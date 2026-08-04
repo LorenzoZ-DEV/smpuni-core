@@ -1,5 +1,5 @@
 # ==========================================
-#           HIRU - SMP Core Plugin
+#           LXSMP - SMP Core Plugin
 #       Configuration File (config.yml)
 # ==========================================
 
@@ -60,11 +60,11 @@ join-quit:
   # Shown when a player leaves.
   quit: '&8[&c-&8] &7{rank} &f{player} &7has left the server'
   # Shown the FIRST time a player joins (replaces vanilla join broadcast).
-  first-join: '&6&l✦ &e{player} &fJoined for the first time! &6&lWELCOME TO SMPUNI!'
+  first-join: '&6&l✦ &e{player} &fJoined for the first time! &6&lWELCOME TO LUXURYSMP!'
   # Optional extra lines broadcast to everyone on first join (leave empty to disable).
   first-join-broadcast:
     - '&r'
-    - '&#FFD700&l   ★ &fA new adventurer joined &#0053ff&lSMPUNI&f! ★'
+    - '&#FFD700&l   ★ &fA new adventurer joined &#0053ff&lLUXURYSMP&f! ★'
     - '&#d8e4e4   Welcome &e{player} &#d8e4e4to the server!'
     - '&r'
 
@@ -73,7 +73,7 @@ join-quit:
 database:
   type: YAML # YAML or SQLITE
   sqlite:
-    file: solum.db
+    file: lxsmp.db
 
 # ---- Messages ----
 messages:
@@ -561,8 +561,8 @@ statswipe:
 
 # ---- Lunar Client ----
 lunar:
-  server-name: SMPUNI
-  server-ip: play.smpuni.xyz
+  server-name: LXSMP
+  server-ip: play.lorenzzz.xyz
   discord-app-id: ''
 
 # ---- Settings ----
@@ -789,16 +789,6 @@ kits:
     auto-starter: '&#d1e0e0You received the &#1a55a2Starter Kit&#d1e0e0! Use &f/kit
       &#d1e0e0to claim it again later.'
 
-# ---- Ad System ----
-ad:
-  cooldown-seconds: 300
-  # Text copied when clicking NO VIP button (plain, no colors)
-  copy-novip: './ad uninet SMPUNI Season I has been released [SKILLS] [ECONOMY] [LK STAFF] [JOIN NOW]'
-  # Text copied when clicking VIP button (with Minecraft color codes)
-  copy-vip: './ad uninet &9&lSMPUNI &fSeason I has been released &d[SKILLS] &3[ECONOMY] &6[LK STAFF] &a[JOIN NOW]'
-  messages:
-    cooldown: '&#d1e0e0You can use /ad again in &#1a55a2%seconds% &#d1e0e0seconds.'
-    confirmed: '&#d1e0e0Thanks for advertising! &#d1e0e0Next use in &#1a55a2%minutes% minutes&#d1e0e0.'
 
 
 # ---- Broadcast ----
